@@ -1,0 +1,272 @@
+basePath: /api/v1
+definitions:
+  api.CustomerUpsert:
+    properties:
+      birthdate:
+        type: string
+      full_name:
+        type: string
+      gender:
+        type: string
+      height_cm:
+        type: integer
+      weight_kg:
+        type: number
+    type: object
+  api.GoogleLoginRequest:
+    properties:
+      idToken:
+        type: string
+    type: object
+  api.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  api.RefreshRequest:
+    properties:
+      refreshToken:
+        type: string
+    type: object
+  api.RegisterRequest:
+    properties:
+      confirmPassword:
+        type: string
+      email:
+        example: alice@example.com
+        format: email
+        type: string
+      password:
+        type: string
+    required:
+    - confirmPassword
+    - email
+    - password
+    type: object
+  api.ShopUpsert:
+    properties:
+      address:
+        type: string
+      phone:
+        type: string
+      shop_name:
+        type: string
+    type: object
+  resp.Envelope:
+    properties:
+      code:
+        type: string
+      data: {}
+      message:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Auth (local, Google) + Profile (customer/shop)
+  title: MyFashion API
+  version: "1.0"
+paths:
+  /auth/google:
+    post:
+      consumes:
+      - application/json
+      description: Xác thực Google ID Token; nếu chưa có user thì tạo (role=customer)
+      parameters:
+      - description: payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.GoogleLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: Login Google
+      tags:
+      - Auth
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Đăng nhập local (email/password)
+      parameters:
+      - description: payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: Login
+      tags:
+      - Auth
+  /auth/logout:
+    post:
+      description: Thu hồi tất cả refresh token của người dùng hiện tại
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Logout
+      tags:
+      - Auth
+  /auth/me:
+    get:
+      description: Lấy info hiện tại từ JWT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Me
+      tags:
+      - Auth
+  /auth/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Đổi refresh token lấy access token mới (rotate)
+      parameters:
+      - description: payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: Refresh access token
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Đăng ký tài khoản customer (chỉ customer, shop được cấp thủ công)
+      parameters:
+      - description: payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: Register
+      tags:
+      - Auth
+  /profiles/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get my profile
+      tags:
+      - Profile
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Nếu role=customer
+        in: body
+        name: customer
+        schema:
+          $ref: '#/definitions/api.CustomerUpsert'
+      - description: Nếu role=shop
+        in: body
+        name: shop
+        schema:
+          $ref: '#/definitions/api.ShopUpsert'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Upsert my profile
+      tags:
+      - Profile
+schemes:
+- http
+securityDefinitions:
+  Bearer:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

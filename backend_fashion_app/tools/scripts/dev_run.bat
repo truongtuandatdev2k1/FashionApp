@@ -1,0 +1,1 @@
+@echo off & echo set PORT=4003 & echo set DB_DSN=root:password@tcp(127.0.0.1:3306)/myfashion?parseTime=true&loc=Local&charset=utf8mb4 & echo set JWT_SECRET=dev_secret_change_me & echo set GOOGLE_CLIENT_ID=YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com & echo swag init -g .\cmd\api\main.go -o .\internal\common\httpx\docs & echo go run .\cmd\api
