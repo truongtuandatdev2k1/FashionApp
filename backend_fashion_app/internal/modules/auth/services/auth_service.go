@@ -22,7 +22,7 @@ func NewAuthService(repo UserRepository, tokens RefreshTokenRepository, pwd secu
 }
 
 // RegisterCustomer đăng ký tài khoản customer (shop được cấp thủ công)
-func (s *AuthService) RegisterCustomer(ctx context.Context, email, rawPwd string) (*entities.User, error) {
+func (s *AuthService) RegisterCustomer(ctx context.Context, email, rawPwd, phoneNumber string) (*entities.User, error) {
 	if ex, _ := s.repo.GetByEmail(ctx, email); ex != nil {
 		return nil, errors.New("email already exists")
 	}
@@ -31,21 +31,15 @@ func (s *AuthService) RegisterCustomer(ctx context.Context, email, rawPwd string
 		return nil, err
 	}
 	// Chỉ tạo tài khoản customer, GoogleSub = nil cho local account
-	u := &entities.User{Email: email, Password: hash, Role: entities.RoleCustomer, Provider: entities.ProviderLocal, GoogleSub: nil}
+	u := &entities.User{Email: email, Password: hash, PhoneNumber: phoneNumber, Role: entities.RoleCustomer, Provider: entities.ProviderLocal, GoogleSub: nil}
 	if err := s.repo.Create(ctx, u); err != nil {
 		return nil, err
 	}
 	return u, nil
 }
 
-// Register (deprecated) - giữ lại để tương thích, nhưng chỉ cho phép customer
-func (s *AuthService) Register(ctx context.Context, email, rawPwd string, role entities.Role) (*entities.User, error) {
-	// Bỏ qua role được truyền vào, luôn tạo customer
-	return s.RegisterCustomer(ctx, email, rawPwd)
-}
-
-func (s *AuthService) Login(ctx context.Context, email, rawPwd string) (*entities.User, error) {
-	u, err := s.repo.GetByEmail(ctx, email)
+func (s *AuthService) Login(ctx context.Context, credential, rawPwd string) (*entities.User, error) {
+	u, err := s.repo.GetByCredential(ctx, credential)
 	if err != nil || u == nil {
 		return nil, errors.New("invalid credentials")
 	}

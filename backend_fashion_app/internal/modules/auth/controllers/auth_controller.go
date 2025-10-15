@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"gorm.io/gorm"
+
 	"myfashion/internal/common/authn"
 	"myfashion/internal/common/config"
 	"myfashion/internal/common/resp"
@@ -12,8 +14,6 @@ import (
 	"myfashion/internal/modules/auth/api"
 	"myfashion/internal/modules/auth/repositories"
 	"myfashion/internal/modules/auth/services"
-
-	"gorm.io/gorm"
 )
 
 // @tags Auth
@@ -45,23 +45,27 @@ func (h *AuthController) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate request data
 	if err := validation.Validate(&req); err != nil {
 		resp.Error(w, http.StatusBadRequest, validation.GetErrorMsg(err))
 		return
 	}
 
-	// Chỉ cho phép đăng ký customer, shop được cấp thủ công
-	u, err := h.svc.RegisterCustomer(r.Context(), req.Email, req.Password)
+	u, err := h.svc.RegisterCustomer(r.Context(), req.Email, req.Password, req.PhoneNumber)
 	if err != nil {
 		resp.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
 	j, _ := authn.GenerateToken(authn.JWTConfig{Secret: h.cfg.JWT_Secret, ExpiresMin: h.cfg.JWT_AccessTTLMin}, u.ID, string(u.Role))
-	// issue refresh token
 	rtPlain, _ := security.GenerateRandomToken(32)
 	_, _ = h.svc.IssueRefreshToken(r.Context(), u.ID, h.cfg.JWT_RefreshTTLD, rtPlain)
-	resp.Created(w, api.AuthResponse{Token: j, RefreshToken: rtPlain})
+	resp.Created(w, api.AuthResponse{
+		Token:        j,
+		RefreshToken: rtPlain,
+		User: &api.UserInfo{
+			ID:   u.ID,
+			Role: string(u.Role),
+		},
+	})
 }
 
 // @Summary Login
@@ -79,7 +83,7 @@ func (h *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 		resp.Error(w, http.StatusBadRequest, "invalid body")
 		return
 	}
-	u, err := h.svc.Login(r.Context(), req.Email, req.Password)
+	u, err := h.svc.Login(r.Context(), req.Credential, req.Password)
 	if err != nil {
 		resp.Error(w, http.StatusUnauthorized, err.Error())
 		return
@@ -87,7 +91,14 @@ func (h *AuthController) Login(w http.ResponseWriter, r *http.Request) {
 	j, _ := authn.GenerateToken(authn.JWTConfig{Secret: h.cfg.JWT_Secret, ExpiresMin: h.cfg.JWT_AccessTTLMin}, u.ID, string(u.Role))
 	rtPlain, _ := security.GenerateRandomToken(32)
 	_, _ = h.svc.IssueRefreshToken(r.Context(), u.ID, h.cfg.JWT_RefreshTTLD, rtPlain)
-	resp.OK(w, api.AuthResponse{Token: j, RefreshToken: rtPlain})
+	resp.OK(w, api.AuthResponse{
+		Token:        j,
+		RefreshToken: rtPlain,
+		User: &api.UserInfo{
+			ID:   u.ID,
+			Role: string(u.Role),
+		},
+	})
 }
 
 // @Summary Login Google
@@ -113,7 +124,14 @@ func (h *AuthController) Google(w http.ResponseWriter, r *http.Request) {
 	j, _ := authn.GenerateToken(authn.JWTConfig{Secret: h.cfg.JWT_Secret, ExpiresMin: h.cfg.JWT_AccessTTLMin}, u.ID, string(u.Role))
 	rtPlain, _ := security.GenerateRandomToken(32)
 	_, _ = h.svc.IssueRefreshToken(r.Context(), u.ID, h.cfg.JWT_RefreshTTLD, rtPlain)
-	resp.OK(w, api.AuthResponse{Token: j, RefreshToken: rtPlain})
+	resp.OK(w, api.AuthResponse{
+		Token:        j,
+		RefreshToken: rtPlain,
+		User: &api.UserInfo{
+			ID:   u.ID,
+			Role: string(u.Role),
+		},
+	})
 }
 
 // @Summary Refresh access token

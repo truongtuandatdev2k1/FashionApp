@@ -272,6 +272,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
+                "description": "Tạo hoặc cập nhật hồ sơ cho người dùng hiện đang được xác thực. Nội dung yêu cầu phải chứa đối tượng 'khách hàng' hoặc 'cửa hàng', tùy thuộc vào vai trò của người dùng.",
                 "consumes": [
                     "application/json"
                 ],
@@ -284,19 +285,12 @@ const docTemplate = `{
                 "summary": "Upsert my profile",
                 "parameters": [
                     {
-                        "description": "Nếu role=customer",
-                        "name": "customer",
+                        "description": "Profile data",
+                        "name": "body",
                         "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.CustomerUpsert"
-                        }
-                    },
-                    {
-                        "description": "Nếu role=shop",
-                        "name": "shop",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/api.ShopUpsert"
+                            "$ref": "#/definitions/api.UpsertProfileRequest"
                         }
                     }
                 ],
@@ -326,21 +320,24 @@ const docTemplate = `{
     "definitions": {
         "api.CustomerUpsert": {
             "type": "object",
+            "required": [
+                "address",
+                "age",
+                "full_name",
+                "gender"
+            ],
             "properties": {
-                "birthdate": {
+                "address": {
                     "type": "string"
+                },
+                "age": {
+                    "type": "integer"
                 },
                 "full_name": {
                     "type": "string"
                 },
                 "gender": {
                     "type": "string"
-                },
-                "height_cm": {
-                    "type": "integer"
-                },
-                "weight_kg": {
-                    "type": "number"
                 }
             }
         },
@@ -355,7 +352,7 @@ const docTemplate = `{
         "api.LoginRequest": {
             "type": "object",
             "properties": {
-                "email": {
+                "credential": {
                     "type": "string"
                 },
                 "password": {
@@ -376,7 +373,8 @@ const docTemplate = `{
             "required": [
                 "confirmPassword",
                 "email",
-                "password"
+                "password",
+                "phone_number"
             ],
             "properties": {
                 "confirmPassword": {
@@ -385,24 +383,39 @@ const docTemplate = `{
                 "email": {
                     "type": "string",
                     "format": "email",
-                    "example": "alice@example.com"
+                    "example": "alice@gmail.com"
                 },
                 "password": {
+                    "type": "string"
+                },
+                "phone_number": {
                     "type": "string"
                 }
             }
         },
         "api.ShopUpsert": {
             "type": "object",
+            "required": [
+                "address",
+                "shop_name"
+            ],
             "properties": {
                 "address": {
                     "type": "string"
                 },
-                "phone": {
-                    "type": "string"
-                },
                 "shop_name": {
                     "type": "string"
+                }
+            }
+        },
+        "api.UpsertProfileRequest": {
+            "type": "object",
+            "properties": {
+                "customer": {
+                    "$ref": "#/definitions/api.CustomerUpsert"
+                },
+                "shop": {
+                    "$ref": "#/definitions/api.ShopUpsert"
                 }
             }
         },

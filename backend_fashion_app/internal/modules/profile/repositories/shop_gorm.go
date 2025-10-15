@@ -30,6 +30,6 @@ func (r *shopRepo) Upsert(ctx context.Context, p *cen.ShopProfile) error {
 	m := toShopModel(p)
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"shop_name", "address", "phone"}),
+		DoUpdates: clause.AssignmentColumns([]string{"shop_name", "address"}),
 	}).Create(m).Error
 }

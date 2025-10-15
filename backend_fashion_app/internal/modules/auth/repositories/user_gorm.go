@@ -42,6 +42,17 @@ func (r *userRepo) GetByID(ctx context.Context, id uint) (*entities.User, error)
 	}
 	return toEntity(&m), nil
 }
+func (r *userRepo) GetByCredential(ctx context.Context, credential string) (*entities.User, error) {
+	var m UserModel
+	if err := r.db.WithContext(ctx).Where("email = ? OR phone_number = ?", credential, credential).First(&m).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return toEntity(&m), nil
+}
+
 func (r *userRepo) GetByGoogleSub(ctx context.Context, sub string) (*entities.User, error) {
 	if sub == "" {
 		return nil, nil

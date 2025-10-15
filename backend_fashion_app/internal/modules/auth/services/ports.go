@@ -8,6 +8,7 @@ import (
 type UserRepository interface {
 	Create(ctx context.Context, u *entities.User) error
 	GetByEmail(ctx context.Context, email string) (*entities.User, error)
+	GetByCredential(ctx context.Context, credential string) (*entities.User, error)
 	GetByID(ctx context.Context, id uint) (*entities.User, error)
 	GetByGoogleSub(ctx context.Context, sub string) (*entities.User, error)
 }

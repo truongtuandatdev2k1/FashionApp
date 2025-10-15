@@ -8,6 +8,7 @@ import (
 
 	"myfashion/internal/common/authn"
 	"myfashion/internal/common/resp"
+	"myfashion/internal/common/validation"
 	"myfashion/internal/modules/profile/api"
 	"myfashion/internal/modules/profile/entities"
 	"myfashion/internal/modules/profile/repositories"
@@ -49,12 +50,12 @@ func (h *ProfileController) GetMine(w http.ResponseWriter, r *http.Request) {
 
 // PUT /profiles/me
 // @Summary Upsert my profile
+// @Description Tạo hoặc cập nhật hồ sơ cho người dùng hiện đang được xác thực. Nội dung yêu cầu phải chứa đối tượng 'khách hàng' hoặc 'cửa hàng', tùy thuộc vào vai trò của người dùng.
 // @Security Bearer
 // @Tags Profile
 // @Accept json
 // @Produce json
-// @Param customer body api.CustomerUpsert false "Nếu role=customer"
-// @Param shop body api.ShopUpsert     false "Nếu role=shop"
+// @Param body body api.UpsertProfileRequest true "Profile data"
 // @Success 200 {object} resp.Envelope
 // @Failure 400 {object} resp.Envelope
 // @Failure 401 {object} resp.Envelope
@@ -66,19 +67,27 @@ func (h *ProfileController) UpsertMine(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var req api.UpsertProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Error(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+
 	switch claims.Role {
 	case "customer":
-		var req api.CustomerUpsert
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			resp.Error(w, http.StatusBadRequest, "invalid body")
+		if req.Customer == nil {
+			resp.Error(w, http.StatusBadRequest, "customer data is required")
+			return
+		}
+		if err := validation.Validate(req.Customer); err != nil {
+			resp.Error(w, http.StatusBadRequest, validation.GetErrorMsg(err))
 			return
 		}
 		err := h.svc.UpsertMine(r.Context(), claims.Role, claims.UID, &entities.CustomerProfile{
-			FullName:  req.FullName,
-			Gender:    req.Gender,
-			Birthdate: req.Birthdate,
-			HeightCM:  req.HeightCM,
-			WeightKG:  req.WeightKG,
+			FullName: req.Customer.FullName,
+			Age:      req.Customer.Age,
+			Gender:   req.Customer.Gender,
+			Address:  req.Customer.Address,
 		})
 		if err != nil {
 			resp.Error(w, http.StatusBadRequest, err.Error())
@@ -87,15 +96,17 @@ func (h *ProfileController) UpsertMine(w http.ResponseWriter, r *http.Request) {
 		resp.OK(w, "ok")
 
 	case "shop":
-		var req api.ShopUpsert
-		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-			resp.Error(w, http.StatusBadRequest, "invalid body")
+		if req.Shop == nil {
+			resp.Error(w, http.StatusBadRequest, "shop data is required")
+			return
+		}
+		if err := validation.Validate(req.Shop); err != nil {
+			resp.Error(w, http.StatusBadRequest, validation.GetErrorMsg(err))
 			return
 		}
 		err := h.svc.UpsertMine(r.Context(), claims.Role, claims.UID, &entities.ShopProfile{
-			ShopName: req.ShopName,
-			Address:  req.Address,
-			Phone:    req.Phone,
+			ShopName: req.Shop.ShopName,
+			Address:  req.Shop.Address,
 		})
 		if err != nil {
 			resp.Error(w, http.StatusBadRequest, err.Error())

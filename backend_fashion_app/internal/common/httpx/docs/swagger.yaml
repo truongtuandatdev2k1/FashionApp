@@ -2,16 +2,19 @@ basePath: /api/v1
 definitions:
   api.CustomerUpsert:
     properties:
-      birthdate:
+      address:
         type: string
+      age:
+        type: integer
       full_name:
         type: string
       gender:
         type: string
-      height_cm:
-        type: integer
-      weight_kg:
-        type: number
+    required:
+    - address
+    - age
+    - full_name
+    - gender
     type: object
   api.GoogleLoginRequest:
     properties:
@@ -20,7 +23,7 @@ definitions:
     type: object
   api.LoginRequest:
     properties:
-      email:
+      credential:
         type: string
       password:
         type: string
@@ -35,24 +38,35 @@ definitions:
       confirmPassword:
         type: string
       email:
-        example: alice@example.com
+        example: alice@gmail.com
         format: email
         type: string
       password:
+        type: string
+      phone_number:
         type: string
     required:
     - confirmPassword
     - email
     - password
+    - phone_number
     type: object
   api.ShopUpsert:
     properties:
       address:
         type: string
-      phone:
-        type: string
       shop_name:
         type: string
+    required:
+    - address
+    - shop_name
+    type: object
+  api.UpsertProfileRequest:
+    properties:
+      customer:
+        $ref: '#/definitions/api.CustomerUpsert'
+      shop:
+        $ref: '#/definitions/api.ShopUpsert'
     type: object
   resp.Envelope:
     properties:
@@ -231,17 +245,16 @@ paths:
     put:
       consumes:
       - application/json
+      description: Tạo hoặc cập nhật hồ sơ cho người dùng hiện đang được xác thực.
+        Nội dung yêu cầu phải chứa đối tượng 'khách hàng' hoặc 'cửa hàng', tùy thuộc
+        vào vai trò của người dùng.
       parameters:
-      - description: Nếu role=customer
+      - description: Profile data
         in: body
-        name: customer
+        name: body
+        required: true
         schema:
-          $ref: '#/definitions/api.CustomerUpsert'
-      - description: Nếu role=shop
-        in: body
-        name: shop
-        schema:
-          $ref: '#/definitions/api.ShopUpsert'
+          $ref: '#/definitions/api.UpsertProfileRequest'
       produces:
       - application/json
       responses:

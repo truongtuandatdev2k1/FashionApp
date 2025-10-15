@@ -1,15 +1,20 @@
 package api
 
 type CustomerUpsert struct {
-	FullName  string  `json:"full_name"`
-	Gender    string  `json:"gender"`
-	Birthdate string  `json:"birthdate"`
-	HeightCM  int16   `json:"height_cm"`
-	WeightKG  float32 `json:"weight_kg"`
+	FullName string `json:"full_name" validate:"required"`
+	Age      int    `json:"age" validate:"required,gt=0"`
+	Gender   string `json:"gender" validate:"required"`
+	Address  string `json:"address" validate:"required"`
 }
 
 type ShopUpsert struct {
-	ShopName string `json:"shop_name"`
-	Address  string `json:"address"`
-	Phone    string `json:"phone"`
+	ShopName string `json:"shop_name" validate:"required"`
+	Address  string `json:"address" validate:"required"`
+}
+
+// UpsertProfileRequest is a unified request body for the profile upsert endpoint.
+// Only one of the fields (Customer or Shop) should be provided, depending on the user's role.
+type UpsertProfileRequest struct {
+	Customer *CustomerUpsert `json:"customer,omitempty"`
+	Shop     *ShopUpsert     `json:"shop,omitempty"`
 }
