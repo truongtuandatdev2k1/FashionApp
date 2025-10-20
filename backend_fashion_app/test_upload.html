@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Product Upload API</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .required {
+            color: #e74c3c;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+
+        input[type="file"]:hover {
+            background: #e8eaff;
+        }
+
+        .file-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .preview-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #e0e0e0;
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-item .remove-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-item .remove-btn:hover {
+            background: #c0392b;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-reset {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-reset:hover {
+            background: #d0d0d0;
+        }
+
+        .response-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .response-section.success {
+            background: #d4edda;
+            border: 2px solid #28a745;
+            display: block;
+        }
+
+        .response-section.error {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            display: block;
+        }
+
+        .response-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+
+        .response-content {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .info-box strong {
+            color: #1976D2;
+        }
+
+        .file-count {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h[object Object]</h1>
+            <p class="subtitle">Test multiple image upload for product creation</p>
+
+            <div class="info-box">
+                <strong>📝 Hướng dẫn:</strong><br>
+                1. Nhập Bearer Token (lấy từ API login)<br>
+                2. Điền thông tin sản phẩm<br>
+                3. Chọn 1 ảnh nền (background_image)<br>
+                4. Chọn nhiều ảnh khác (other_images) - có thể chọn nhiều file cùng lúc<br>
+                5. Nhấn "Tạo sản phẩm" để test API
+            </div>
+
+            <form id="productForm">
+                <!-- Token -->
+                <div class="form-group">
+                    <label for="token">Bearer Token <span class="required">*</span></label>
+                    <input type="text" id="token" placeholder="Nhập token từ API login" required>
+                </div>
+
+                <!-- API URL -->
+                <div class="form-group">
+                    <label for="apiUrl">API URL <span class="required">*</span></label>
+                    <input type="text" id="apiUrl" value="http://localhost:8080/api/v1/products" required>
+                </div>
+
+                <!-- Product Name -->
+                <div class="form-group">
+                    <label for="name">Tên sản phẩm <span class="required">*</span></label>
+                    <input type="text" id="name" placeholder="VD: Áo thun nam cao cấp" required>
+                </div>
+
+                <!-- Category IDs -->
+                <div class="form-group">
+                    <label for="category_ids">Category IDs <span class="required">*</span></label>
+                    <input type="text" id="category_ids" placeholder="VD: 1,2,3" required>
+                </div>
+
+                <!-- Style IDs -->
+                <div class="form-group">
+                    <label for="style_ids">Style IDs <span class="required">*</span></label>
+                    <input type="text" id="style_ids" placeholder="VD: 1,2" required>
+                </div>
+
+                <!-- Price -->
+                <div class="form-group">
+                    <label for="price">Giá <span class="required">*</span></label>
+                    <input type="number" id="price" placeholder="VD: 299000" required>
+                </div>
+
+                <!-- Discount -->
+                <div class="form-group">
+                    <label for="discount_pct">Giảm giá (%)</label>
+                    <input type="number" id="discount_pct" placeholder="VD: 10" min="0" max="100">
+                </div>
+
+                <!-- Color -->
+                <div class="form-group">
+                    <label for="color">Màu sắc</label>
+                    <input type="text" id="color" placeholder="VD: Đen, Trắng, Xanh">
+                </div>
+
+                <!-- Age Range -->
+                <div class="form-group">
+                    <label for="age_range">Độ tuổi</label>
+                    <input type="text" id="age_range" placeholder="VD: 18-25">
+                </div>
+
+                <!-- Description -->
+                <div class="form-group">
+                    <label for="description">Mô tả</label>
+                    <textarea id="description" placeholder="Nhập mô tả sản phẩm..."></textarea>
+                </div>
+
+                <!-- Background Image -->
+                <div class="form-group">
+                    <label for="background_image">Ảnh nền (Background Image) <span class="required">*</span></label>
+                    <input type="file" id="background_image" accept="image/*" required>
+                    <div id="backgroundPreview" class="file-preview"></div>
+                </div>
+
+                <!-- Other Images -->
+                <div class="form-group">
+                    <label for="other_images">Ảnh khác (Other Images)</label>
+                    <input type="file" id="other_images" accept="image/*" multiple>
+                    <div class="file-count" id="otherImagesCount">Chưa chọn file nào</div>
+                    <div id="otherImagesPreview" class="file-preview"></div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="btn-group">
+                    <button type="button" class="btn-reset" onclick="resetForm()">Reset</button>
+                    <button type="submit" class="btn-submit">Tạo sản phẩm</button>
+                </div>
+            </form>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px; color: #667eea;">Đang upload...</p>
+            </div>
+
+            <!-- Response -->
+            <div class="response-section" id="responseSection">
+                <div class="response-title" id="responseTitle"></div>
+                <div class="response-content" id="responseContent"></div>
+            </div>
+    </div>
+
+    <script>
+        // Preview background image
+        document.getElementById('background_image').addEventListener('change', function (e) {
+            const preview = document.getElementById('backgroundPreview');
+            preview.innerHTML = '';
+
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `<img src="${e.target.result}" alt="Background">`;
+                    preview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Preview other images
+        document.getElementById('other_images').addEventListener('change', function (e) {
+            const preview = document.getElementById('otherImagesPreview');
+            const count = document.getElementById('otherImagesCount');
+            preview.innerHTML = '';
+
+            const files = Array.from(e.target.files);
+            count.textContent = files.length > 0 ? `Đã chọn ${files.length} file` : 'Chưa chọn file nào';
+
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const div = document.createElement('div');
+                    div.className = 'preview-item';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="Image ${index + 1}">
+                        <button type="button" class="remove-btn" onclick="removeOtherImage(${index})">×</button>
+                    `;
+                    preview.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+
+        // Remove other image
+        function removeOtherImage(index) {
+            const input = document.getElementById('other_images');
+            const dt = new DataTransfer();
+            const files = Array.from(input.files);
+
+            files.forEach((file, i) => {
+                if (i !== index) {
+                    dt.items.add(file);
+                }
+            });
+
+            input.files = dt.files;
+            input.dispatchEvent(new Event('change'));
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('productForm').reset();
+            document.getElementById('backgroundPreview').innerHTML = '';
+            document.getElementById('otherImagesPreview').innerHTML = '';
+            document.getElementById('otherImagesCount').textContent = 'Chưa chọn file nào';
+            document.getElementById('responseSection').style.display = 'none';
+        }
+
+        // Submit form
+        document.getElementById('productForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const token = document.getElementById('token').value.trim();
+            const apiUrl = document.getElementById('apiUrl').value.trim();
+
+            if (!token) {
+                alert('Vui lòng nhập Bearer Token!');
+                return;
+            }
+
+            // Create FormData
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('category_ids', document.getElementById('category_ids').value);
+            formData.append('style_ids', document.getElementById('style_ids').value);
+            formData.append('price', document.getElementById('price').value);
+
+            const discount = document.getElementById('discount_pct').value;
+            if (discount) formData.append('discount_pct', discount);
+
+            const color = document.getElementById('color').value;
+            if (color) formData.append('color', color);
+
+            const ageRange = document.getElementById('age_range').value;
+            if (ageRange) formData.append('age_range', ageRange);
+
+            const description = document.getElementById('description').value;
+            if (description) formData.append('description', description);
+
+            // Background image
+            const backgroundImage = document.getElementById('background_image').files[0];
+            if (backgroundImage) {
+                formData.append('background_image', backgroundImage);
+            }
+
+            // Other images (multiple files)
+            const otherImages = document.getElementById('other_images').files;
+            for (let i = 0; i < otherImages.length; i++) {
+                formData.append('other_images', otherImages[i]);
+            }
+
+            // Show loading
+            document.getElementById('loading').classList.add('active');
+            document.getElementById('responseSection').style.display = 'none';
+            document.querySelector('.btn-submit').disabled = true;
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                // Show response
+                const responseSection = document.getElementById('responseSection');
+                const responseTitle = document.getElementById('responseTitle');
+                const responseContent = document.getElementById('responseContent');
+
+                if (response.ok) {
+                    responseSection.className = 'response-section success';
+                    responseTitle.textContent = '✅ Thành công!';
+                    responseContent.textContent = JSON.stringify(data, null, 2);
+                } else {
+                    responseSection.className = 'response-section error';
+                    responseTitle.textContent = '❌ Lỗi!';
+                    responseContent.textContent = JSON.stringify(data, null, 2);
+                }
+
+            } catch (error) {
+                const responseSection = document.getElementById('responseSection');
+                const responseTitle = document.getElementById('responseTitle');
+                const responseContent = document.getElementById('responseContent');
+
+                responseSection.className = 'response-section error';
+                responseTitle.textContent = '❌ Lỗi kết nối!';
+                responseContent.textContent = error.message;
+            } finally {
+                document.getElementById('loading').classList.remove('active');
+                document.querySelector('.btn-submit').disabled = false;
+            }
+        });
+    </script>
+</body>
+
+</html>

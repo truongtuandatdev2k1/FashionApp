@@ -1,0 +1,84 @@
+package api
+
+import "time"
+
+// --- Category DTOs ---
+
+type CreateCategoryRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+type UpdateCategoryRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+type CategoryResponse struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+// --- Style DTOs ---
+
+type CreateStyleRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+type UpdateStyleRequest struct {
+	Name string `json:"name" binding:"required"`
+}
+
+type StyleResponse struct {
+	ID   uint   `json:"id"`
+	Name string `json:"name"`
+}
+
+// --- Product DTOs ---
+
+type ProductImageResponse struct {
+	ID  uint   `json:"id"`
+	URL string `json:"url"`
+}
+
+type ProductResponse struct {
+	ID          uint                   `json:"id"`
+	Name        string                 `json:"name"`
+	Price       float64                `json:"price"`
+	DiscountPct int                    `json:"discount_pct"`
+	PriceAfter  float64                `json:"price_after"`
+	Color       string                 `json:"color"`
+	AgeRange    string                 `json:"age_range"`
+	Description string                 `json:"description"`
+	ImageURL    string                 `json:"image_url"`
+	Categories  []CategoryResponse     `json:"categories"`
+	Styles      []StyleResponse        `json:"styles"`
+	Images      []ProductImageResponse `json:"images"`
+	CreatedAt   time.Time              `json:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+}
+
+// CreateProductRequest uses form binding for multipart/form-data
+// CategoryIDs and StyleIDs are comma-separated strings
+// e.g., "1,2,3"
+type CreateProductRequest struct {
+	Name        string  `form:"name" binding:"required"`
+	CategoryIDs string  `form:"category_ids" binding:"required"`
+	StyleIDs    string  `form:"style_ids" binding:"required"`
+	Price       float64 `form:"price" binding:"required,gt=0"`
+	DiscountPct int     `form:"discount_pct" binding:"omitempty,gte=0,lte=100"`
+	Color       string  `form:"color"`
+	AgeRange    string  `form:"age_range"`
+	Description string  `form:"description"`
+}
+
+// UpdateProductRequest uses form binding for multipart/form-data
+type UpdateProductRequest struct {
+	Name        string  `form:"name"`
+	CategoryIDs string  `form:"category_ids"`
+	StyleIDs    string  `form:"style_ids"`
+	Price       float64 `form:"price" binding:"omitempty,gt=0"`
+	DiscountPct *int    `form:"discount_pct" binding:"omitempty,gte=0,lte=100"`
+	Color       string  `form:"color"`
+	AgeRange    string  `form:"age_range"`
+	Description string  `form:"description"`
+	ImageURL    string  `form:"image_url"`
+}

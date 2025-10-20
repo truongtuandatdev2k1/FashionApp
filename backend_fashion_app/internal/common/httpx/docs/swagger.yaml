@@ -1,5 +1,26 @@
 basePath: /api/v1
 definitions:
+  api.CategoryResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  api.CreateCategoryRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  api.CreateStyleRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
   api.CustomerUpsert:
     properties:
       address:
@@ -26,6 +47,50 @@ definitions:
       credential:
         type: string
       password:
+        type: string
+    type: object
+  api.ProductImageResponse:
+    properties:
+      id:
+        type: integer
+      url:
+        type: string
+    type: object
+  api.ProductResponse:
+    properties:
+      age_range:
+        type: string
+      categories:
+        items:
+          $ref: '#/definitions/api.CategoryResponse'
+        type: array
+      color:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      discount_pct:
+        type: integer
+      id:
+        type: integer
+      image_url:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/api.ProductImageResponse'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+      price_after:
+        type: number
+      styles:
+        items:
+          $ref: '#/definitions/api.StyleResponse'
+        type: array
+      updated_at:
         type: string
     type: object
   api.RefreshRequest:
@@ -61,6 +126,27 @@ definitions:
     - address
     - shop_name
     type: object
+  api.StyleResponse:
+    properties:
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  api.UpdateCategoryRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  api.UpdateStyleRequest:
+    properties:
+      name:
+        type: string
+    required:
+    - name
+    type: object
   api.UpsertProfileRequest:
     properties:
       customer:
@@ -78,7 +164,7 @@ definitions:
     type: object
 info:
   contact: {}
-  description: Auth (local, Google) + Profile (customer/shop)
+  description: Auth (local, Google) + Profile (customer/shop) + Catalog
   title: MyFashion API
   version: "1.0"
 paths:
@@ -224,6 +310,390 @@ paths:
       summary: Register
       tags:
       - Auth
+  /categories:
+    get:
+      description: Get all categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/api.CategoryResponse'
+                  type: array
+              type: object
+      summary: List Categories
+      tags:
+      - Catalog
+    post:
+      consumes:
+      - application/json
+      description: Create a new category (Shop only)
+      parameters:
+      - description: Category data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CategoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create Category
+      tags:
+      - Catalog
+  /categories/{id}:
+    delete:
+      description: Delete a category (Shop only)
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Delete Category
+      tags:
+      - Catalog
+    get:
+      description: Get a category by ID
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CategoryResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: Get Category
+      tags:
+      - Catalog
+    put:
+      consumes:
+      - application/json
+      description: Update a category (Shop only)
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Category data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CategoryResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Update Category
+      tags:
+      - Catalog
+  /products:
+    get:
+      description: Get all products
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/api.ProductResponse'
+                  type: array
+              type: object
+      summary: List Products
+      tags:
+      - Catalog
+    post:
+      consumes:
+      - multipart/form-data
+      description: Create a new product with images (Shop only). Use multipart/form-data.
+        For 'other_images', you can select multiple files at once or add the field
+        multiple times in your HTTP client.
+      parameters:
+      - description: Product Name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Comma-separated category IDs (e.g., '1,2')
+        in: formData
+        name: category_ids
+        required: true
+        type: string
+      - description: Comma-separated style IDs (e.g., '3,4')
+        in: formData
+        name: style_ids
+        required: true
+        type: string
+      - description: Product Price
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: Discount Percentage
+        in: formData
+        name: discount_pct
+        type: integer
+      - description: Product Color
+        in: formData
+        name: color
+        type: string
+      - description: Age Range
+        in: formData
+        name: age_range
+        type: string
+      - description: Product Description
+        in: formData
+        name: description
+        type: string
+      - description: Background image for the product (image_url)
+        in: formData
+        name: background_image
+        required: true
+        type: file
+      - collectionFormat: multi
+        description: Other related images (can upload multiple files)
+        in: formData
+        items:
+          type: file
+        name: other_images
+        type: array
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.ProductResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create Product
+      tags:
+      - Catalog
+  /products/{id}:
+    delete:
+      description: Delete a product (Shop only)
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Delete Product
+      tags:
+      - Catalog
+    get:
+      description: Get a product by ID
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.ProductResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: Get Product
+      tags:
+      - Catalog
+    put:
+      consumes:
+      - multipart/form-data
+      description: Update a product (Shop only). Use multipart/form-data.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product Name
+        in: formData
+        name: name
+        type: string
+      - description: Comma-separated category IDs
+        in: formData
+        name: category_ids
+        type: string
+      - description: Comma-separated style IDs
+        in: formData
+        name: style_ids
+        type: string
+      - description: Product Price
+        in: formData
+        name: price
+        type: number
+      - description: Discount Percentage
+        in: formData
+        name: discount_pct
+        type: integer
+      - description: Product Color
+        in: formData
+        name: color
+        type: string
+      - description: Age Range
+        in: formData
+        name: age_range
+        type: string
+      - description: Product Description
+        in: formData
+        name: description
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.ProductResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Update Product
+      tags:
+      - Catalog
   /profiles/me:
     get:
       produces:
@@ -275,6 +745,163 @@ paths:
       summary: Upsert my profile
       tags:
       - Profile
+  /styles:
+    get:
+      description: Get all styles
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/api.StyleResponse'
+                  type: array
+              type: object
+      summary: List Styles
+      tags:
+      - Catalog
+    post:
+      consumes:
+      - application/json
+      description: Create a new style (Shop only)
+      parameters:
+      - description: Style data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateStyleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.StyleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create Style
+      tags:
+      - Catalog
+  /styles/{id}:
+    delete:
+      description: Delete a style (Shop only)
+      parameters:
+      - description: Style ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Delete Style
+      tags:
+      - Catalog
+    get:
+      description: Get a style by ID
+      parameters:
+      - description: Style ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.StyleResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: Get Style
+      tags:
+      - Catalog
+    put:
+      consumes:
+      - application/json
+      description: Update a style (Shop only)
+      parameters:
+      - description: Style ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Style data
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateStyleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.StyleResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Update Style
+      tags:
+      - Catalog
 schemes:
 - http
 securityDefinitions:
