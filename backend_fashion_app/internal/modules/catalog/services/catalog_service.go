@@ -106,6 +106,7 @@ func (s *CatalogService) CreateProduct(ctx context.Context, req api.CreateProduc
 		Price:       req.Price,
 		DiscountPct: req.DiscountPct,
 		PriceAfter:  priceAfter,
+		Stock:       req.Stock,
 		Color:       req.Color,
 		AgeRange:    req.AgeRange,
 		Description: req.Description,
@@ -123,6 +124,17 @@ func (s *CatalogService) GetProduct(ctx context.Context, id uint) (*entities.Pro
 
 func (s *CatalogService) ListProducts(ctx context.Context) ([]*entities.Product, error) {
 	return s.prodRepo.GetAll(ctx)
+}
+
+func (s *CatalogService) ListProductsPaginated(ctx context.Context, page, limit int) ([]*entities.Product, int64, error) {
+	// Set default values if not provided
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20 // Default to 20 items per page
+	}
+	return s.prodRepo.GetAllPaginated(ctx, page, limit)
 }
 
 func (s *CatalogService) UpdateProduct(ctx context.Context, id uint, req api.UpdateProductRequest) (*entities.Product, error) {
@@ -154,6 +166,11 @@ func (s *CatalogService) UpdateProduct(ctx context.Context, id uint, req api.Upd
 	if req.DiscountPct != nil {
 		product.DiscountPct = *req.DiscountPct
 		discountChanged = true
+	}
+
+	// Only update stock if explicitly provided (pointer is not nil)
+	if req.Stock != nil {
+		product.Stock = *req.Stock
 	}
 
 	// Recalculate price_after only if price or discount changed

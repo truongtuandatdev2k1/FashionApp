@@ -2,6 +2,25 @@ package api
 
 import "time"
 
+// --- Pagination DTOs ---
+
+type PaginationRequest struct {
+	Page  int `form:"page" json:"page"`   // Default: 1
+	Limit int `form:"limit" json:"limit"` // Default: 20
+}
+
+type PaginationMeta struct {
+	CurrentPage int   `json:"current_page"`
+	PerPage     int   `json:"per_page"`
+	Total       int64 `json:"total"`
+	TotalPages  int   `json:"total_pages"`
+}
+
+type PaginatedProductResponse struct {
+	Data []ProductResponse `json:"data"`
+	Meta PaginationMeta    `json:"meta"`
+}
+
 // --- Category DTOs ---
 
 type CreateCategoryRequest struct {
@@ -45,6 +64,7 @@ type ProductResponse struct {
 	Price       float64                `json:"price"`
 	DiscountPct int                    `json:"discount_pct"`
 	PriceAfter  float64                `json:"price_after"`
+	Stock       int                    `json:"stock"`
 	Color       string                 `json:"color"`
 	AgeRange    string                 `json:"age_range"`
 	Description string                 `json:"description"`
@@ -65,6 +85,7 @@ type CreateProductRequest struct {
 	StyleIDs    string  `form:"style_ids" binding:"required"`
 	Price       float64 `form:"price" binding:"required,gt=0"`
 	DiscountPct int     `form:"discount_pct" binding:"omitempty,gte=0,lte=100"`
+	Stock       int     `form:"stock" binding:"required,gte=0"`
 	Color       string  `form:"color"`
 	AgeRange    string  `form:"age_range"`
 	Description string  `form:"description"`
@@ -77,6 +98,7 @@ type UpdateProductRequest struct {
 	StyleIDs    string  `form:"style_ids"`
 	Price       float64 `form:"price" binding:"omitempty,gt=0"`
 	DiscountPct *int    `form:"discount_pct" binding:"omitempty,gte=0,lte=100"`
+	Stock       *int    `form:"stock" binding:"omitempty,gte=0"`
 	Color       string  `form:"color"`
 	AgeRange    string  `form:"age_range"`
 	Description string  `form:"description"`

@@ -12,6 +12,7 @@ type Product struct {
 	Price       float64        `gorm:"type:decimal(10,2);not null"`
 	DiscountPct int            `gorm:"column:discount_pct;default:0"`
 	PriceAfter  float64        `gorm:"type:decimal(10,2);not null"`
+	Stock       int            `gorm:"column:stock;default:0;not null"`
 	Color       string         `gorm:"type:varchar(50)"`
 	AgeRange    string         `gorm:"column:age_range;type:varchar(50)"`
 	Description string         `gorm:"type:text"`

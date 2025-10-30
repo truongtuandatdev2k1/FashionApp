@@ -1,11 +1,336 @@
 basePath: /api/v1
 definitions:
+  CancelOrderRequest:
+    properties:
+      reason:
+        example: Đặt nhầm sản phẩm
+        type: string
+    required:
+    - reason
+    type: object
+  CreateOrderRequest:
+    description: Request body for creating a new order from cart items
+    properties:
+      address_id:
+        example: 1
+        type: integer
+      cart_item_ids:
+        example:
+        - 1
+        - 2
+        - 3
+        items:
+          type: integer
+        minItems: 1
+        type: array
+      note:
+        example: Giao hàng giờ hành chính
+        type: string
+      payment_method:
+        enum:
+        - cod
+        - bank_transfer
+        - e_wallet
+        example: cod
+        type: string
+    required:
+    - address_id
+    - cart_item_ids
+    - payment_method
+    type: object
+  OrderItemResponse:
+    properties:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440003
+        type: string
+      price:
+        example: 150000
+        type: number
+      product_id:
+        example: 1
+        type: integer
+      product_image:
+        example: https://example.com/image.jpg
+        type: string
+      product_name:
+        example: Áo thun nam basic
+        type: string
+      quantity:
+        example: 2
+        type: integer
+      subtotal:
+        example: 300000
+        type: number
+    type: object
+  OrderListResponse:
+    properties:
+      limit:
+        example: 20
+        type: integer
+      offset:
+        example: 0
+        type: integer
+      orders:
+        items:
+          $ref: '#/definitions/OrderResponse'
+        type: array
+      total:
+        example: 100
+        type: integer
+    type: object
+  OrderResponse:
+    properties:
+      cancel_reason:
+        example: ""
+        type: string
+      cancelled_at:
+        example: ""
+        type: string
+      confirmed_at:
+        example: "2024-01-21T10:30:00Z"
+        type: string
+      created_at:
+        example: "2024-01-21T10:00:00Z"
+        type: string
+      customer_id:
+        example: 1
+        type: integer
+      delivered_at:
+        example: "2024-01-22T10:00:00Z"
+        type: string
+      discount_amount:
+        example: 50000
+        type: number
+      final_amount:
+        example: 480000
+        type: number
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/OrderItemResponse'
+        type: array
+      note:
+        example: Giao hàng giờ hành chính
+        type: string
+      order_number:
+        example: ORD-20240121-abc123
+        type: string
+      payment_method:
+        example: cod
+        type: string
+      payment_status:
+        example: pending
+        type: string
+      shipped_at:
+        example: "2024-01-21T14:00:00Z"
+        type: string
+      shipping_address:
+        example: 123 Đường ABC
+        type: string
+      shipping_district:
+        example: Quận 1
+        type: string
+      shipping_fee:
+        example: 30000
+        type: number
+      shipping_name:
+        example: Nguyễn Văn A
+        type: string
+      shipping_phone:
+        example: "0901234567"
+        type: string
+      shipping_province:
+        example: Hồ Chí Minh
+        type: string
+      shipping_ward:
+        example: Phường Bến Nghé
+        type: string
+      shop_id:
+        example: 2
+        type: integer
+      status:
+        example: pending
+        type: string
+      total_amount:
+        example: 500000
+        type: number
+      updated_at:
+        example: "2024-01-21T10:00:00Z"
+        type: string
+    type: object
+  UpdateOrderStatusRequest:
+    properties:
+      status:
+        enum:
+        - confirmed
+        - processing
+        - shipping
+        - delivered
+        - cancelled
+        - returned
+        example: confirmed
+        type: string
+    required:
+    - status
+    type: object
+  api.AddToCartRequest:
+    properties:
+      product_id:
+        minimum: 1
+        type: integer
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - product_id
+    - quantity
+    type: object
+  api.AddressResponse:
+    properties:
+      address_line1:
+        type: string
+      address_line2:
+        type: string
+      address_type:
+        $ref: '#/definitions/entities.AddressType'
+      city:
+        type: string
+      created_at:
+        type: string
+      district:
+        type: string
+      full_address:
+        type: string
+      id:
+        type: integer
+      is_default:
+        type: boolean
+      phone_number:
+        type: string
+      recipient_name:
+        type: string
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+      ward:
+        type: string
+    type: object
+  api.CartItemResponse:
+    properties:
+      created_at:
+        type: string
+      current_price:
+        description: Giá hiện tại
+        type: number
+      id:
+        type: integer
+      price_changed:
+        description: Có thay đổi giá không?
+        type: boolean
+      price_snapshot:
+        description: Giá lúc thêm vào giỏ
+        type: number
+      product:
+        $ref: '#/definitions/api.ProductInfo'
+      product_id:
+        type: integer
+      quantity:
+        type: integer
+      stock_issue:
+        description: Số lượng trong giỏ > tồn kho?
+        type: boolean
+      subtotal:
+        description: Tổng tiền = quantity * current_price
+        type: number
+    type: object
+  api.CartResponse:
+    properties:
+      can_checkout:
+        description: Có thể thanh toán không?
+        type: boolean
+      created_at:
+        type: string
+      has_issues:
+        description: Có vấn đề gì không (giá thay đổi, hết hàng...)
+        type: boolean
+      id:
+        type: integer
+      items:
+        items:
+          $ref: '#/definitions/api.CartItemResponse'
+        type: array
+      total_amount:
+        description: Tổng tiền
+        type: number
+      total_items:
+        description: Tổng số sản phẩm (cộng dồn quantity)
+        type: integer
+      updated_at:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  api.CartSummaryResponse:
+    properties:
+      can_checkout:
+        type: boolean
+      issues:
+        description: Danh sách các vấn đề (nếu có)
+        items:
+          type: string
+        type: array
+      items:
+        items:
+          $ref: '#/definitions/api.CartItemResponse'
+        type: array
+      total_amount:
+        type: number
+      total_items:
+        type: integer
+    type: object
   api.CategoryResponse:
     properties:
       id:
         type: integer
       name:
         type: string
+    type: object
+  api.CreateAddressRequest:
+    properties:
+      address_line1:
+        type: string
+      address_line2:
+        type: string
+      address_type:
+        allOf:
+        - $ref: '#/definitions/entities.AddressType'
+        enum:
+        - home
+        - office
+        - other
+      city:
+        type: string
+      district:
+        type: string
+      is_default:
+        type: boolean
+      phone_number:
+        type: string
+      recipient_name:
+        type: string
+      ward:
+        type: string
+    required:
+    - address_line1
+    - address_type
+    - city
+    - district
+    - phone_number
+    - recipient_name
+    - ward
     type: object
   api.CreateCategoryRequest:
     properties:
@@ -45,9 +370,34 @@ definitions:
   api.LoginRequest:
     properties:
       credential:
+        example: test@gmail.com/0965744926
         type: string
       password:
+        example: Cong123@
         type: string
+    required:
+    - credential
+    - password
+    type: object
+  api.PaginatedProductResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.ProductResponse'
+        type: array
+      meta:
+        $ref: '#/definitions/api.PaginationMeta'
+    type: object
+  api.PaginationMeta:
+    properties:
+      current_page:
+        type: integer
+      per_page:
+        type: integer
+      total:
+        type: integer
+      total_pages:
+        type: integer
     type: object
   api.ProductImageResponse:
     properties:
@@ -55,6 +405,20 @@ definitions:
         type: integer
       url:
         type: string
+    type: object
+  api.ProductInfo:
+    properties:
+      current_price:
+        description: Giá hiện tại từ DB
+        type: number
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      stock:
+        type: integer
     type: object
   api.ProductResponse:
     properties:
@@ -86,6 +450,8 @@ definitions:
         type: number
       price_after:
         type: number
+      stock:
+        type: integer
       styles:
         items:
           $ref: '#/definitions/api.StyleResponse'
@@ -133,6 +499,38 @@ definitions:
       name:
         type: string
     type: object
+  api.UpdateAddressRequest:
+    properties:
+      address_line1:
+        type: string
+      address_line2:
+        type: string
+      address_type:
+        allOf:
+        - $ref: '#/definitions/entities.AddressType'
+        enum:
+        - home
+        - office
+        - other
+      city:
+        type: string
+      district:
+        type: string
+      phone_number:
+        type: string
+      recipient_name:
+        type: string
+      ward:
+        type: string
+    type: object
+  api.UpdateCartItemRequest:
+    properties:
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - quantity
+    type: object
   api.UpdateCategoryRequest:
     properties:
       name:
@@ -154,6 +552,16 @@ definitions:
       shop:
         $ref: '#/definitions/api.ShopUpsert'
     type: object
+  entities.AddressType:
+    enum:
+    - home
+    - office
+    - other
+    type: string
+    x-enum-varnames:
+    - AddressTypeHome
+    - AddressTypeOffice
+    - AddressTypeOther
   resp.Envelope:
     properties:
       code:
@@ -168,6 +576,266 @@ info:
   title: MyFashion API
   version: "1.0"
 paths:
+  /addresses:
+    get:
+      description: Get all addresses for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/api.AddressResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get all addresses
+      tags:
+      - Address
+    post:
+      consumes:
+      - application/json
+      description: Create a new address for the authenticated user
+      parameters:
+      - description: Address data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AddressResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create a new address
+      tags:
+      - Address
+  /addresses/{id}:
+    delete:
+      description: Delete an address for the authenticated user
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Delete an address
+      tags:
+      - Address
+    get:
+      description: Get an address by ID for the authenticated user
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AddressResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get an address
+      tags:
+      - Address
+    put:
+      consumes:
+      - application/json
+      description: Update an address for the authenticated user
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Address data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateAddressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AddressResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Update an address
+      tags:
+      - Address
+  /addresses/{id}/set-default:
+    patch:
+      description: Set an address as default for the authenticated user
+      parameters:
+      - description: Address ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Set default address
+      tags:
+      - Address
+  /addresses/default:
+    get:
+      description: Get the default address for the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AddressResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get default address
+      tags:
+      - Address
   /auth/google:
     post:
       consumes:
@@ -310,6 +978,195 @@ paths:
       summary: Register
       tags:
       - Auth
+  /cart:
+    delete:
+      description: Xóa toàn bộ sản phẩm trong giỏ hàng
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Clear Cart
+      tags:
+      - Cart
+    get:
+      description: Lấy thông tin giỏ hàng của người dùng hiện tại
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CartResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get Cart
+      tags:
+      - Cart
+  /cart/items:
+    post:
+      consumes:
+      - application/json
+      description: Thêm một sản phẩm vào giỏ hàng
+      parameters:
+      - description: Thông tin sản phẩm cần thêm
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.AddToCartRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CartItemResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Add Item to Cart
+      tags:
+      - Cart
+  /cart/items/{id}:
+    delete:
+      description: Xóa một sản phẩm khỏi giỏ hàng
+      parameters:
+      - description: ID của Cart Item
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Remove Cart Item
+      tags:
+      - Cart
+    put:
+      consumes:
+      - application/json
+      description: Cập nhật số lượng của một sản phẩm trong giỏ hàng
+      parameters:
+      - description: ID của Cart Item
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Số lượng mới
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCartItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CartItemResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Update Cart Item
+      tags:
+      - Cart
+  /cart/summary:
+    get:
+      description: Lấy tóm tắt giỏ hàng để chuẩn bị thanh toán
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CartSummaryResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get Cart Summary
+      tags:
+      - Cart
   /categories:
     get:
       description: Get all categories
@@ -467,9 +1324,32 @@ paths:
       summary: Update Category
       tags:
       - Catalog
-  /products:
+  /orders:
     get:
-      description: Get all products
+      description: Lấy danh sách đơn hàng của tôi (customer hoặc shop)
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Filter by status
+        enum:
+        - pending
+        - confirmed
+        - processing
+        - shipping
+        - delivered
+        - cancelled
+        - returned
+        in: query
+        name: status
+        type: string
       produces:
       - application/json
       responses:
@@ -480,9 +1360,284 @@ paths:
             - $ref: '#/definitions/resp.Envelope'
             - properties:
                 data:
-                  items:
-                    $ref: '#/definitions/api.ProductResponse'
-                  type: array
+                  $ref: '#/definitions/OrderListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get My Orders
+      tags:
+      - Order
+    post:
+      consumes:
+      - application/json
+      description: Tạo đơn hàng mới từ giỏ hàng (customer)
+      parameters:
+      - description: Order info
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CreateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create Order
+      tags:
+      - Order
+  /orders/{id}:
+    get:
+      description: Lấy thông tin đơn hàng theo ID
+      parameters:
+      - description: Order ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get Order by ID
+      tags:
+      - Order
+  /orders/{id}/cancel:
+    post:
+      consumes:
+      - application/json
+      description: Hủy đơn hàng (customer hoặc shop)
+      parameters:
+      - description: Order ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Cancel reason
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/CancelOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Cancel Order
+      tags:
+      - Order
+  /orders/{id}/confirm:
+    post:
+      description: Xác nhận đơn hàng (shop only)
+      parameters:
+      - description: Order ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Confirm Order
+      tags:
+      - Order
+  /orders/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: Cập nhật trạng thái đơn hàng (shop only)
+      parameters:
+      - description: Order ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: New status
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateOrderStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Update Order Status
+      tags:
+      - Order
+  /products:
+    get:
+      description: Get all products with pagination
+      parameters:
+      - description: 'Page number (default: 1)'
+        in: query
+        name: page
+        type: integer
+      - description: 'Items per page (default: 20, max: 100)'
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.PaginatedProductResponse'
               type: object
       summary: List Products
       tags:

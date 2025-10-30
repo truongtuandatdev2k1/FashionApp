@@ -17,8 +17,11 @@ import (
 	"myfashion/internal/common/db"
 	"myfashion/internal/common/httpx"
 
+	addressm "myfashion/internal/modules/address"
 	authm "myfashion/internal/modules/auth"
+	cartm "myfashion/internal/modules/cart"
 	catalogm "myfashion/internal/modules/catalog"
+	orderm "myfashion/internal/modules/order"
 	profilem "myfashion/internal/modules/profile"
 )
 
@@ -60,7 +63,10 @@ func main() {
 	api := chi.NewRouter()
 	authm.RegisterRoutes(api, cfg, gdb)
 	profilem.RegisterRoutes(api, cfg, gdb)
-	catalogm.RegisterRoutes(api, cfg, gdb) // Register catalog routes
+	catalogm.RegisterRoutes(api, cfg, gdb)          // Register catalog routes
+	cartm.RegisterRoutes(api, cfg, gdb)             // Register cart routes
+	addressm.RegisterRoutes(api, cfg, gdb)          // Register address routes
+	orderm.RegisterRoutes(api, gdb, cfg.JWT_Secret) // Register order routes
 	r.Mount("/api/v1", api)
 
 	log.Printf("listening on :%s", cfg.Port)
@@ -75,6 +81,15 @@ func runMigrations(db *gorm.DB) {
 		log.Fatal(err)
 	}
 	if err := catalogm.Migrate(db); err != nil {
+		log.Fatal(err)
+	}
+	if err := cartm.Migrate(db); err != nil {
+		log.Fatal(err)
+	}
+	if err := addressm.Migrate(db); err != nil {
+		log.Fatal(err)
+	}
+	if err := orderm.Migrate(db); err != nil {
 		log.Fatal(err)
 	}
 }

@@ -406,6 +406,7 @@ func (c *CatalogController) CreateProduct(w http.ResponseWriter, r *http.Request
 
 	price, _ := strconv.ParseFloat(r.FormValue("price"), 64)
 	discount, _ := strconv.Atoi(r.FormValue("discount_pct"))
+	stock, _ := strconv.Atoi(r.FormValue("stock"))
 
 	req := api.CreateProductRequest{
 		Name:        r.FormValue("name"),
@@ -413,6 +414,7 @@ func (c *CatalogController) CreateProduct(w http.ResponseWriter, r *http.Request
 		StyleIDs:    r.FormValue("style_ids"),
 		Price:       price,
 		DiscountPct: discount,
+		Stock:       stock,
 		Color:       r.FormValue("color"),
 		AgeRange:    r.FormValue("age_range"),
 		Description: r.FormValue("description"),
@@ -499,23 +501,65 @@ func (c *CatalogController) GetProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary List Products
-// @Description Get all products
+// @Description Get all products with pagination
 // @Tags Catalog
 // @Produce json
-// @Success 200 {object} resp.Envelope{data=[]api.ProductResponse}
+// @Param page query int false "Page number (default: 1)"
+// @Param limit query int false "Items per page (default: 20, max: 100)"
+// @Success 200 {object} resp.Envelope{data=api.PaginatedProductResponse}
 // @Router /products [get]
 func (c *CatalogController) ListProducts(w http.ResponseWriter, r *http.Request) {
-	products, err := c.svc.ListProducts(r.Context())
+	// Parse query parameters
+	pageStr := r.URL.Query().Get("page")
+	limitStr := r.URL.Query().Get("limit")
+
+	page := 1
+	limit := 20
+
+	if pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+
+	}
+
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+		}
+	}
+
+	// Get paginated products
+	products, total, err := c.svc.ListProductsPaginated(r.Context(), page, limit)
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	var res []api.ProductResponse
+	// Convert to response DTOs
+	var productResponses []api.ProductResponse
 	for _, p := range products {
-		res = append(res, *toProductResponse(p))
+		productResponses = append(productResponses, *toProductResponse(p))
 	}
-	resp.OK(w, res)
+
+	// Calculate total pages
+	totalPages := int(total) / limit
+	if int(total)%limit != 0 {
+		totalPages++
+	}
+
+	// Build paginated response
+	paginatedResponse := api.PaginatedProductResponse{
+		Data: productResponses,
+		Meta: api.PaginationMeta{
+			CurrentPage: page,
+			PerPage:     limit,
+			Total:       total,
+			TotalPages:  totalPages,
+		},
+	}
+
+	resp.OK(w, paginatedResponse)
 }
 
 // @Summary Update Product
@@ -566,12 +610,22 @@ func (c *CatalogController) UpdateProduct(w http.ResponseWriter, r *http.Request
 		}
 	}
 
+	// Only parse stock if it's provided in the form
+	var stockPtr *int
+	if stockStr := r.FormValue("stock"); stockStr != "" {
+		stock, err := strconv.Atoi(stockStr)
+		if err == nil {
+			stockPtr = &stock
+		}
+	}
+
 	req := api.UpdateProductRequest{
 		Name:        r.FormValue("name"),
 		CategoryIDs: r.FormValue("category_ids"),
 		StyleIDs:    r.FormValue("style_ids"),
 		Price:       price,
 		DiscountPct: discountPtr,
+		Stock:       stockPtr,
 		Color:       r.FormValue("color"),
 		AgeRange:    r.FormValue("age_range"),
 		Description: r.FormValue("description"),
@@ -664,6 +718,7 @@ func toProductResponse(p *catalogEntities.Product) *api.ProductResponse {
 		Price:       p.Price,
 		DiscountPct: p.DiscountPct,
 		PriceAfter:  p.PriceAfter,
+		Stock:       p.Stock,
 		Color:       p.Color,
 		AgeRange:    p.AgeRange,
 		Description: p.Description,

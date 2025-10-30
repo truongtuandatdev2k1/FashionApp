@@ -88,6 +88,38 @@ func (r *productGormRepo) GetAll(ctx context.Context) ([]*entities.Product, erro
 	return productEntities, nil
 }
 
+func (r *productGormRepo) GetAllPaginated(ctx context.Context, page, limit int) ([]*entities.Product, int64, error) {
+	// Count total records
+	var total int64
+	if err := r.db.WithContext(ctx).Model(&ProductModel{}).Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	// Calculate offset
+	offset := (page - 1) * limit
+
+	// Fetch paginated products
+	var models []ProductModel
+	if err := r.db.WithContext(ctx).
+		Offset(offset).
+		Limit(limit).
+		Order("created_at DESC").
+		Find(&models).Error; err != nil {
+		return nil, 0, err
+	}
+
+	var productEntities []*entities.Product
+	for _, model := range models {
+		product, err := r.GetByID(ctx, model.ID) // Reuse GetByID to load relations
+		if err != nil {
+			return nil, 0, err
+		}
+		productEntities = append(productEntities, product)
+	}
+
+	return productEntities, total, nil
+}
+
 func (r *productGormRepo) Update(ctx context.Context, product *entities.Product) error {
 	model := ProductEntityToModel(product)
 	return r.db.WithContext(ctx).Model(&ProductModel{}).Where("id = ?", model.ID).Updates(model).Error
