@@ -28,7 +28,7 @@ type ProductRepository interface {
 	Create(ctx context.Context, product *entities.Product) error
 	GetByID(ctx context.Context, id uint) (*entities.Product, error)
 	GetAll(ctx context.Context) ([]*entities.Product, error)
-	GetAllPaginated(ctx context.Context, page, limit int) ([]*entities.Product, int64, error)
+	GetAllPaginated(ctx context.Context, filter string, page, limit int) ([]*entities.Product, int64, error)
 	Update(ctx context.Context, product *entities.Product) error
 	Delete(ctx context.Context, id uint) error
 	CreateImage(ctx context.Context, image *entities.ProductImage) error

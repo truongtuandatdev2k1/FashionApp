@@ -444,6 +444,75 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/promotions": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "(Admin) Tạo một chương trình khuyến mãi mới",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Promotion"
+                ],
+                "summary": "Create Promotion",
+                "parameters": [
+                    {
+                        "description": "Thông tin khuyến mãi",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreatePromotionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.PromotionResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/google": {
             "post": {
                 "description": "Xác thực Google ID Token; nếu chưa có user thì tạo (role=customer)",
@@ -1719,57 +1788,13 @@ const docTemplate = `{
             }
         },
         "/products": {
-            "get": {
-                "description": "Get all products with pagination",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Catalog"
-                ],
-                "summary": "List Products",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Page number (default: 1)",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Items per page (default: 20, max: 100)",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/resp.Envelope"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/api.PaginatedProductResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    }
-                }
-            },
             "post": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Create a new product with images (Shop only). Use multipart/form-data. For 'other_images', you can select multiple files at once or add the field multiple times in your HTTP client.",
+                "description": "Create a new product. Supports uploading images via file or providing image URLs.\nAt least one of ` + "`" + `background_image` + "`" + ` (file) or ` + "`" + `background_image_url` + "`" + ` (text) is required.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1811,6 +1836,13 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "description": "Stock quantity",
+                        "name": "stock",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
                         "description": "Discount Percentage",
                         "name": "discount_pct",
                         "in": "formData"
@@ -1834,11 +1866,22 @@ const docTemplate = `{
                         "in": "formData"
                     },
                     {
+                        "type": "boolean",
+                        "description": "Mark as a hot trend product",
+                        "name": "is_hot_trend",
+                        "in": "formData"
+                    },
+                    {
                         "type": "file",
-                        "description": "Background image for the product (image_url)",
+                        "description": "Background image file (required if URL is not provided)",
                         "name": "background_image",
-                        "in": "formData",
-                        "required": true
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Background image URL (required if file is not provided)",
+                        "name": "background_image_url",
+                        "in": "formData"
                     },
                     {
                         "type": "array",
@@ -1846,8 +1889,14 @@ const docTemplate = `{
                             "type": "file"
                         },
                         "collectionFormat": "multi",
-                        "description": "Other related images (can upload multiple files)",
+                        "description": "Other image files (can be combined with URLs)",
                         "name": "other_images",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Other image URLs (comma-separated)",
+                        "name": "other_image_urls",
                         "in": "formData"
                     }
                 ],
@@ -1880,6 +1929,51 @@ const docTemplate = `{
                         "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/list": {
+            "post": {
+                "description": "Lấy danh sách sản phẩm với phân trang và bộ lọc.\nFilter options: ` + "`" + `all` + "`" + `, ` + "`" + `bestseller` + "`" + `, ` + "`" + `new` + "`" + `, ` + "`" + `hottrend` + "`" + `.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Catalog"
+                ],
+                "summary": "List Products",
+                "parameters": [
+                    {
+                        "description": "Tùy chọn phân trang và bộ lọc. Để trống body để dùng giá trị mặc định.",
+                        "name": "body",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/api.ProductListRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.PaginatedProductResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -1937,7 +2031,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Update a product (Shop only). Use multipart/form-data.",
+                "description": "Update a product. Supports uploading images via file or providing image URLs.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -1982,6 +2076,12 @@ const docTemplate = `{
                     },
                     {
                         "type": "integer",
+                        "description": "Stock quantity",
+                        "name": "stock",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
                         "description": "Discount Percentage",
                         "name": "discount_pct",
                         "in": "formData"
@@ -2002,6 +2102,40 @@ const docTemplate = `{
                         "type": "string",
                         "description": "Product Description",
                         "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Set as hot trend (true/false)",
+                        "name": "is_hot_trend",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "New background image file (optional)",
+                        "name": "background_image",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "New background image URL (optional)",
+                        "name": "background_image_url",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "file"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "New other image files (optional)",
+                        "name": "other_images",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "New other image URLs (comma-separated, optional)",
+                        "name": "other_image_urls",
                         "in": "formData"
                     }
                 ],
@@ -2124,9 +2258,9 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Tạo hoặc cập nhật hồ sơ cho người dùng hiện đang được xác thực. Nội dung yêu cầu phải chứa đối tượng 'khách hàng' hoặc 'cửa hàng', tùy thuộc vào vai trò của người dùng.",
+                "description": "Tạo hoặc cập nhật hồ sơ. Hỗ trợ upload avatar qua file (multipart/form-data) hoặc URL (form field).",
                 "consumes": [
-                    "application/json"
+                    "multipart/form-data"
                 ],
                 "produces": [
                     "application/json"
@@ -2137,13 +2271,46 @@ const docTemplate = `{
                 "summary": "Upsert my profile",
                 "parameters": [
                     {
-                        "description": "Profile data",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.UpsertProfileRequest"
-                        }
+                        "type": "string",
+                        "description": "(Customer) Tên đầy đủ",
+                        "name": "full_name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "(Customer) Tuổi",
+                        "name": "age",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "(Customer) Giới tính",
+                        "name": "gender",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Địa chỉ (chung cho Customer và Shop)",
+                        "name": "address",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "(Shop) Tên cửa hàng",
+                        "name": "shop_name",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "File ảnh avatar để tải lên",
+                        "name": "avatar",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL ảnh avatar (nếu không tải file)",
+                        "name": "img_url",
+                        "in": "formData"
                     }
                 ],
                 "responses": {
@@ -2151,6 +2318,69 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/promotions/validate": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "(Customer) Kiểm tra và tính toán giá trị của một hoặc nhiều mã khuyến mãi",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Promotion"
+                ],
+                "summary": "Validate Promotions",
+                "parameters": [
+                    {
+                        "description": "Thông tin mã và đơn hàng",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ValidatePromotionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.ValidatePromotionResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2734,6 +2964,20 @@ const docTemplate = `{
                 }
             }
         },
+        "api.AppliedPromotion": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "discount_amount": {
+                    "type": "number"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CartItemResponse": {
             "type": "object",
             "properties": {
@@ -2912,6 +3156,111 @@ const docTemplate = `{
                 }
             }
         },
+        "api.CreatePromotionRequest": {
+            "type": "object",
+            "required": [
+                "code",
+                "end_date",
+                "name",
+                "start_date",
+                "target_group",
+                "type",
+                "value"
+            ],
+            "properties": {
+                "applicable_tiers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "gold",
+                        "silver"
+                    ]
+                },
+                "applicable_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    },
+                    "example": [
+                        101,
+                        102
+                    ]
+                },
+                "code": {
+                    "type": "string",
+                    "example": "SALE50"
+                },
+                "description": {
+                    "type": "string",
+                    "example": "Áp dụng cho tất cả sản phẩm, trừ hàng mới về."
+                },
+                "end_date": {
+                    "type": "string",
+                    "example": "2025-11-30T23:59:59Z"
+                },
+                "is_active": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "is_stackable": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "max_discount": {
+                    "type": "number",
+                    "example": 100000
+                },
+                "min_order_value": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 500000
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Giảm 50k cho đơn hàng trên 500k"
+                },
+                "start_date": {
+                    "type": "string",
+                    "example": "2025-11-01T00:00:00Z"
+                },
+                "target_group": {
+                    "type": "string",
+                    "enum": [
+                        "all",
+                        "new_customer",
+                        "specific_users",
+                        "customer_tier"
+                    ],
+                    "example": "all, new_customer, specific_users, customer_tier"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "order_fixed",
+                        "order_percentage",
+                        "shipping_fixed",
+                        "free_shipping"
+                    ],
+                    "example": "order_fixed, order_percentage, shipping_fixed, free_shipping"
+                },
+                "usage_limit": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1000
+                },
+                "user_usage_limit": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "example": 1
+                },
+                "value": {
+                    "type": "number",
+                    "example": 50000
+                }
+            }
+        },
         "api.CreateStyleRequest": {
             "type": "object",
             "required": [
@@ -2923,33 +3272,21 @@ const docTemplate = `{
                 }
             }
         },
-        "api.CustomerUpsert": {
-            "type": "object",
-            "required": [
-                "address",
-                "age",
-                "full_name",
-                "gender"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "age": {
-                    "type": "integer"
-                },
-                "full_name": {
-                    "type": "string"
-                },
-                "gender": {
-                    "type": "string"
-                }
-            }
-        },
         "api.GoogleLoginRequest": {
             "type": "object",
             "properties": {
                 "idToken": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.InvalidPromotion": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "reason": {
                     "type": "string"
                 }
             }
@@ -2977,7 +3314,7 @@ const docTemplate = `{
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.ProductResponse"
+                        "$ref": "#/definitions/api.ProductSummaryResponse"
                     }
                 },
                 "meta": {
@@ -3030,6 +3367,21 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "stock": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.ProductListRequest": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "description": "all, bestseller, new, hottrend",
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
                     "type": "integer"
                 }
             }
@@ -3093,6 +3445,117 @@ const docTemplate = `{
                 }
             }
         },
+        "api.ProductSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "discount_pct": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "price_after": {
+                    "type": "number"
+                }
+            }
+        },
+        "api.PromotionResponse": {
+            "type": "object",
+            "properties": {
+                "applicable_tiers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "applicable_users": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "code": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "end_date": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "is_stackable": {
+                    "type": "boolean"
+                },
+                "max_discount": {
+                    "type": "number"
+                },
+                "min_order_value": {
+                    "type": "number"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "target_group": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "usage_count": {
+                    "type": "integer"
+                },
+                "usage_limit": {
+                    "type": "integer"
+                },
+                "user_usage_limit": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "api.PromotionSummary": {
+            "type": "object",
+            "properties": {
+                "final_amount": {
+                    "type": "number"
+                },
+                "order_subtotal": {
+                    "type": "number"
+                },
+                "total_order_discount": {
+                    "type": "number"
+                },
+                "total_shipping_discount": {
+                    "type": "number"
+                }
+            }
+        },
         "api.RefreshRequest": {
             "type": "object",
             "properties": {
@@ -3122,21 +3585,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "phone_number": {
-                    "type": "string"
-                }
-            }
-        },
-        "api.ShopUpsert": {
-            "type": "object",
-            "required": [
-                "address",
-                "shop_name"
-            ],
-            "properties": {
-                "address": {
-                    "type": "string"
-                },
-                "shop_name": {
                     "type": "string"
                 }
             }
@@ -3224,14 +3672,52 @@ const docTemplate = `{
                 }
             }
         },
-        "api.UpsertProfileRequest": {
+        "api.ValidatePromotionRequest": {
+            "type": "object",
+            "required": [
+                "codes"
+            ],
+            "properties": {
+                "codes": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "SALE50",
+                        "FREESHIP"
+                    ]
+                },
+                "order_subtotal": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 600000
+                },
+                "shipping_fee": {
+                    "type": "number",
+                    "minimum": 0,
+                    "example": 30000
+                }
+            }
+        },
+        "api.ValidatePromotionResponse": {
             "type": "object",
             "properties": {
-                "customer": {
-                    "$ref": "#/definitions/api.CustomerUpsert"
+                "applied_promotions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.AppliedPromotion"
+                    }
                 },
-                "shop": {
-                    "$ref": "#/definitions/api.ShopUpsert"
+                "invalid_promotions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.InvalidPromotion"
+                    }
+                },
+                "summary": {
+                    "$ref": "#/definitions/api.PromotionSummary"
                 }
             }
         },

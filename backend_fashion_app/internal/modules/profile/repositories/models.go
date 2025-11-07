@@ -6,6 +6,8 @@ type CustomerProfileModel struct {
 	Age      int
 	Gender   string `gorm:"size:10"`
 	Address  string `gorm:"size:255"`
+	Tier     string `gorm:"size:50;default:'bronze'"` // Hạng thành viên: bronze, silver, gold
+	ImgURL   string `gorm:"size:500"`
 }
 
 func (CustomerProfileModel) TableName() string { return "customer_profiles" }
@@ -14,6 +16,7 @@ type ShopProfileModel struct {
 	UserID   uint   `gorm:"primaryKey"`
 	ShopName string `gorm:"size:255"`
 	Address  string `gorm:"size:255"`
+	ImgURL   string `gorm:"size:500"`
 }
 
 func (ShopProfileModel) TableName() string { return "shop_profiles" }

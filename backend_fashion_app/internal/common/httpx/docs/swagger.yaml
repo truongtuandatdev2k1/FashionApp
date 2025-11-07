@@ -218,6 +218,15 @@ definitions:
       ward:
         type: string
     type: object
+  api.AppliedPromotion:
+    properties:
+      code:
+        type: string
+      discount_amount:
+        type: number
+      type:
+        type: string
+    type: object
   api.CartItemResponse:
     properties:
       created_at:
@@ -339,6 +348,86 @@ definitions:
     required:
     - name
     type: object
+  api.CreatePromotionRequest:
+    properties:
+      applicable_tiers:
+        example:
+        - gold
+        - silver
+        items:
+          type: string
+        type: array
+      applicable_users:
+        example:
+        - 101
+        - 102
+        items:
+          type: integer
+        type: array
+      code:
+        example: SALE50
+        type: string
+      description:
+        example: Áp dụng cho tất cả sản phẩm, trừ hàng mới về.
+        type: string
+      end_date:
+        example: "2025-11-30T23:59:59Z"
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      is_stackable:
+        example: false
+        type: boolean
+      max_discount:
+        example: 100000
+        type: number
+      min_order_value:
+        example: 500000
+        minimum: 0
+        type: number
+      name:
+        example: Giảm 50k cho đơn hàng trên 500k
+        type: string
+      start_date:
+        example: "2025-11-01T00:00:00Z"
+        type: string
+      target_group:
+        enum:
+        - all
+        - new_customer
+        - specific_users
+        - customer_tier
+        example: all, new_customer, specific_users, customer_tier
+        type: string
+      type:
+        enum:
+        - order_fixed
+        - order_percentage
+        - shipping_fixed
+        - free_shipping
+        example: order_fixed, order_percentage, shipping_fixed, free_shipping
+        type: string
+      usage_limit:
+        example: 1000
+        minimum: 0
+        type: integer
+      user_usage_limit:
+        example: 1
+        minimum: 0
+        type: integer
+      value:
+        example: 50000
+        type: number
+    required:
+    - code
+    - end_date
+    - name
+    - start_date
+    - target_group
+    - type
+    - value
+    type: object
   api.CreateStyleRequest:
     properties:
       name:
@@ -346,25 +435,16 @@ definitions:
     required:
     - name
     type: object
-  api.CustomerUpsert:
-    properties:
-      address:
-        type: string
-      age:
-        type: integer
-      full_name:
-        type: string
-      gender:
-        type: string
-    required:
-    - address
-    - age
-    - full_name
-    - gender
-    type: object
   api.GoogleLoginRequest:
     properties:
       idToken:
+        type: string
+    type: object
+  api.InvalidPromotion:
+    properties:
+      code:
+        type: string
+      reason:
         type: string
     type: object
   api.LoginRequest:
@@ -383,7 +463,7 @@ definitions:
     properties:
       data:
         items:
-          $ref: '#/definitions/api.ProductResponse'
+          $ref: '#/definitions/api.ProductSummaryResponse'
         type: array
       meta:
         $ref: '#/definitions/api.PaginationMeta'
@@ -418,6 +498,16 @@ definitions:
       name:
         type: string
       stock:
+        type: integer
+    type: object
+  api.ProductListRequest:
+    properties:
+      filter:
+        description: all, bestseller, new, hottrend
+        type: string
+      limit:
+        type: integer
+      page:
         type: integer
     type: object
   api.ProductResponse:
@@ -459,6 +549,79 @@ definitions:
       updated_at:
         type: string
     type: object
+  api.ProductSummaryResponse:
+    properties:
+      discount_pct:
+        type: integer
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      price_after:
+        type: number
+    type: object
+  api.PromotionResponse:
+    properties:
+      applicable_tiers:
+        items:
+          type: string
+        type: array
+      applicable_users:
+        items:
+          type: integer
+        type: array
+      code:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      end_date:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      is_stackable:
+        type: boolean
+      max_discount:
+        type: number
+      min_order_value:
+        type: number
+      name:
+        type: string
+      start_date:
+        type: string
+      target_group:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
+      usage_count:
+        type: integer
+      usage_limit:
+        type: integer
+      user_usage_limit:
+        type: integer
+      value:
+        type: number
+    type: object
+  api.PromotionSummary:
+    properties:
+      final_amount:
+        type: number
+      order_subtotal:
+        type: number
+      total_order_discount:
+        type: number
+      total_shipping_discount:
+        type: number
+    type: object
   api.RefreshRequest:
     properties:
       refreshToken:
@@ -481,16 +644,6 @@ definitions:
     - email
     - password
     - phone_number
-    type: object
-  api.ShopUpsert:
-    properties:
-      address:
-        type: string
-      shop_name:
-        type: string
-    required:
-    - address
-    - shop_name
     type: object
   api.StyleResponse:
     properties:
@@ -545,12 +698,39 @@ definitions:
     required:
     - name
     type: object
-  api.UpsertProfileRequest:
+  api.ValidatePromotionRequest:
     properties:
-      customer:
-        $ref: '#/definitions/api.CustomerUpsert'
-      shop:
-        $ref: '#/definitions/api.ShopUpsert'
+      codes:
+        example:
+        - SALE50
+        - FREESHIP
+        items:
+          type: string
+        minItems: 1
+        type: array
+      order_subtotal:
+        example: 600000
+        minimum: 0
+        type: number
+      shipping_fee:
+        example: 30000
+        minimum: 0
+        type: number
+    required:
+    - codes
+    type: object
+  api.ValidatePromotionResponse:
+    properties:
+      applied_promotions:
+        items:
+          $ref: '#/definitions/api.AppliedPromotion'
+        type: array
+      invalid_promotions:
+        items:
+          $ref: '#/definitions/api.InvalidPromotion'
+        type: array
+      summary:
+        $ref: '#/definitions/api.PromotionSummary'
     type: object
   entities.AddressType:
     enum:
@@ -836,6 +1016,47 @@ paths:
       summary: Get default address
       tags:
       - Address
+  /admin/promotions:
+    post:
+      consumes:
+      - application/json
+      description: (Admin) Tạo một chương trình khuyến mãi mới
+      parameters:
+      - description: Thông tin khuyến mãi
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreatePromotionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.PromotionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create Promotion
+      tags:
+      - Promotion
   /auth/google:
     post:
       consumes:
@@ -1616,38 +1837,12 @@ paths:
       tags:
       - Order
   /products:
-    get:
-      description: Get all products with pagination
-      parameters:
-      - description: 'Page number (default: 1)'
-        in: query
-        name: page
-        type: integer
-      - description: 'Items per page (default: 20, max: 100)'
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/resp.Envelope'
-            - properties:
-                data:
-                  $ref: '#/definitions/api.PaginatedProductResponse'
-              type: object
-      summary: List Products
-      tags:
-      - Catalog
     post:
       consumes:
       - multipart/form-data
-      description: Create a new product with images (Shop only). Use multipart/form-data.
-        For 'other_images', you can select multiple files at once or add the field
-        multiple times in your HTTP client.
+      description: |-
+        Create a new product. Supports uploading images via file or providing image URLs.
+        At least one of `background_image` (file) or `background_image_url` (text) is required.
       parameters:
       - description: Product Name
         in: formData
@@ -1669,6 +1864,11 @@ paths:
         name: price
         required: true
         type: number
+      - description: Stock quantity
+        in: formData
+        name: stock
+        required: true
+        type: integer
       - description: Discount Percentage
         in: formData
         name: discount_pct
@@ -1685,18 +1885,29 @@ paths:
         in: formData
         name: description
         type: string
-      - description: Background image for the product (image_url)
+      - description: Mark as a hot trend product
+        in: formData
+        name: is_hot_trend
+        type: boolean
+      - description: Background image file (required if URL is not provided)
         in: formData
         name: background_image
-        required: true
         type: file
+      - description: Background image URL (required if file is not provided)
+        in: formData
+        name: background_image_url
+        type: string
       - collectionFormat: multi
-        description: Other related images (can upload multiple files)
+        description: Other image files (can be combined with URLs)
         in: formData
         items:
           type: file
         name: other_images
         type: array
+      - description: Other image URLs (comma-separated)
+        in: formData
+        name: other_image_urls
+        type: string
       produces:
       - application/json
       responses:
@@ -1781,7 +1992,8 @@ paths:
     put:
       consumes:
       - multipart/form-data
-      description: Update a product (Shop only). Use multipart/form-data.
+      description: Update a product. Supports uploading images via file or providing
+        image URLs.
       parameters:
       - description: Product ID
         in: path
@@ -1804,6 +2016,10 @@ paths:
         in: formData
         name: price
         type: number
+      - description: Stock quantity
+        in: formData
+        name: stock
+        type: integer
       - description: Discount Percentage
         in: formData
         name: discount_pct
@@ -1819,6 +2035,29 @@ paths:
       - description: Product Description
         in: formData
         name: description
+        type: string
+      - description: Set as hot trend (true/false)
+        in: formData
+        name: is_hot_trend
+        type: boolean
+      - description: New background image file (optional)
+        in: formData
+        name: background_image
+        type: file
+      - description: New background image URL (optional)
+        in: formData
+        name: background_image_url
+        type: string
+      - collectionFormat: multi
+        description: New other image files (optional)
+        in: formData
+        items:
+          type: file
+        name: other_images
+        type: array
+      - description: New other image URLs (comma-separated, optional)
+        in: formData
+        name: other_image_urls
         type: string
       produces:
       - application/json
@@ -1849,6 +2088,35 @@ paths:
       summary: Update Product
       tags:
       - Catalog
+  /products/list:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Lấy danh sách sản phẩm với phân trang và bộ lọc.
+        Filter options: `all`, `bestseller`, `new`, `hottrend`.
+      parameters:
+      - description: Tùy chọn phân trang và bộ lọc. Để trống body để dùng giá trị
+          mặc định.
+        in: body
+        name: body
+        schema:
+          $ref: '#/definitions/api.ProductListRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.PaginatedProductResponse'
+              type: object
+      summary: List Products
+      tags:
+      - Catalog
   /profiles/me:
     get:
       produces:
@@ -1869,17 +2137,38 @@ paths:
       - Profile
     put:
       consumes:
-      - application/json
-      description: Tạo hoặc cập nhật hồ sơ cho người dùng hiện đang được xác thực.
-        Nội dung yêu cầu phải chứa đối tượng 'khách hàng' hoặc 'cửa hàng', tùy thuộc
-        vào vai trò của người dùng.
+      - multipart/form-data
+      description: Tạo hoặc cập nhật hồ sơ. Hỗ trợ upload avatar qua file (multipart/form-data)
+        hoặc URL (form field).
       parameters:
-      - description: Profile data
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/api.UpsertProfileRequest'
+      - description: (Customer) Tên đầy đủ
+        in: formData
+        name: full_name
+        type: string
+      - description: (Customer) Tuổi
+        in: formData
+        name: age
+        type: integer
+      - description: (Customer) Giới tính
+        in: formData
+        name: gender
+        type: string
+      - description: Địa chỉ (chung cho Customer và Shop)
+        in: formData
+        name: address
+        type: string
+      - description: (Shop) Tên cửa hàng
+        in: formData
+        name: shop_name
+        type: string
+      - description: File ảnh avatar để tải lên
+        in: formData
+        name: avatar
+        type: file
+      - description: URL ảnh avatar (nếu không tải file)
+        in: formData
+        name: img_url
+        type: string
       produces:
       - application/json
       responses:
@@ -1900,6 +2189,44 @@ paths:
       summary: Upsert my profile
       tags:
       - Profile
+  /promotions/validate:
+    post:
+      consumes:
+      - application/json
+      description: (Customer) Kiểm tra và tính toán giá trị của một hoặc nhiều mã
+        khuyến mãi
+      parameters:
+      - description: Thông tin mã và đơn hàng
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.ValidatePromotionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.ValidatePromotionResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Validate Promotions
+      tags:
+      - Promotion
   /styles:
     get:
       description: Get all styles

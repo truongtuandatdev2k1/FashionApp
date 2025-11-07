@@ -373,7 +373,8 @@ func (c *CatalogController) DeleteStyle(w http.ResponseWriter, r *http.Request) 
 // --- Product Handlers ---
 
 // @Summary Create Product
-// @Description Create a new product with images (Shop only). Use multipart/form-data. For 'other_images', you can select multiple files at once or add the field multiple times in your HTTP client.
+// @Description Create a new product. Supports uploading images via file or providing image URLs.
+// @Description At least one of `background_image` (file) or `background_image_url` (text) is required.
 // @Security Bearer
 // @Tags Catalog
 // @Accept multipart/form-data
@@ -382,12 +383,16 @@ func (c *CatalogController) DeleteStyle(w http.ResponseWriter, r *http.Request) 
 // @Param category_ids formData string true "Comma-separated category IDs (e.g., '1,2')"
 // @Param style_ids formData string true "Comma-separated style IDs (e.g., '3,4')"
 // @Param price formData number true "Product Price"
+// @Param stock formData integer true "Stock quantity"
 // @Param discount_pct formData integer false "Discount Percentage"
 // @Param color formData string false "Product Color"
 // @Param age_range formData string false "Age Range"
 // @Param description formData string false "Product Description"
-// @Param background_image formData file true "Background image for the product (image_url)"
-// @Param other_images formData []file false "Other related images (can upload multiple files)" collectionFormat(multi)
+// @Param is_hot_trend formData boolean false "Mark as a hot trend product"
+// @Param background_image formData file false "Background image file (required if URL is not provided)"
+// @Param background_image_url formData string false "Background image URL (required if file is not provided)"
+// @Param other_images formData []file false "Other image files (can be combined with URLs)" collectionFormat(multi)
+// @Param other_image_urls formData string false "Other image URLs (comma-separated)"
 // @Success 201 {object} resp.Envelope{data=api.ProductResponse}
 // @Failure 400 {object} resp.Envelope
 // @Failure 403 {object} resp.Envelope
@@ -407,17 +412,21 @@ func (c *CatalogController) CreateProduct(w http.ResponseWriter, r *http.Request
 	price, _ := strconv.ParseFloat(r.FormValue("price"), 64)
 	discount, _ := strconv.Atoi(r.FormValue("discount_pct"))
 	stock, _ := strconv.Atoi(r.FormValue("stock"))
+	isHotTrend, _ := strconv.ParseBool(r.FormValue("is_hot_trend"))
 
 	req := api.CreateProductRequest{
-		Name:        r.FormValue("name"),
-		CategoryIDs: r.FormValue("category_ids"),
-		StyleIDs:    r.FormValue("style_ids"),
-		Price:       price,
-		DiscountPct: discount,
-		Stock:       stock,
-		Color:       r.FormValue("color"),
-		AgeRange:    r.FormValue("age_range"),
-		Description: r.FormValue("description"),
+		Name:               r.FormValue("name"),
+		CategoryIDs:        r.FormValue("category_ids"),
+		StyleIDs:           r.FormValue("style_ids"),
+		Price:              price,
+		DiscountPct:        discount,
+		Stock:              stock,
+		Color:              r.FormValue("color"),
+		AgeRange:           r.FormValue("age_range"),
+		Description:        r.FormValue("description"),
+		IsHotTrend:         isHotTrend,
+		BackgroundImageURL: r.FormValue("background_image_url"),
+		OtherImageURLs:     r.FormValue("other_image_urls"),
 	}
 
 	// Create product first to get an ID
@@ -432,29 +441,45 @@ func (c *CatalogController) CreateProduct(w http.ResponseWriter, r *http.Request
 	var backgroundURL string
 	var otherImageURLs []string
 
-	// Handle background image
-	bgImages, ok := form.File["background_image"]
-	if !ok || len(bgImages) == 0 {
-		resp.Error(w, http.StatusBadRequest, "background_image is required")
-		return
+	// 1. Handle Background Image (ưu tiên URL)
+	backgroundURL = r.FormValue("background_image_url")
+	if backgroundURL == "" {
+		// Nếu không có URL, kiểm tra file tải lên
+		bgImages, ok := form.File["background_image"]
+		if !ok || len(bgImages) == 0 {
+			resp.Error(w, http.StatusBadRequest, "background_image file or background_image_url is required")
+			return
+		}
+		savedURL, err := c.saveUploadedFile(bgImages[0])
+		if err != nil {
+			resp.Error(w, http.StatusInternalServerError, "failed to save background image")
+			return
+		}
+		backgroundURL = savedURL
 	}
-	bgURL, err := c.saveUploadedFile(bgImages[0])
-	if err != nil {
-		resp.Error(w, http.StatusInternalServerError, "failed to save background image")
-		return
-	}
-	backgroundURL = bgURL
 
-	// Handle other images
-	otherImages, ok := form.File["other_images"]
+	// 2. Handle Other Images (cả URL và file)
+	// Từ trường URL (cách nhau bằng dấu phẩy)
+	otherImageURLsRaw := r.FormValue("other_image_urls")
+	if otherImageURLsRaw != "" {
+		urls := strings.Split(otherImageURLsRaw, ",")
+		for _, u := range urls {
+			if trimmed := strings.TrimSpace(u); trimmed != "" {
+				otherImageURLs = append(otherImageURLs, trimmed)
+			}
+		}
+	}
+
+	// Từ file tải lên
+	otherImagesFiles, ok := form.File["other_images"]
 	if ok {
-		for _, fileHeader := range otherImages {
-			url, err := c.saveUploadedFile(fileHeader)
+		for _, fileHeader := range otherImagesFiles {
+			savedURL, err := c.saveUploadedFile(fileHeader)
 			if err != nil {
 				fmt.Printf("failed to save file %s: %v\n", fileHeader.Filename, err)
-				continue
+				continue // Bỏ qua nếu có lỗi
 			}
-			otherImageURLs = append(otherImageURLs, url)
+			otherImageURLs = append(otherImageURLs, savedURL)
 		}
 	}
 
@@ -501,59 +526,56 @@ func (c *CatalogController) GetProduct(w http.ResponseWriter, r *http.Request) {
 }
 
 // @Summary List Products
-// @Description Get all products with pagination
+// @Description Lấy danh sách sản phẩm với phân trang và bộ lọc.
+// @Description Filter options: `all`, `bestseller`, `new`, `hottrend`.
 // @Tags Catalog
+// @Accept json
 // @Produce json
-// @Param page query int false "Page number (default: 1)"
-// @Param limit query int false "Items per page (default: 20, max: 100)"
+// @Param body body api.ProductListRequest false "Tùy chọn phân trang và bộ lọc. Để trống body để dùng giá trị mặc định."
 // @Success 200 {object} resp.Envelope{data=api.PaginatedProductResponse}
-// @Router /products [get]
+// @Router /products/list [post]
 func (c *CatalogController) ListProducts(w http.ResponseWriter, r *http.Request) {
-	// Parse query parameters
-	pageStr := r.URL.Query().Get("page")
-	limitStr := r.URL.Query().Get("limit")
+	var req api.ProductListRequest
 
-	page := 1
-	limit := 20
-
-	if pageStr != "" {
-		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-			page = p
-		}
-
-	}
-
-	if limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
-			limit = l
+	// Decode request body. Nếu body rỗng hoặc sai định dạng, sẽ dùng giá trị mặc định.
+	if r.Body != http.NoBody {
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil && err != io.EOF {
+			resp.Error(w, http.StatusBadRequest, "invalid request body")
+			return
 		}
 	}
 
-	// Get paginated products
-	products, total, err := c.svc.ListProductsPaginated(r.Context(), page, limit)
+	// Lấy sản phẩm đã phân trang và lọc
+	products, total, err := c.svc.ListProductsPaginated(r.Context(), req.Filter, req.Page, req.Limit)
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	// Convert to response DTOs
-	var productResponses []api.ProductResponse
-	for _, p := range products {
-		productResponses = append(productResponses, *toProductResponse(p))
+	// Chuyển đổi sang DTO rút gọn
+	productSummaries := make([]api.ProductSummaryResponse, len(products))
+	for i, p := range products {
+		productSummaries[i] = toProductSummaryResponse(p)
 	}
 
-	// Calculate total pages
-	totalPages := int(total) / limit
-	if int(total)%limit != 0 {
-		totalPages++
+	// Lấy giá trị limit thực tế từ service (vì có giá trị mặc định)
+	finalLimit := req.Limit
+	if finalLimit <= 0 {
+		finalLimit = 20
+	}
+
+	// Tính toán tổng số trang
+	totalPages := 0
+	if total > 0 {
+		totalPages = int(total-1)/finalLimit + 1
 	}
 
 	// Build paginated response
 	paginatedResponse := api.PaginatedProductResponse{
-		Data: productResponses,
+		Data: productSummaries,
 		Meta: api.PaginationMeta{
-			CurrentPage: page,
-			PerPage:     limit,
+			CurrentPage: req.Page,
+			PerPage:     finalLimit,
 			Total:       total,
 			TotalPages:  totalPages,
 		},
@@ -562,8 +584,20 @@ func (c *CatalogController) ListProducts(w http.ResponseWriter, r *http.Request)
 	resp.OK(w, paginatedResponse)
 }
 
+// toProductSummaryResponse là một mapper helper để chuyển đổi entity Product sang DTO rút gọn
+func toProductSummaryResponse(p *catalogEntities.Product) api.ProductSummaryResponse {
+	return api.ProductSummaryResponse{
+		ID:          p.ID,
+		Name:        p.Name,
+		Price:       p.Price,
+		DiscountPct: p.DiscountPct,
+		PriceAfter:  p.PriceAfter,
+		ImageURL:    p.ImageURL,
+	}
+}
+
 // @Summary Update Product
-// @Description Update a product (Shop only). Use multipart/form-data.
+// @Description Update a product. Supports uploading images via file or providing image URLs.
 // @Security Bearer
 // @Tags Catalog
 // @Accept multipart/form-data
@@ -573,10 +607,16 @@ func (c *CatalogController) ListProducts(w http.ResponseWriter, r *http.Request)
 // @Param category_ids formData string false "Comma-separated category IDs"
 // @Param style_ids formData string false "Comma-separated style IDs"
 // @Param price formData number false "Product Price"
+// @Param stock formData integer false "Stock quantity"
 // @Param discount_pct formData integer false "Discount Percentage"
 // @Param color formData string false "Product Color"
 // @Param age_range formData string false "Age Range"
 // @Param description formData string false "Product Description"
+// @Param is_hot_trend formData boolean false "Set as hot trend (true/false)"
+// @Param background_image formData file false "New background image file (optional)"
+// @Param background_image_url formData string false "New background image URL (optional)"
+// @Param other_images formData []file false "New other image files (optional)" collectionFormat(multi)
+// @Param other_image_urls formData string false "New other image URLs (comma-separated, optional)"
 // @Success 200 {object} resp.Envelope{data=api.ProductResponse}
 // @Failure 400 {object} resp.Envelope
 // @Failure 403 {object} resp.Envelope
@@ -619,6 +659,14 @@ func (c *CatalogController) UpdateProduct(w http.ResponseWriter, r *http.Request
 		}
 	}
 
+	var isHotTrendPtr *bool
+	if isHotTrendStr := r.FormValue("is_hot_trend"); isHotTrendStr != "" {
+		isHotTrend, err := strconv.ParseBool(isHotTrendStr)
+		if err == nil {
+			isHotTrendPtr = &isHotTrend
+		}
+	}
+
 	req := api.UpdateProductRequest{
 		Name:        r.FormValue("name"),
 		CategoryIDs: r.FormValue("category_ids"),
@@ -626,11 +674,58 @@ func (c *CatalogController) UpdateProduct(w http.ResponseWriter, r *http.Request
 		Price:       price,
 		DiscountPct: discountPtr,
 		Stock:       stockPtr,
+		IsHotTrend:  isHotTrendPtr,
 		Color:       r.FormValue("color"),
 		AgeRange:    r.FormValue("age_range"),
 		Description: r.FormValue("description"),
 	}
 
+	// --- Image Handling for Update ---
+	form := r.MultipartForm
+	var backgroundURL string
+	var otherImageURLs []string
+
+	// 1. Handle Background Image (ưu tiên URL)
+	backgroundURL = r.FormValue("background_image_url")
+	if backgroundURL == "" {
+		// Nếu không có URL, kiểm tra file tải lên
+		bgImages, ok := form.File["background_image"]
+		if ok && len(bgImages) > 0 {
+			savedURL, err := c.saveUploadedFile(bgImages[0])
+			if err != nil {
+				resp.Error(w, http.StatusInternalServerError, "failed to save background image")
+				return
+			}
+			backgroundURL = savedURL
+		}
+	}
+	// Gán URL ảnh nền vào request update
+	req.BackgroundImageURL = backgroundURL
+
+	// 2. Handle Other Images (cả URL và file)
+	otherImageURLsRaw := r.FormValue("other_image_urls")
+	if otherImageURLsRaw != "" {
+		urls := strings.Split(otherImageURLsRaw, ",")
+		for _, u := range urls {
+			if trimmed := strings.TrimSpace(u); trimmed != "" {
+				otherImageURLs = append(otherImageURLs, trimmed)
+			}
+		}
+	}
+
+	otherImagesFiles, ok := form.File["other_images"]
+	if ok {
+		for _, fileHeader := range otherImagesFiles {
+			savedURL, err := c.saveUploadedFile(fileHeader)
+			if err != nil {
+				fmt.Printf("failed to save file %s: %v\n", fileHeader.Filename, err)
+				continue
+			}
+			otherImageURLs = append(otherImageURLs, savedURL)
+		}
+	}
+
+	// 3. Update product details first
 	product, err := c.svc.UpdateProduct(r.Context(), id, req)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
@@ -641,7 +736,23 @@ func (c *CatalogController) UpdateProduct(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	resp.OK(w, toProductResponse(product))
+	// 4. Add new images if any
+	if len(otherImageURLs) > 0 {
+		_, err := c.svc.AddProductImages(r.Context(), product.ID, otherImageURLs)
+		if err != nil {
+			resp.Error(w, http.StatusInternalServerError, "failed to save additional product images")
+			return
+		}
+	}
+
+	// 5. Get the final product state and return
+	finalProduct, err := c.svc.GetProduct(r.Context(), id)
+	if err != nil {
+		resp.Error(w, http.StatusNotFound, "failed to retrieve final product state")
+		return
+	}
+
+	resp.OK(w, toProductResponse(finalProduct))
 }
 
 // @Summary Delete Product

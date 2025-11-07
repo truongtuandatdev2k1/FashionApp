@@ -23,6 +23,7 @@ import (
 	catalogm "myfashion/internal/modules/catalog"
 	orderm "myfashion/internal/modules/order"
 	profilem "myfashion/internal/modules/profile"
+	promotionm "myfashion/internal/modules/promotion"
 )
 
 // @title MyFashion API
@@ -67,6 +68,7 @@ func main() {
 	cartm.RegisterRoutes(api, cfg, gdb)             // Register cart routes
 	addressm.RegisterRoutes(api, cfg, gdb)          // Register address routes
 	orderm.RegisterRoutes(api, gdb, cfg.JWT_Secret) // Register order routes
+	promotionm.RegisterRoutes(api, cfg, gdb)        // Register promotion routes
 	r.Mount("/api/v1", api)
 
 	log.Printf("listening on :%s", cfg.Port)
@@ -90,6 +92,9 @@ func runMigrations(db *gorm.DB) {
 		log.Fatal(err)
 	}
 	if err := orderm.Migrate(db); err != nil {
+		log.Fatal(err)
+	}
+	if err := promotionm.Migrate(db); err != nil {
 		log.Fatal(err)
 	}
 }

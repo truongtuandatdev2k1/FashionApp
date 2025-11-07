@@ -4,4 +4,5 @@ type ShopProfile struct {
 	UserID   uint
 	ShopName string
 	Address  string
+	ImgURL   string
 }

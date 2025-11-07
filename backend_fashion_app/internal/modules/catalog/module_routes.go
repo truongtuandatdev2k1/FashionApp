@@ -17,7 +17,7 @@ func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB) {
 	r.Get("/categories/{id}", h.GetCategory)
 	r.Get("/styles", h.ListStyles)
 	r.Get("/styles/{id}", h.GetStyle)
-	r.Get("/products", h.ListProducts)
+	r.Post("/products/list", h.ListProducts)
 	r.Get("/products/{id}", h.GetProduct)
 
 	// Shop-only routes

@@ -30,6 +30,6 @@ func (r *customerRepo) Upsert(ctx context.Context, p *cen.CustomerProfile) error
 	m := toCustomerModel(p)
 	return r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"full_name", "age", "gender", "address"}),
+		DoUpdates: clause.AssignmentColumns([]string{"full_name", "age", "gender", "address", "img_url"}),
 	}).Create(m).Error
 }

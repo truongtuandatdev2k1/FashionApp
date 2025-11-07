@@ -40,6 +40,7 @@ type ProductModel struct {
 	AgeRange    string    `gorm:"column:age_range;type:varchar(50)"`
 	Description string    `gorm:"column:description;type:text"`
 	ImageURL    string    `gorm:"column:image_url;type:varchar(255)"`
+	IsHotTrend  bool      `gorm:"column:is_hot_trend;default:false"`
 	CreatedAt   time.Time `gorm:"column:created_at"`
 	UpdatedAt   time.Time `gorm:"column:updated_at"`
 }

@@ -12,6 +12,8 @@ func toCustomerModel(e *cen.CustomerProfile) *CustomerProfileModel {
 		Age:      e.Age,
 		Gender:   e.Gender,
 		Address:  e.Address,
+		Tier:     e.Tier,
+		ImgURL:   e.ImgURL,
 	}
 }
 
@@ -25,6 +27,8 @@ func toCustomerEntity(m *CustomerProfileModel) *cen.CustomerProfile {
 		Age:      m.Age,
 		Gender:   m.Gender,
 		Address:  m.Address,
+		Tier:     m.Tier,
+		ImgURL:   m.ImgURL,
 	}
 }
 
@@ -36,6 +40,7 @@ func toShopModel(e *cen.ShopProfile) *ShopProfileModel {
 		UserID:   e.UserID,
 		ShopName: e.ShopName,
 		Address:  e.Address,
+		ImgURL:   e.ImgURL,
 	}
 }
 
@@ -47,5 +52,6 @@ func toShopEntity(m *ShopProfileModel) *cen.ShopProfile {
 		UserID:   m.UserID,
 		ShopName: m.ShopName,
 		Address:  m.Address,
+		ImgURL:   m.ImgURL,
 	}
 }

@@ -17,6 +17,7 @@ type Product struct {
 	AgeRange    string         `gorm:"column:age_range;type:varchar(50)"`
 	Description string         `gorm:"type:text"`
 	ImageURL    string         `gorm:"column:image_url;type:varchar(255)"`
+	IsHotTrend  bool           `gorm:"column:is_hot_trend;default:false"`
 	Images      []ProductImage `gorm:"foreignKey:ProductID"`
 	CreatedAt   time.Time
 	UpdatedAt   time.Time

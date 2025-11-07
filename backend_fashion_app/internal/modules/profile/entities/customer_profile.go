@@ -6,4 +6,6 @@ type CustomerProfile struct {
 	Age      int
 	Gender   string
 	Address  string
+	Tier     string // Hạng thành viên: bronze, silver, gold
+	ImgURL   string
 }
