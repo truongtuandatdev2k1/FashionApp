@@ -10,14 +10,11 @@ import 'customer/logic/profile/profile_controller.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // BƯỚC 1: Load .env.dev (bắt buộc trước khi dùng)
   await dotenv.load(fileName: ".env.dev");
 
-  // BƯỚC 2: Init DI + API
   await setupDependencies();
   await ApiConfig.init();
 
-  // BƯỚC 3: Chạy app
   runApp(
     MultiProvider(
       providers: [
