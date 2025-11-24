@@ -1,0 +1,271 @@
+.
+├── android
+│   ├── app
+│   │   ├── src
+│   │   │   ├── admin
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   ├── customer
+│   │   │   │   ├── res
+│   │   │   │   │   └── values
+│   │   │   │   │       └── strings.xml
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   ├── debug
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   ├── main
+│   │   │   │   ├── java
+│   │   │   │   │   └── io
+│   │   │   │   │       └── flutter
+│   │   │   │   │           └── plugins
+│   │   │   │   │               └── GeneratedPluginRegistrant.java
+│   │   │   │   ├── kotlin
+│   │   │   │   │   └── com
+│   │   │   │   │       └── example
+│   │   │   │   │           └── ui_mobile_fashion_app
+│   │   │   │   │               └── MainActivity.kt
+│   │   │   │   ├── res
+│   │   │   │   │   ├── drawable
+│   │   │   │   │   │   └── launch_background.xml
+│   │   │   │   │   ├── drawable-v21
+│   │   │   │   │   │   └── launch_background.xml
+│   │   │   │   │   ├── mipmap-hdpi
+│   │   │   │   │   │   └── ic_launcher.png
+│   │   │   │   │   ├── mipmap-mdpi
+│   │   │   │   │   │   └── ic_launcher.png
+│   │   │   │   │   ├── mipmap-xhdpi
+│   │   │   │   │   │   └── ic_launcher.png
+│   │   │   │   │   ├── mipmap-xxhdpi
+│   │   │   │   │   │   └── ic_launcher.png
+│   │   │   │   │   ├── mipmap-xxxhdpi
+│   │   │   │   │   │   └── ic_launcher.png
+│   │   │   │   │   ├── values
+│   │   │   │   │   │   ├── strings.xml
+│   │   │   │   │   │   └── styles.xml
+│   │   │   │   │   └── values-night
+│   │   │   │   │       └── styles.xml
+│   │   │   │   └── AndroidManifest.xml
+│   │   │   └── profile
+│   │   │       └── AndroidManifest.xml
+│   │   └── build.gradle.kts
+│   ├── gradle
+│   │   └── wrapper
+│   │       ├── gradle-wrapper.jar
+│   │       └── gradle-wrapper.properties
+│   ├── .kotlin
+│   │   └── sessions
+│   ├── build.gradle.kts
+│   ├── .gitignore
+│   ├── gradle.properties
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── local.properties
+│   └── settings.gradle.kts
+├── assets
+│   ├── customer
+│   │   └── images
+│   │       ├── friendship.png
+│   │       └── happy_shopping.png
+│   └── logo_fas.png
+├── hazii_note
+│   ├── flutter_structure.txt
+│   ├── run_and_build.txt
+│   └── tuan_dat.jpg
+├── ios
+│   ├── Flutter
+│   │   ├── ephemeral
+│   │   │   ├── flutter_lldb_helper.py
+│   │   │   └── flutter_lldbinit
+│   │   ├── AppFrameworkInfo.plist
+│   │   ├── Debug.xcconfig
+│   │   ├── flutter_export_environment.sh
+│   │   ├── Generated.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Runner
+│   │   ├── Assets.xcassets
+│   │   │   ├── AppIcon.appiconset
+│   │   │   │   ├── Contents.json
+│   │   │   │   ├── Icon-App-1024x1024@1x.png
+│   │   │   │   ├── Icon-App-20x20@1x.png
+│   │   │   │   ├── Icon-App-20x20@2x.png
+│   │   │   │   ├── Icon-App-20x20@3x.png
+│   │   │   │   ├── Icon-App-29x29@1x.png
+│   │   │   │   ├── Icon-App-29x29@2x.png
+│   │   │   │   ├── Icon-App-29x29@3x.png
+│   │   │   │   ├── Icon-App-40x40@1x.png
+│   │   │   │   ├── Icon-App-40x40@2x.png
+│   │   │   │   ├── Icon-App-40x40@3x.png
+│   │   │   │   ├── Icon-App-60x60@2x.png
+│   │   │   │   ├── Icon-App-60x60@3x.png
+│   │   │   │   ├── Icon-App-76x76@1x.png
+│   │   │   │   ├── Icon-App-76x76@2x.png
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png
+│   │   │   └── LaunchImage.imageset
+│   │   │       ├── Contents.json
+│   │   │       ├── LaunchImage@2x.png
+│   │   │       ├── LaunchImage@3x.png
+│   │   │       ├── LaunchImage.png
+│   │   │       └── README.md
+│   │   ├── Base.lproj
+│   │   │   ├── LaunchScreen.storyboard
+│   │   │   └── Main.storyboard
+│   │   ├── AppDelegate.swift
+│   │   ├── Config.xcconfig
+│   │   ├── GeneratedPluginRegistrant.h
+│   │   ├── GeneratedPluginRegistrant.m
+│   │   ├── Info.plist
+│   │   └── Runner-Bridging-Header.h
+│   ├── RunnerTests
+│   │   └── RunnerTests.swift
+│   ├── Runner.xcodeproj
+│   │   ├── project.xcworkspace
+│   │   │   ├── xcshareddata
+│   │   │   │   ├── IDEWorkspaceChecks.plist
+│   │   │   │   └── WorkspaceSettings.xcsettings
+│   │   │   └── contents.xcworkspacedata
+│   │   ├── xcshareddata
+│   │   │   └── xcschemes
+│   │   │       └── Runner.xcscheme
+│   │   └── project.pbxproj
+│   ├── Runner.xcworkspace
+│   │   ├── xcshareddata
+│   │   │   ├── IDEWorkspaceChecks.plist
+│   │   │   └── WorkspaceSettings.xcsettings
+│   │   └── contents.xcworkspacedata
+│   └── .gitignore
+├── lib
+│   ├── admin
+│   │   ├── features
+│   │   │   ├── auth
+│   │   │   │   └── presentation
+│   │   │   │       └── screens
+│   │   │   │           └── login_screen.dart
+│   │   │   ├── dashboard
+│   │   │   │   └── presentation
+│   │   │   │       └── screens
+│   │   │   │           └── stats_screen.dart
+│   │   │   └── product
+│   │   │       └── presentation
+│   │   │           └── screens
+│   │   │               └── product_list_screen.dart
+│   │   ├── navigation
+│   │   │   └── admin_router.dart
+│   │   └── presentation
+│   │       └── splash
+│   │           └── admin_splash_screen.dart
+│   ├── core
+│   │   ├── config
+│   │   │   ├── app_config.dart
+│   │   │   ├── build_config.dart
+│   │   │   ├── flavor_config.dart
+│   │   │   └── router.dart
+│   │   ├── constants
+│   │   │   ├── assets.dart
+│   │   │   │   └── assets.gen.dart
+│   │   │   ├── colors.dart
+│   │   │   └── strings.dart
+│   │   ├── di
+│   │   │   └── locator.dart
+│   │   ├── error
+│   │   │   ├── exceptions.dart
+│   │   │   └── failures.dart
+│   │   ├── navigation
+│   │   │   └── app_navigator.dart
+│   │   ├── network
+│   │   │   ├── api_client.dart
+│   │   │   ├── api_config.dart
+│   │   │   ├── dio_config.dart
+│   │   │   ├── token_interceptor.dart
+│   │   │   ├── token_manager.dart
+│   │   │   └── user_manager.dart
+│   │   ├── shared
+│   │   │   ├── data
+│   │   │   │   └── models
+│   │   │   │       └── user_model.dart
+│   │   │   └── domain
+│   │   │       └── entities
+│   │   │           └── user_entity.dart
+│   │   ├── utils
+│   │   │   ├── extensions.dart
+│   │   │   ├── image_url_helper.dart
+│   │   │   ├── logger.dart
+│   │   │   └── validators.dart
+│   │   └── router.dart
+│   ├── customer
+│   │   ├── logic
+│   │   │   ├── auth
+│   │   │   │   └── auth_api.dart
+│   │   │   ├── product
+│   │   │   │   ├── product_api.dart
+│   │   │   │   └── product_controller.dart
+│   │   │   └── profile
+│   │   │       ├── profile_api.dart
+│   │   │       └── profile_controller.dart
+│   │   ├── models
+│   │   │   ├── product_data.dart
+│   │   │   └── product_model.dart
+│   │   ├── router
+│   │   │   └── customer_router.dart
+│   │   ├── views
+│   │   │   ├── auth
+│   │   │   │   └── login_screen.dart
+│   │   │   ├── cart
+│   │   │   │   └── views
+│   │   │   │       └── cart_screen.dart
+│   │   │   ├── common
+│   │   │   │   └── customer_bottom_nav.dart
+│   │   │   ├── home
+│   │   │   │   ├── data
+│   │   │   │   │   ├── best_sellers.dart
+│   │   │   │   │   ├── hot_trends.dart
+│   │   │   │   │   ├── new_arrivals.dart
+│   │   │   │   │   └── product_sections.dart
+│   │   │   │   ├── views
+│   │   │   │   │   └── home_screen.dart
+│   │   │   │   └── widgets
+│   │   │   │       ├── banner_slider.dart
+│   │   │   │       ├── custom_sidebar.dart
+│   │   │   │       ├── horizontal_product_section.dart
+│   │   │   │       ├── product_item.dart
+│   │   │   │       ├── sidebar_overlay_manager.dart
+│   │   │   │       └── utility_access_bar.dart
+│   │   │   ├── navigation_shell
+│   │   │   │   └── customer_navigation_shell.dart
+│   │   │   ├── product
+│   │   │   │   ├── widgets
+│   │   │   │   │   └── product_grid_item.dart
+│   │   │   │   └── product_list_screen.dart
+│   │   │   ├── profile
+│   │   │   │   ├── views
+│   │   │   │   │   └── profile_screen.dart
+│   │   │   │   └── widgets
+│   │   │   │       ├── profile_header.dart
+│   │   │   │       └── profile_menu_list.dart
+│   │   │   ├── saved
+│   │   │   │   └── views
+│   │   │   │       └── saved_screen.dart
+│   │   │   └── splash
+│   │   │       └── customer_splash_screen.dart
+│   │   ├── app_initializer.dart
+│   │   ├── main_app.dart
+│   │   └── providers.dart
+│   ├── shared
+│   │   ├── data
+│   │   │   └── models
+│   │   │       ├── product_model.dart
+│   │   │       └── user_model.dart
+│   │   └── domain
+│   │       └── entities
+│   │           ├── product_entity.dart
+│   │           └── user_entity.dart
+│   ├── main_admin.dart
+│   └── main_customer.dart
+├── test
+│   └── widget_test.dart
+├── analysis_options.yaml
+├── .env.dev
+├── .flutter-plugins-dependencies
+├── .gitignore
+├── .metadata
+├── pubspec.yaml
+└── README.md
+
+113 directories, 156 files

@@ -1,0 +1,9 @@
+1. admin
+flutter build apk --flavor admin --debug -t lib/main_admin.dart --dart-define=FLAVOR=admin
+flutter run --flavor admin -t lib/main_admin.dart --dart-define=FLAVOR=admin
+
+2.customer
+flutter build apk --flavor customer --debug -t lib/main_customer.dart --dart-define=FLAVOR=custome
+flutter run --flavor customer -t lib/main_customer.dart --dart-define=FLAVOR=customer
+
+tree -a -I 'build|.dart_tool|.gradle|.idea|*.g.dart|*.lock|*.iml' --dirsfirst > hazii_note/flutter_structure.txt

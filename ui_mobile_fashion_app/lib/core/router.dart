@@ -1,0 +1,39 @@
+// lib/core/router.dart
+
+import 'package:go_router/go_router.dart';
+import 'package:flutter/material.dart';
+// ***************************************************************
+// 1. CẬP NHẬT IMPORT: Trỏ đến file Navigation Shell MỚI
+import 'package:ui_mobile_fashion_app/customer/views/navigation_shell/customer_navigation_shell.dart';
+// ***************************************************************
+import 'package:ui_mobile_fashion_app/customer/views/splash/customer_splash_screen.dart';
+import 'package:ui_mobile_fashion_app/customer/views/auth/login_screen.dart';
+
+class AppRouter {
+  static final GoRouter router = GoRouter(
+    routes: <RouteBase>[
+      GoRoute(
+        path: '/',
+        builder: (BuildContext context, GoRouterState state) {
+          return const CustomerSplashScreen();
+        },
+      ),
+      GoRoute(
+        path: '/login',
+        builder: (BuildContext context, GoRouterState state) {
+          return const LoginScreen();
+        },
+      ),
+      GoRoute(
+        path: '/home',
+        builder: (BuildContext context, GoRouterState state) {
+          // ***************************************************************
+          // 2. CẬP NHẬT WIDGET: Trỏ '/home' đến CustomerNavigationShell mới
+          return const CustomerNavigationShell();
+          // ***************************************************************
+        },
+      ),
+      // Thêm route khác sau này
+    ],
+  );
+}
