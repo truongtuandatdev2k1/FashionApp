@@ -8,6 +8,7 @@ import 'package:ui_mobile_fashion_app/customer/views/navigation_shell/customer_n
 // ***************************************************************
 import 'package:ui_mobile_fashion_app/customer/views/splash/customer_splash_screen.dart';
 import 'package:ui_mobile_fashion_app/customer/views/auth/login_screen.dart';
+import 'package:ui_mobile_fashion_app/customer/views/address/views/address_list_screen.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
@@ -32,6 +33,10 @@ class AppRouter {
           return const CustomerNavigationShell();
           // ***************************************************************
         },
+      ),
+      GoRoute(
+        path: '/addresses',
+        builder: (context, state) => const AddressListScreen(),
       ),
       // Thêm route khác sau này
     ],

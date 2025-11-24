@@ -1,4 +1,4 @@
-.
+ui_mobile_fashion_app/
 ├── android
 │   ├── app
 │   │   ├── src
@@ -66,9 +66,11 @@
 │   │       └── happy_shopping.png
 │   └── logo_fas.png
 ├── hazii_note
+│   ├── address_customer.txt
 │   ├── flutter_structure.txt
 │   ├── run_and_build.txt
-│   └── tuan_dat.jpg
+│   ├── tuan_dat.jpg
+│   └── ui_customer.txt
 ├── ios
 │   ├── Flutter
 │   │   ├── ephemeral
@@ -195,7 +197,8 @@
 │   │   │   │   └── auth_api.dart
 │   │   │   ├── product
 │   │   │   │   ├── product_api.dart
-│   │   │   │   └── product_controller.dart
+│   │   │   │   ├── product_controller.dart
+│   │   │   │   └── product_list_controller.dart
 │   │   │   └── profile
 │   │   │       ├── profile_api.dart
 │   │   │       └── profile_controller.dart
@@ -205,6 +208,12 @@
 │   │   ├── router
 │   │   │   └── customer_router.dart
 │   │   ├── views
+│   │   │   ├── address
+│   │   │   │   ├── views
+│   │   │   │   │   ├── address_form_screen.dart
+│   │   │   │   │   └── address_list_screen.dart
+│   │   │   │   └── widgets
+│   │   │   │       └── address_item.dart
 │   │   │   ├── auth
 │   │   │   │   └── login_screen.dart
 │   │   │   ├── cart
@@ -231,7 +240,18 @@
 │   │   │   │   └── customer_navigation_shell.dart
 │   │   │   ├── product
 │   │   │   │   ├── widgets
+│   │   │   │   │   ├── product_detail
+│   │   │   │   │   │   ├── body
+│   │   │   │   │   │   │   ├── brand_rating.dart
+│   │   │   │   │   │   │   ├── color_selector.dart
+│   │   │   │   │   │   │   ├── description.dart
+│   │   │   │   │   │   │   ├── image_section.dart
+│   │   │   │   │   │   │   ├── price_sold.dart
+│   │   │   │   │   │   │   └── size_selector.dart
+│   │   │   │   │   │   ├── bottom_action_bar.dart
+│   │   │   │   │   │   └── header.dart
 │   │   │   │   │   └── product_grid_item.dart
+│   │   │   │   ├── product_detail_screen.dart
 │   │   │   │   └── product_list_screen.dart
 │   │   │   ├── profile
 │   │   │   │   ├── views
@@ -268,4 +288,4 @@
 ├── pubspec.yaml
 └── README.md
 
-113 directories, 156 files
+118 directories, 171 files
