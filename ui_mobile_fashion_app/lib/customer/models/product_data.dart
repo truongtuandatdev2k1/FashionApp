@@ -20,7 +20,7 @@ class ProductData {
       name: json['name'],
       price: json['price'],
       discountPct: json['discount_pct'] ?? 0,
-      priceAfter: json['price_after'],
+      priceAfter: json['priceAfter'],
     );
   }
 }

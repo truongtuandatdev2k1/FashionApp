@@ -94,8 +94,8 @@ class ProductItem extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 color: Colors.black,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              maxLines: 1,               // chỉ hiển thị 1 dòng
+              overflow: TextOverflow.ellipsis, // nếu dài thì thêm "..."
             ),
 
             const SizedBox(height: 4),
