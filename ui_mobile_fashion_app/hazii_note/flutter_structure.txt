@@ -1,4 +1,4 @@
-ui_mobile_fashion_app/
+.
 ├── android
 │   ├── app
 │   │   ├── src
@@ -193,6 +193,8 @@ ui_mobile_fashion_app/
 │   │   └── router.dart
 │   ├── customer
 │   │   ├── logic
+│   │   │   ├── address
+│   │   │   │   └── mock_address_data.dart
 │   │   │   ├── auth
 │   │   │   │   └── auth_api.dart
 │   │   │   ├── product
@@ -213,7 +215,9 @@ ui_mobile_fashion_app/
 │   │   │   │   │   ├── address_form_screen.dart
 │   │   │   │   │   └── address_list_screen.dart
 │   │   │   │   └── widgets
-│   │   │   │       └── address_item.dart
+│   │   │   │       ├── address_item.dart
+│   │   │   │       ├── address_list_view.dart
+│   │   │   │       └── empty_address_view.dart
 │   │   │   ├── auth
 │   │   │   │   └── login_screen.dart
 │   │   │   ├── cart
@@ -288,4 +292,4 @@ ui_mobile_fashion_app/
 ├── pubspec.yaml
 └── README.md
 
-118 directories, 171 files
+119 directories, 174 files

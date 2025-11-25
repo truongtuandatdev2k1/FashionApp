@@ -17,8 +17,20 @@ class AddressListScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
-        title: const Text("Địa Chỉ Nhận Hàng", style: TextStyle(fontWeight: FontWeight.bold)),
+        // Thêm nút back thủ công ở bên trái
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        title: const Text(
+          "Địa Chỉ Nhận Hàng",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
+        // Nếu muốn bỏ luôn back button tự động của hệ thống (tránh bị trùng)
+        // automaticallyImplyLeading: false,
       ),
       body: addresses.isEmpty
           ? const EmptyAddressView()
