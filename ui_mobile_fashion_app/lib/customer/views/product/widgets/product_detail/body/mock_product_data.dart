@@ -46,7 +46,7 @@ final ProductDetails mockProduct = ProductDetails(
   reviewCount: 1700,
   soldCount: 28600,
   description:
-      'Stay stylish with this Men\'s Mandarin Collar Shirt. Made from premium cotton blend, it offers a comfortable fit and a modern look. Perfect for both casual and semi-formal occasions. Features a sleek mandarin collar and subtle stitching details.',
+      'Chất liệu cotton mềm mại, thoáng mát. Thiết kế cổ trụ thanh lịch, phù hợp mặc đi làm hoặc đi chơi. Đường may chắc chắn, bền đẹp theo thời gian. Phù hợp với mọi dáng người. Dễ phối đồ với quần jeans, kaki hoặc short',
   sizes: ['S', 'M', 'L', 'XL', 'XXL'],
   colors: [
     Colors.teal,
