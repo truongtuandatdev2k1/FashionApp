@@ -1,3 +1,4 @@
+// file: lib/admin/presentation/splash/admin_splash_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -12,7 +13,7 @@ class _AdminSplashScreenState extends State<AdminSplashScreen> {
   @override
   void initState() {
     super.initState();
-    // _navigateToLogin();
+    _navigateToLogin();
   }
 
   void _navigateToLogin() async {
