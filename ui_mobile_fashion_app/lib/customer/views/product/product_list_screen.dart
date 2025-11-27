@@ -57,12 +57,14 @@ class _ProductListView extends StatelessWidget {
   }
 
   Widget _buildBody(
-      BuildContext context,
-      ProductListController controller,
-      ScrollController scrollController,
-      ) {
+    BuildContext context,
+    ProductListController controller,
+    ScrollController scrollController,
+  ) {
     if (controller.products.isEmpty && controller.isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Colors.black));
+      return const Center(
+        child: CircularProgressIndicator(color: Colors.black),
+      );
     }
 
     if (controller.error != null) {
@@ -106,16 +108,22 @@ class _ProductListView extends StatelessWidget {
           }
 
           final product = controller.products[index];
+          // Trong itemBuilder của GridView.builder
           return ProductGridItem(
             imageUrl: product.imageUrl,
             name: product.name,
             price: product.price.toDouble(),
             discountPct: product.discountPct,
             priceAfter: product.priceAfter.toDouble(),
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ProductDetailScreen()),
-            ),
+            productId: product.id, // THÊM DÒNG NÀY
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ProductDetailScreen(productId: product.id),
+                ),
+              );
+            },
           );
         },
       ),

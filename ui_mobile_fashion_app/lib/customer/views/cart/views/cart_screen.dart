@@ -1,17 +1,16 @@
+// lib/customer/views/cart/views/cart_screen.dart
 import 'package:flutter/material.dart';
-// **QUAN TRỌNG:** Phải import file được tạo ra bởi FlutterGen
 import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
+import '../../../logic/cart/cart_mock_data.dart';
+import '../widgets/cart_product_item.dart';
 
-// Đổi tên thành CartScreen
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    // Kích thước của lớp phủ hình tròn (to hơn)
+  // Widget khi giỏ hàng rỗng
+  Widget _buildEmptyCart() {
     const double circleSize = 200.0;
-    // Kích thước của hình ảnh (nhỏ hơn, giữ nguyên)
-    const double imageContentSize = 100.0; // Khoảng 60% của circleSize
+    const double imageContentSize = 100.0;
 
     return Scaffold(
       body: Center(
@@ -20,21 +19,18 @@ class CartScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              // 1. Hiển thị hình ảnh với lớp phủ hình tròn to
+              // Hình tròn + ảnh happy shopping
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Lớp phủ xám nhạt (Overlay) hình tròn to
                   Container(
                     width: circleSize,
                     height: circleSize,
                     decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.15), // Màu xám nhạt
-                      shape: BoxShape.circle,              // Hình tròn
+                      color: Colors.grey.withOpacity(0.15),
+                      shape: BoxShape.circle,
                     ),
                   ),
-
-                  // Hình ảnh happy_shopping.png (giữ nguyên kích thước cũ)
                   Assets.customer.images.happyShopping.image(
                     width: imageContentSize,
                     height: imageContentSize,
@@ -42,10 +38,7 @@ class CartScreen extends StatelessWidget {
                   ),
                 ],
               ),
-
               const SizedBox(height: 30),
-
-              // 2. Text thông báo giỏ hàng rỗng
               const Text(
                 'Giỏ hàng của bạn\nhiện chưa có sản phẩm nào',
                 textAlign: TextAlign.center,
@@ -55,22 +48,19 @@ class CartScreen extends StatelessWidget {
                   color: Colors.black54,
                 ),
               ),
-
               const SizedBox(height: 20),
-
-              // 3. Button "Tiếp tục mua sắm"
               SizedBox(
                 width: double.infinity,
                 height: 50,
                 child: TextButton(
                   onPressed: () {
-                    // TODO: Xử lý sự kiện khi nhấn nút
                     debugPrint('Tiếp tục mua sắm');
+                    // TODO: Navigate về trang chủ
                   },
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.black,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20), // Bo góc tròn 20
+                      borderRadius: BorderRadius.circular(20),
                     ),
                   ),
                   child: const Text(
@@ -88,5 +78,81 @@ class CartScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  // Widget khi có sản phẩm
+  Widget _buildCartWithItems() {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Giỏ hàng'),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.only(top: 12),
+              itemCount: CartMockData.items.length,
+              itemBuilder: (context, index) {
+                final product = CartMockData.items[index];
+                return CartProductItem(product: product);
+              },
+            ),
+          ),
+          // Footer tổng tiền + nút thanh toán (có thể mở rộng sau)
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              boxShadow: [
+                BoxShadow(color: Colors.black12, blurRadius: 10),
+              ],
+            ),
+            child: SafeArea(
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Tổng cộng', style: TextStyle(color: Colors.grey)),
+                      Text(
+                        '2.554.000₫',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      debugPrint('Thanh toán');
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    child: const Text(
+                      'Thanh toán',
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasItems = CartMockData.items.isNotEmpty;
+    return hasItems ? _buildCartWithItems() : _buildEmptyCart();
   }
 }

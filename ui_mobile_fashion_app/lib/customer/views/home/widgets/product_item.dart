@@ -1,7 +1,7 @@
 // lib/customer/views/home/widgets/product_item.dart
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
-import '../../product/product_detail_screen.dart'; // ĐÃ THÊM
+// import '../../product/product_detail_screen.dart'; // ĐÃ THÊM
 
 class ProductItem extends StatelessWidget {
   final String? imageUrl;
@@ -9,7 +9,7 @@ class ProductItem extends StatelessWidget {
   final double price;
   final int? discountPct;
   final double? priceAfter;
-  final VoidCallback? onTap; // ĐÃ THÊM
+  final VoidCallback onTap; // ĐÃ THÊM
 
   const ProductItem({
     super.key,
@@ -18,7 +18,7 @@ class ProductItem extends StatelessWidget {
     required this.price,
     this.discountPct,
     this.priceAfter,
-    this.onTap, // ĐÃ THÊM
+    required this.onTap, // BẮT BUỘC
   });
 
   @override
@@ -26,10 +26,7 @@ class ProductItem extends StatelessWidget {
     final bool hasDiscount = discountPct != null && discountPct! > 0;
 
     return InkWell(
-      onTap: onTap ?? () => Navigator.push( // ĐÃ THÊM: Mặc định đi đến chi tiết
-        context,
-        MaterialPageRoute(builder: (_) => const ProductDetailScreen()),
-      ),
+      onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
         width: 165,
@@ -63,7 +60,10 @@ class ProductItem extends StatelessWidget {
                       top: 0,
                       right: 0,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: const BoxDecoration(
                           color: Colors.red,
                           borderRadius: BorderRadius.only(
@@ -94,8 +94,8 @@ class ProductItem extends StatelessWidget {
                 fontWeight: FontWeight.w700,
                 color: Colors.black,
               ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+              maxLines: 1, // chỉ hiển thị 1 dòng
+              overflow: TextOverflow.ellipsis, // nếu dài thì thêm "..."
             ),
 
             const SizedBox(height: 4),
@@ -119,7 +119,8 @@ class ProductItem extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 11,
                       color: Colors.grey[500],
-                      decoration: hasDiscount ? TextDecoration.lineThrough : null,
+                      decoration:
+                          hasDiscount ? TextDecoration.lineThrough : null,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -147,30 +148,34 @@ class ProductItem extends StatelessWidget {
       width: double.infinity,
       height: double.infinity,
       fit: BoxFit.cover,
-      placeholder: (context, url) => Container(
-        color: Colors.grey[200],
-        child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      ),
-      errorWidget: (context, url, error) => Container(
-        color: Colors.grey[200],
-        child: Center(
-          child: Stack(
-            children: [
-              const Icon(Icons.image, size: 40, color: Colors.grey),
-              Positioned(
-                top: 8,
-                left: 8,
-                right: 8,
-                child: Container(
-                  height: 2,
-                  color: Colors.red,
-                  transform: Matrix4.rotationZ(0.785),
-                ),
-              ),
-            ],
+      placeholder:
+          (context, url) => Container(
+            color: Colors.grey[200],
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
           ),
-        ),
-      ),
+      errorWidget:
+          (context, url, error) => Container(
+            color: Colors.grey[200],
+            child: Center(
+              child: Stack(
+                children: [
+                  const Icon(Icons.image, size: 40, color: Colors.grey),
+                  Positioned(
+                    top: 8,
+                    left: 8,
+                    right: 8,
+                    child: Container(
+                      height: 2,
+                      color: Colors.red,
+                      transform: Matrix4.rotationZ(0.785),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
     );
   }
 }

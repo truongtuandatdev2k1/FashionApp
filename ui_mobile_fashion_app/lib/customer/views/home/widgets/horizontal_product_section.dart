@@ -17,10 +17,14 @@ class HorizontalProductSection extends StatelessWidget {
 
   String _mapTitleToFilter(String title) {
     switch (title) {
-      case 'Bán chạy nhất': return 'bestseller';
-      case 'Sản phẩm mới': return 'new';
-      case 'Hot trend': return 'hottrend';
-      default: return 'all';
+      case 'Bán chạy nhất':
+        return 'bestseller';
+      case 'Sản phẩm mới':
+        return 'new';
+      case 'Hot trend':
+        return 'hottrend';
+      default:
+        return 'all';
     }
   }
 
@@ -48,10 +52,11 @@ class HorizontalProductSection extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (_) => ProductListScreen(
-                        title: title,
-                        filter: _mapTitleToFilter(title),
-                      ),
+                      builder:
+                          (_) => ProductListScreen(
+                            title: title,
+                            filter: _mapTitleToFilter(title),
+                          ),
                     ),
                   );
                 },
@@ -70,7 +75,7 @@ class HorizontalProductSection extends StatelessWidget {
 
         // Danh sách cuộn ngang
         SizedBox(
-          height: 217,
+          height: 220,
           child: ListView.builder(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,
@@ -80,13 +85,20 @@ class HorizontalProductSection extends StatelessWidget {
               return ProductItem(
                 imageUrl: product.imageUrl,
                 name: product.name,
-                price: product.price.toDouble(),     // ĐÃ SỬA: int → double
+                price: product.price.toDouble(),
                 discountPct: product.discountPct,
-                priceAfter: product.priceAfter.toDouble(), // ĐÃ SỬA: int → double
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const ProductDetailScreen()),
-                ),
+                priceAfter: product.priceAfter.toDouble(),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder:
+                          (_) => ProductDetailScreen(
+                            productId: product.id,
+                          ), // DÙNG ID
+                    ),
+                  );
+                },
               );
             },
           ),
