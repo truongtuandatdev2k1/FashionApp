@@ -1,3 +1,4 @@
+# file: FashionApp_uiAdmin/ui_mobile_fashion_app/pubspec.yaml
 name: ui_mobile_fashion_app
 description: "A simple fashion mobile app built with Flutter."
 publish_to: 'none'
