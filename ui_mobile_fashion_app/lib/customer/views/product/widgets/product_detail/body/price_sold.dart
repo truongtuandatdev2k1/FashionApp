@@ -1,15 +1,14 @@
 // lib/customer/views/product/widgets/product_detail/body/price_sold.dart
-
 import 'package:flutter/material.dart';
-import 'package:lucide_icons_flutter/lucide_icons.dart'; // Dùng Lucide để icon star đẹp hơn
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class PriceAndSold extends StatelessWidget {
   final String title;
-  final double currentPrice;
+  final double currentPrice; // Đơn vị: nghìn đồng (VD: 450.99 = 450.990 đ)
   final double oldPrice;
-  final double rating;        // THÊM LẠI
-  final int reviewCount;      // Số lượt đánh giá (ví dụ: 1700)
-  final int soldCount;        // Số lượt đã bán
+  final double rating;
+  final int reviewCount;
+  final int soldCount;
 
   const PriceAndSold({
     super.key,
@@ -21,9 +20,22 @@ class PriceAndSold extends StatelessWidget {
     required this.soldCount,
   });
 
+  // Định dạng số tiền Việt Nam: 1234567 → 1.234.567 đ
+  String _formatCurrency(double price) {
+    final String raw = price.toStringAsFixed(0); // bỏ phần thập phân nếu có
+    final RegExp reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    final String result = raw.replaceAllMapped(reg, (Match m) => '${m[1]}.');
+    return '$result đ';
+  }
+
+  // Format số lượng (1.2k, 15k…)
   String _formatNumber(int number) {
+    if (number >= 1000000) {
+      final double m = number / 1000000;
+      return m % 1 == 0 ? '${m.toInt()}tr' : '${m.toStringAsFixed(1)}tr';
+    }
     if (number >= 1000) {
-      final double k = number / 1000;
+      final double k = number / 1000.0;
       return k % 1 == 0 ? '${k.toInt()}k' : '${k.toStringAsFixed(1)}k';
     }
     return number.toString();
@@ -31,7 +43,8 @@ class PriceAndSold extends StatelessWidget {
 
   String get discountPercent {
     if (oldPrice <= currentPrice) return '0';
-    final discount = ((oldPrice - currentPrice) / oldPrice * 100).toStringAsFixed(0);
+    final discount = ((oldPrice - currentPrice) / oldPrice * 100)
+        .toStringAsFixed(0);
     return discount;
   }
 
@@ -40,17 +53,18 @@ class PriceAndSold extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // === TIÊU ĐỀ + GIÁ + GIẢM GIÁ ===
+        // Tiêu đề sản phẩm
         Text(
           title,
           style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),
 
+        // Giá hiện tại + giá cũ + % giảm
         Row(
           children: [
             Text(
-              '\$${currentPrice.toStringAsFixed(2)}',
+              _formatCurrency(currentPrice),
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
@@ -59,7 +73,7 @@ class PriceAndSold extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              '\$${oldPrice.toStringAsFixed(2)}',
+              _formatCurrency(oldPrice),
               style: const TextStyle(
                 fontSize: 16,
                 color: Colors.grey,
@@ -85,28 +99,26 @@ class PriceAndSold extends StatelessWidget {
               ),
           ],
         ),
-
         const SizedBox(height: 16),
 
-        // === ĐƯỜNG KẺ MỎNG ===
-        Container(
-          height: 0.5,
-          color: Colors.grey.shade300,
-        ),
-
+        // Đường kẻ ngang
+        Container(height: 0.5, color: Colors.grey.shade300),
         const SizedBox(height: 12),
 
-        // === RATING + LƯỢT ĐÁNH GIÁ + ĐÃ BÁN ===
+        // Rating + lượt đánh giá + đã bán
         Row(
           children: [
-            // Rating + số review
+            // Rating
             Row(
               children: [
                 const Icon(LucideIcons.star, color: Colors.amber, size: 18),
                 const SizedBox(width: 4),
                 Text(
                   rating.toStringAsFixed(1),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 15,
+                  ),
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -115,18 +127,9 @@ class PriceAndSold extends StatelessWidget {
                 ),
               ],
             ),
-
             const SizedBox(width: 16),
-
-            // Đường kẻ dọc phân cách
-            Container(
-              width: 1,
-              height: 16,
-              color: Colors.grey.shade400,
-            ),
-
+            Container(width: 1, height: 16, color: Colors.grey.shade400),
             const SizedBox(width: 16),
-
             // Đã bán
             Text(
               'Đã bán ${_formatNumber(soldCount)}',

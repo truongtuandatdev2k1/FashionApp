@@ -1,4 +1,4 @@
-ui_mobile_fashion_app/
+.
 ├── android
 │   ├── app
 │   │   ├── src
@@ -67,10 +67,12 @@ ui_mobile_fashion_app/
 │   └── logo_fas.png
 ├── hazii_note
 │   ├── address_customer.txt
+│   ├── cart.txt
 │   ├── flutter_structure.txt
 │   ├── product_detail_cus.txt
 │   ├── run_and_build.txt
 │   ├── tuan_dat.jpg
+│   ├── ui_admin.txt
 │   └── ui_customer.txt
 ├── ios
 │   ├── Flutter
@@ -149,11 +151,11 @@ ui_mobile_fashion_app/
 │   │   │       └── presentation
 │   │   │           └── screens
 │   │   │               └── product_list_screen.dart
-│   │   ├── navigation
-│   │   │   └── admin_router.dart
-│   │   └── presentation
-│   │       └── splash
-│   │           └── admin_splash_screen.dart
+│   │   ├── presentation
+│   │   │   └── splash
+│   │   │       └── admin_splash_screen.dart
+│   │   └── routes
+│   │       └── admin_router.dart
 │   ├── core
 │   │   ├── config
 │   │   │   ├── app_config.dart
@@ -170,8 +172,6 @@ ui_mobile_fashion_app/
 │   │   ├── error
 │   │   │   ├── exceptions.dart
 │   │   │   └── failures.dart
-│   │   ├── navigation
-│   │   │   └── app_navigator.dart
 │   │   ├── network
 │   │   │   ├── api_client.dart
 │   │   │   ├── api_config.dart
@@ -198,15 +198,19 @@ ui_mobile_fashion_app/
 │   │   │   │   └── mock_address_data.dart
 │   │   │   ├── auth
 │   │   │   │   └── auth_api.dart
+│   │   │   ├── cart
+│   │   │   │   └── cart_mock_data.dart
 │   │   │   ├── product
 │   │   │   │   ├── product_api.dart
 │   │   │   │   ├── product_controller.dart
+│   │   │   │   ├── product_detail_api.dart
 │   │   │   │   └── product_list_controller.dart
 │   │   │   └── profile
 │   │   │       ├── profile_api.dart
 │   │   │       └── profile_controller.dart
 │   │   ├── models
-│   │   │   └── product_data.dart
+│   │   │   ├── product_data.dart
+│   │   │   └── product_detail_model.dart
 │   │   ├── router
 │   │   │   └── customer_router.dart
 │   │   ├── views
@@ -221,8 +225,10 @@ ui_mobile_fashion_app/
 │   │   │   ├── auth
 │   │   │   │   └── login_screen.dart
 │   │   │   ├── cart
-│   │   │   │   └── views
-│   │   │   │       └── cart_screen.dart
+│   │   │   │   ├── views
+│   │   │   │   │   └── cart_screen.dart
+│   │   │   │   └── widgets
+│   │   │   │       └── cart_product_item.dart
 │   │   │   ├── common
 │   │   │   │   └── customer_bottom_nav.dart
 │   │   │   ├── home
@@ -257,10 +263,6 @@ ui_mobile_fashion_app/
 │   │   │   │   │   │   ├── bottom_action_bar.dart
 │   │   │   │   │   │   ├── header.dart
 │   │   │   │   │   │   └── size_color_selector_sheet.dart
-│   │   │   │   │   │   │   ├── price_sold.dart
-│   │   │   │   │   │   │   └── size_selector.dart
-│   │   │   │   │   │   ├── bottom_action_bar.dart
-│   │   │   │   │   │   └── header.dart
 │   │   │   │   │   └── product_grid_item.dart
 │   │   │   │   ├── product_detail_screen.dart
 │   │   │   │   └── product_list_screen.dart
@@ -299,4 +301,4 @@ ui_mobile_fashion_app/
 ├── pubspec.yaml
 └── README.md
 
-119 directories, 174 files
+120 directories, 182 files
