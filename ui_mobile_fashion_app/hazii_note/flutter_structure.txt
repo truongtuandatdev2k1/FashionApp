@@ -68,6 +68,7 @@
 ├── hazii_note
 │   ├── address_customer.txt
 │   ├── flutter_structure.txt
+│   ├── product_detail_cus.txt
 │   ├── run_and_build.txt
 │   ├── tuan_dat.jpg
 │   └── ui_customer.txt
@@ -205,8 +206,7 @@
 │   │   │       ├── profile_api.dart
 │   │   │       └── profile_controller.dart
 │   │   ├── models
-│   │   │   ├── product_data.dart
-│   │   │   └── product_model.dart
+│   │   │   └── product_data.dart
 │   │   ├── router
 │   │   │   └── customer_router.dart
 │   │   ├── views
@@ -250,6 +250,13 @@
 │   │   │   │   │   │   │   ├── color_selector.dart
 │   │   │   │   │   │   │   ├── description.dart
 │   │   │   │   │   │   │   ├── image_section.dart
+│   │   │   │   │   │   │   ├── mock_product_data.dart
+│   │   │   │   │   │   │   ├── price_sold.dart
+│   │   │   │   │   │   │   ├── size_guide_section.dart
+│   │   │   │   │   │   │   └── size_selector.dart
+│   │   │   │   │   │   ├── bottom_action_bar.dart
+│   │   │   │   │   │   ├── header.dart
+│   │   │   │   │   │   └── size_color_selector_sheet.dart
 │   │   │   │   │   │   │   ├── price_sold.dart
 │   │   │   │   │   │   │   └── size_selector.dart
 │   │   │   │   │   │   ├── bottom_action_bar.dart
