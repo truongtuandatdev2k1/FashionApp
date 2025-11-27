@@ -195,6 +195,7 @@
 │   ├── customer
 │   │   ├── logic
 │   │   │   ├── address
+│   │   │   │   ├── address_api.dart
 │   │   │   │   └── mock_address_data.dart
 │   │   │   ├── auth
 │   │   │   │   └── auth_api.dart
@@ -209,6 +210,7 @@
 │   │   │       ├── profile_api.dart
 │   │   │       └── profile_controller.dart
 │   │   ├── models
+│   │   │   ├── address.dart
 │   │   │   ├── product_data.dart
 │   │   │   └── product_detail_model.dart
 │   │   ├── router
@@ -301,4 +303,4 @@
 ├── pubspec.yaml
 └── README.md
 
-120 directories, 182 files
+120 directories, 184 files
