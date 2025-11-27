@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/auth/auth_api.dart';
+import 'package:ui_mobile_fashion_app/core/utils/extensions.dart';
 
 const Color kPrimaryColor = Colors.black;
 
@@ -16,6 +17,12 @@ class ProfileMenuList extends StatelessWidget {
           text: "Tài Khoản Của Tôi",
           iconData: LucideIcons.user,
           onTap: () {},
+        ),
+        // THÊM MỤC ĐỊA CHỈ NHẬN HÀNG
+        ProfileMenuItem(
+          text: "Địa Chỉ Nhận Hàng",
+          iconData: LucideIcons.mapPin,
+          onTap: () => context.go('/addresses'),
         ),
         ProfileMenuItem(
           text: "Thông Báo",
@@ -95,20 +102,17 @@ class ProfileMenuItem extends StatelessWidget {
           children: [
             // ICON: Luôn màu đen
             Icon(iconData, color: kPrimaryColor, size: 22),
-
             const SizedBox(width: 20),
-
             // TEXT: Luôn màu đen, không đậm
             Expanded(
               child: Text(
                 text,
                 style: const TextStyle(
                   color: kPrimaryColor,
-                  fontWeight: FontWeight.normal, // Không bold
+                  fontWeight: FontWeight.normal,
                 ),
               ),
             ),
-
             // MŨI TÊN: Luôn màu đen
             const Icon(
               Icons.arrow_forward_ios,

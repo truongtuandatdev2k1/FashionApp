@@ -1,16 +1,16 @@
 // lib/customer/views/product/widgets/product_detail/body/brand_rating.dart
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart'; // ĐÃ THÊM
 
 class BrandRating extends StatelessWidget {
   final String brandName;
-  final double rating;
   final String brandLogoUrl;
 
   const BrandRating({
     super.key,
     required this.brandName,
-    required this.rating,
     required this.brandLogoUrl,
   });
 
@@ -19,43 +19,44 @@ class BrandRating extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        // === PHẦN TRÁI: Logo + Tên thương hiệu + Verified ===
         Row(
           children: [
-            // LOGO GIỮ TỈ LỆ GỐC, TỰ ĐỘNG RESIZE
+            // Logo thương hiệu
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: ConstrainedBox(
                 constraints: const BoxConstraints(
-                  maxWidth: 20,
-                  maxHeight: 20,
-                  minWidth: 16,
-                  minHeight: 16,
+                  maxWidth: 24,
+                  maxHeight: 24,
+                  minWidth: 20,
+                  minHeight: 20,
                 ),
                 child: CachedNetworkImage(
                   imageUrl: brandLogoUrl,
-                  fit: BoxFit.contain, // GIỮ TỈ LỆ GỐC
+                  fit: BoxFit.contain,
                   placeholder: (_, __) => Container(
-                    width: 20,
-                    height: 20,
+                    width: 24,
+                    height: 24,
                     color: Colors.grey[300],
                     child: const Center(
                       child: SizedBox(
-                        width: 12,
-                        height: 12,
+                        width: 14,
+                        height: 14,
                         child: CircularProgressIndicator(strokeWidth: 1.5),
                       ),
                     ),
                   ),
                   errorWidget: (_, __, ___) => Container(
-                    width: 20,
-                    height: 20,
+                    width: 24,
+                    height: 24,
                     color: Colors.black,
                     alignment: Alignment.center,
                     child: Text(
                       brandName.isNotEmpty ? brandName[0].toUpperCase() : '?',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
+                        fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -63,24 +64,53 @@ class BrandRating extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 10),
             Text(
               brandName,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            const SizedBox(width: 4),
-            const Icon(Icons.verified, color: Colors.blue, size: 16),
+            const SizedBox(width: 6),
+            const Icon(Icons.verified, color: Colors.blue, size: 18),
           ],
         ),
-        Row(
-          children: [
-            const Icon(Icons.star, color: Colors.orange, size: 16),
-            const SizedBox(width: 4),
-            Text(
-              rating.toStringAsFixed(1),
-              style: const TextStyle(fontWeight: FontWeight.bold),
+
+        // === PHẦN PHẢI: Mũi tên sang phải (thay thế rating) ===
+        GestureDetector(
+          onTap: () {
+            // TODO: Điều hướng đến trang thương hiệu hoặc trang đánh giá
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Xem chi tiết thương hiệu')),
+            );
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade100,
+              borderRadius: BorderRadius.circular(20),
             ),
-          ],
+            child: const Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Text(
+                //   'Xem shop',
+                //   style: TextStyle(
+                //     fontSize: 14,
+                //     fontWeight: FontWeight.w600,
+                //     color: Colors.black87,
+                //   ),
+                // ),
+                SizedBox(width: 4),
+                Icon(
+                  LucideIcons.chevronRight,
+                  size: 18,
+                  color: Colors.black87,
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
