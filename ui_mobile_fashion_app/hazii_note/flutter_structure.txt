@@ -66,6 +66,7 @@
 │   │       └── happy_shopping.png
 │   └── logo_fas.png
 ├── hazii_note
+│   ├── address_customer.txt
 │   ├── flutter_structure.txt
 │   ├── product_detail_cus.txt
 │   ├── run_and_build.txt
@@ -193,6 +194,8 @@
 │   │   └── router.dart
 │   ├── customer
 │   │   ├── logic
+│   │   │   ├── address
+│   │   │   │   └── mock_address_data.dart
 │   │   │   ├── auth
 │   │   │   │   └── auth_api.dart
 │   │   │   ├── product
@@ -207,6 +210,14 @@
 │   │   ├── router
 │   │   │   └── customer_router.dart
 │   │   ├── views
+│   │   │   ├── address
+│   │   │   │   ├── views
+│   │   │   │   │   ├── address_form_screen.dart
+│   │   │   │   │   └── address_list_screen.dart
+│   │   │   │   └── widgets
+│   │   │   │       ├── address_item.dart
+│   │   │   │       ├── address_list_view.dart
+│   │   │   │       └── empty_address_view.dart
 │   │   │   ├── auth
 │   │   │   │   └── login_screen.dart
 │   │   │   ├── cart
@@ -246,6 +257,10 @@
 │   │   │   │   │   │   ├── bottom_action_bar.dart
 │   │   │   │   │   │   ├── header.dart
 │   │   │   │   │   │   └── size_color_selector_sheet.dart
+│   │   │   │   │   │   │   ├── price_sold.dart
+│   │   │   │   │   │   │   └── size_selector.dart
+│   │   │   │   │   │   ├── bottom_action_bar.dart
+│   │   │   │   │   │   └── header.dart
 │   │   │   │   │   └── product_grid_item.dart
 │   │   │   │   ├── product_detail_screen.dart
 │   │   │   │   └── product_list_screen.dart
@@ -284,4 +299,4 @@
 ├── pubspec.yaml
 └── README.md
 
-115 directories, 170 files
+119 directories, 174 files
