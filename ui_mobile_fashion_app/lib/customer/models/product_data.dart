@@ -1,29 +1,30 @@
 // lib/customer/models/product_data.dart
 class ProductData {
-  final int id; // THÊM DÒNG NÀY
+  final int id;
   final String imageUrl;
   final String name;
-  final int price;
+  final int price; // vẫn giữ int (vì backend trả về số nguyên)
   final int discountPct;
-  final int priceAfter;
+  final double priceAfter; // ĐỔI QUA DOUBLE (API trả về có .96)
 
   const ProductData({
-    required this.id, // THÊM
+    required this.id,
     required this.imageUrl,
     required this.name,
     required this.price,
     required this.discountPct,
-    required this.priceAfter,
+    required this.priceAfter, // double
   });
 
   factory ProductData.fromApi(Map<String, dynamic> json, String baseUrl) {
     return ProductData(
-      id: json['id'] as int, // THÊM
+      id: json['id'] as int,
       imageUrl: baseUrl + json['image_url'],
-      name: json['name'],
-      price: json['price'],
-      discountPct: json['discount_pct'] ?? 0,
-      priceAfter: json['priceAfter'],
+      name: json['name'] as String,
+      price: json['price'] as int,
+      discountPct: (json['discount_pct'] ?? 0) as int,
+      priceAfter:
+          (json['priceAfter'] as num).toDouble(), // Ép an toàn num → double
     );
   }
 }

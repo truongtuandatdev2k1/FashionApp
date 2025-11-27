@@ -6,7 +6,7 @@ import 'package:ui_mobile_fashion_app/customer/models/product_detail_model.dart'
 class SizeColorSelectorSheet extends StatefulWidget {
   final VoidCallback onConfirm;
   final bool isBuyNow;
-  final ProductDetailModel product; // THÊM PRODUCT ĐỂ LẤY DATA
+  final ProductDetailModel product;
 
   const SizeColorSelectorSheet({
     super.key,
@@ -40,11 +40,11 @@ class SizeColorSelectorSheet extends StatefulWidget {
 
 class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
   String? selectedSize;
-  String? selectedColor;
+  String? selectedColorHex; // ← ĐÃ ĐỔI: dùng hex làm key duy nhất
 
   late List<String> availableSizes;
-  late List<Map<String, dynamic>> availableColors;
-  late Map<String, List<Variant>> variantsByColor;
+  late List<ColorInfo> availableColors; // ← Dùng thẳng ColorInfo, không cần Map
+  late Map<String, List<Variant>> variantsByColorHex; // ← Key là colorHex
 
   @override
   void initState() {
@@ -53,28 +53,32 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
   }
 
   void _prepareData() {
-    variantsByColor = {};
+    // Group variant theo colorHex (đảm bảo duy nhất)
+    variantsByColorHex = {};
     for (var v in widget.product.variants) {
-      variantsByColor.putIfAbsent(v.colorName, () => []);
-      variantsByColor[v.colorName]!.add(v);
+      variantsByColorHex.putIfAbsent(v.colorHex, () => []);
+      variantsByColorHex[v.colorHex]!.add(v);
     }
 
-    availableColors =
-        widget.product.colors
-            .map((c) => {'name': c.name, 'hex': c.hex})
-            .toList();
+    availableColors = widget.product.colors;
 
+    // Chọn màu đầu tiên làm mặc định
     if (availableColors.isNotEmpty) {
-      selectedColor = availableColors.first['name'] as String;
+      selectedColorHex = availableColors.first.hex;
       _updateSizesForSelectedColor();
     }
   }
 
   void _updateSizesForSelectedColor() {
-    if (selectedColor == null) return;
+    if (selectedColorHex == null) return;
+
     final sizes =
-        variantsByColor[selectedColor]!.map((v) => v.sizeCode).toSet().toList()
+        variantsByColorHex[selectedColorHex]!
+            .map((v) => v.sizeCode)
+            .toSet()
+            .toList()
           ..sort();
+
     availableSizes = sizes;
 
     if (availableSizes.isNotEmpty &&
@@ -84,10 +88,11 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
   }
 
   String get _selectedImageUrl {
-    if (selectedColor == null) return widget.product.imageUrl;
-    final variant = variantsByColor[selectedColor]!.firstWhere(
+    if (selectedColorHex == null) return widget.product.imageUrl;
+
+    final variant = variantsByColorHex[selectedColorHex]!.firstWhere(
       (v) => v.sizeCode == selectedSize,
-      orElse: () => variantsByColor[selectedColor]!.first,
+      orElse: () => variantsByColorHex[selectedColorHex]!.first,
     );
     return variant.images.isNotEmpty
         ? variant.images.first
@@ -95,9 +100,9 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
   }
 
   int get _currentStock {
-    if (selectedColor == null || selectedSize == null) return 0;
+    if (selectedColorHex == null || selectedSize == null) return 0;
     try {
-      return variantsByColor[selectedColor]!
+      return variantsByColorHex[selectedColorHex]!
           .firstWhere((v) => v.sizeCode == selectedSize)
           .stock;
     } catch (_) {
@@ -142,16 +147,14 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
           ),
           const SizedBox(height: 16),
 
-          // PHẦN MỚI: THÔNG TIN SẢN PHẨM + ẢNH NHỎ
+          // PHẦN GIÁ + ẢNH NHỎ – GIỮ NGUYÊN 100%
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Cột trái: Ảnh nhỏ
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  // ignore: sized_box_for_whitespace
                   child: Container(
                     width: 90,
                     height: 90,
@@ -167,13 +170,10 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                   ),
                 ),
                 const SizedBox(width: 16),
-
-                // Cột phải: Thông tin
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Giảm giá + giá mới
                       Row(
                         children: [
                           if (widget.product.discountPct > 0)
@@ -206,8 +206,6 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                         ],
                       ),
                       const SizedBox(height: 6),
-
-                      // Giá cũ
                       Text(
                         '${(widget.product.price / 1000).toStringAsFixed(3).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ',
                         style: const TextStyle(
@@ -217,8 +215,6 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                         ),
                       ),
                       const SizedBox(height: 8),
-
-                      // Tồn kho
                       Text(
                         'Kho: $_currentStock',
                         style: const TextStyle(
@@ -242,7 +238,7 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Chọn Size
+                  // === CHỌN SIZE (giữ nguyên) ===
                   const Text(
                     'Kích thước',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
@@ -255,8 +251,21 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                         availableSizes.map((size) {
                           final isSelected = selectedSize == size;
                           final stock =
-                              variantsByColor[selectedColor]!
-                                  .firstWhere((v) => v.sizeCode == size)
+                              variantsByColorHex[selectedColorHex]!
+                                  .firstWhere(
+                                    (v) => v.sizeCode == size,
+                                    orElse:
+                                        () => Variant(
+                                          id: 0,
+                                          price: 0,
+                                          stock: 0,
+                                          sku: '',
+                                          colorName: '',
+                                          colorHex: '',
+                                          sizeCode: size,
+                                          images: [],
+                                        ),
+                                  )
                                   .stock;
                           final isOutOfStock = stock == 0;
 
@@ -304,7 +313,7 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
 
                   const SizedBox(height: 32),
 
-                  // Chọn Màu
+                  // === CHỌN MÀU – HOÀN HẢO, KHÔNG HARDCODE, TỰ ĐỘNG XỬ LÝ MÀU TRẮNG ===
                   const Text(
                     'Màu sắc',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
@@ -314,70 +323,114 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                     spacing: 16,
                     runSpacing: 16,
                     children:
-                        availableColors.map((item) {
-                          final name = item['name'] as String;
-                          final hex = item['hex'] as String;
-                          final color =
-                              hex == '#FFFFFF'
-                                  ? Colors.white
-                                  : Color(
-                                    int.parse(hex.replaceFirst('#', '0xFF')),
-                                  );
-                          final isSelected = selectedColor == name;
+                        availableColors
+                            .where((colorInfo) {
+                              // Ẩn nếu hex rỗng hoặc không hợp lệ
+                              final hex = (colorInfo.hex ?? '').trim();
+                              return hex.isNotEmpty &&
+                                  RegExp(
+                                    r'^#?[0-9A-Fa-f]{6}$',
+                                  ).hasMatch(hex.replaceFirst('#', ''));
+                            })
+                            .map((colorInfo) {
+                              final String hex = colorInfo.hex.trim();
+                              final String cleanHex =
+                                  hex.startsWith('#') ? hex : '#$hex';
+                              final String upperHex = cleanHex.toUpperCase();
 
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedColor = name;
-                                _updateSizesForSelectedColor();
-                              });
-                            },
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: BoxDecoration(
-                                    color: color,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color:
+                              final bool isSelected =
+                                  selectedColorHex?.trim().toUpperCase() ==
+                                  upperHex;
+
+                              // Tự động phát hiện màu trắng/xám rất nhạt (luminance cao)
+                              final Color color = Color(
+                                int.parse(upperHex.replaceFirst('#', '0xFF')),
+                              );
+                              final double luminance = color.computeLuminance();
+                              final bool isLightColor =
+                                  luminance >
+                                  0.9; // > 90% độ sáng → coi như trắng
+
+                              return GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    selectedColorHex =
+                                        cleanHex; // giữ nguyên dạng gốc từ API
+                                    _updateSizesForSelectedColor();
+                                  });
+                                },
+                                child: Column(
+                                  children: [
+                                    Container(
+                                      width: 68,
+                                      height: 68,
+                                      decoration: BoxDecoration(
+                                        color: color,
+                                        borderRadius: BorderRadius.circular(14),
+                                        border: Border.all(
+                                          color:
+                                              isSelected
+                                                  ? Colors.black
+                                                  : (isLightColor
+                                                      ? Colors.grey.shade400
+                                                      : Colors.grey.shade300),
+                                          width:
+                                              isSelected
+                                                  ? 3.8
+                                                  : (isLightColor ? 2.2 : 1.3),
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(
+                                              isSelected ? 0.4 : 0.2,
+                                            ),
+                                            blurRadius: isSelected ? 16 : 10,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child:
                                           isSelected
-                                              ? Colors.black
-                                              : Colors.transparent,
-                                      width: isSelected ? 3 : 1,
+                                              ? const Icon(
+                                                Icons.check,
+                                                color: Colors.white,
+                                                size: 36,
+                                                shadows: [
+                                                  Shadow(
+                                                    color: Colors.black54,
+                                                    blurRadius: 10,
+                                                  ),
+                                                ],
+                                              )
+                                              : null,
                                     ),
-                                  ),
-                                  child:
-                                      isSelected
-                                          ? const Icon(
-                                            Icons.check,
-                                            color: Colors.white,
-                                            size: 32,
-                                          )
-                                          : null,
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      colorInfo.name,
+                                      style: const TextStyle(
+                                        fontSize: 13,
+                                        color: Colors.black87,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(height: 6),
-                                Text(
-                                  name,
-                                  style: const TextStyle(fontSize: 13),
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
+                              );
+                            })
+                            .toList(),
                   ),
 
                   const Spacer(),
 
-                  // Nút xác nhận
+                  // Nút xác nhận (giữ nguyên logic cũ)
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
                       onPressed:
                           (selectedSize != null &&
-                                  selectedColor != null &&
+                                  selectedColorHex != null &&
                                   _currentStock > 0)
                               ? () {
                                 widget.onConfirm();
