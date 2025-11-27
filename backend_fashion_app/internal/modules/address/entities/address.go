@@ -11,19 +11,23 @@ const (
 )
 
 type Address struct {
-	ID            uint
-	UserID        uint
-	RecipientName string
-	PhoneNumber   string
-	AddressLine1  string
-	AddressLine2  string
-	Ward          string
-	District      string
-	City          string
-	AddressType   AddressType
-	IsDefault     bool
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	ID            uint        `gorm:"primaryKey"`
+	UserID        uint        `gorm:"not null;index"`
+	RecipientName string      `gorm:"type:varchar(255);not null"`
+	PhoneNumber   string      `gorm:"type:varchar(20);not null"`
+	AddressLine1  string      `gorm:"type:varchar(255);not null"`
+	AddressLine2  string      `gorm:"type:varchar(255)"`
+	Ward          string      `gorm:"type:varchar(100);not null"`
+	District      string      `gorm:"type:varchar(100);not null"`
+	City          string      `gorm:"type:varchar(100);not null"`
+	AddressType   AddressType `gorm:"type:varchar(20)"`
+	IsDefault     bool        `gorm:"default:false"`
+	CreatedAt     time.Time   `gorm:"autoCreateTime"`
+	UpdatedAt     time.Time   `gorm:"autoUpdateTime"`
+}
+
+func (Address) TableName() string {
+	return "addresses"
 }
 
 // GetFullAddress returns the complete formatted address

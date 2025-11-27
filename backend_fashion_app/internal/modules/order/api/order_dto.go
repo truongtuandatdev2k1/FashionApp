@@ -11,10 +11,11 @@ import (
 // CreateOrderRequest represents the request to create an order
 // @Description Request body for creating a new order from cart items
 type CreateOrderRequest struct {
-	AddressID     uint   `json:"address_id" validate:"required" example:"1"`
-	CartItemIDs   []uint `json:"cart_item_ids" validate:"required,min=1" example:"1,2,3"`
-	PaymentMethod string `json:"payment_method" validate:"required,oneof=cod bank_transfer e_wallet" example:"cod"`
-	Note          string `json:"note" example:"Giao hàng giờ hành chính"`
+	AddressID      uint     `json:"address_id" validate:"required" example:"1"`
+	CartItemIDs    []uint   `json:"cart_item_ids" validate:"required,min=1" example:"1,2,3"`
+	PaymentMethod  string   `json:"payment_method" validate:"required,oneof=cod bank_transfer e_wallet" example:"cod"`
+	Note           string   `json:"note" example:"Giao hàng giờ hành chính"`
+	PromotionCodes []string `json:"promotion_codes,omitempty"`
 } // @name CreateOrderRequest
 
 // UpdateOrderStatusRequest represents the request to update order status
@@ -31,6 +32,7 @@ type CancelOrderRequest struct {
 type OrderResponse struct {
 	ID               uuid.UUID           `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
 	OrderNumber      string              `json:"order_number" example:"ORD-20240121-abc123"`
+	OrderCode        uint64              `json:"order_code" example:"1731570000123456789"`
 	CustomerID       uint                `json:"customer_id" example:"1"`
 	ShopID           uint                `json:"shop_id" example:"2"`
 	ShippingName     string              `json:"shipping_name" example:"Nguyễn Văn A"`
@@ -94,6 +96,7 @@ func ToOrderResponse(order *entities.Order) OrderResponse {
 	return OrderResponse{
 		ID:               order.ID,
 		OrderNumber:      order.OrderNumber,
+		OrderCode:        order.OrderCode,
 		CustomerID:       order.CustomerID,
 		ShopID:           order.ShopID,
 		ShippingName:     order.ShippingName,

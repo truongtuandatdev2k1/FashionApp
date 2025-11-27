@@ -156,9 +156,9 @@ func (s *AddressService) Delete(userID, addressID uint) error {
 	}
 
 	// If this is the only address and it's default, don't allow deletion
-	if address.IsDefault && count == 1 {
-		return entities.ErrCannotDeleteLastAddress
-	}
+	// if address.IsDefault && count == 1 {
+	// 	return entities.ErrCannotDeleteLastAddress
+	// }
 
 	// Delete the address
 	return s.repo.Delete(addressID)

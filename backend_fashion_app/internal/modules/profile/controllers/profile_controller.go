@@ -33,14 +33,9 @@ func NewProfileController(db *gorm.DB) *ProfileController {
 }
 
 // saveAvatarFile lưu file avatar được tải lên và trả về đường dẫn
-func (h *ProfileController) saveAvatarFile(file *multipart.FileHeader) (string, error) {
-	src, err := file.Open()
-	if err != nil {
-		return "", err
-	}
-	defer src.Close()
+func (h *ProfileController) saveAvatarFile(src multipart.File, header *multipart.FileHeader) (string, error) {
 
-	ext := filepath.Ext(file.Filename)
+	ext := filepath.Ext(header.Filename)
 	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
 
 	uploadDir := "uploads/avatars"
@@ -120,7 +115,14 @@ func (h *ProfileController) UpsertMine(w http.ResponseWriter, r *http.Request) {
 	file, header, err := r.FormFile("avatar")
 	if err == nil {
 		defer file.Close()
-		savedURL, err := h.saveAvatarFile(header)
+
+		// Validate the uploaded file
+		if err := validation.ValidateImageFile(header); err != nil {
+			resp.Error(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		savedURL, err := h.saveAvatarFile(file, header)
 		if err != nil {
 			resp.Error(w, http.StatusInternalServerError, "failed to save avatar file")
 			return

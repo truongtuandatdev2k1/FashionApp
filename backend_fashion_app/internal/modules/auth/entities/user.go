@@ -9,23 +9,14 @@ const (
 	RoleShop     Role = "shop"
 )
 
-type Provider string
-
-const (
-	ProviderLocal  Provider = "local"
-	ProviderGoogle Provider = "google"
-)
-
 type User struct {
-	ID          uint
-	Email       string
-	Password    string
-	PhoneNumber string `json:"phone_number" gorm:"column:phone_number"`
-	Role        Role
-	Provider    Provider
-	GoogleSub   *string // Thay đổi thành pointer để có thể là NULL
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	ID          uint      `gorm:"primaryKey"`
+	Email       string    `gorm:"type:varchar(255);not null;unique"`
+	Password    string    `gorm:"type:varchar(255);not null"`
+	PhoneNumber string    `json:"phone_number" gorm:"column:phone_number;type:varchar(20);not null;unique"`
+	Role        Role      `gorm:"type:enum('shop','customer');not null"`
+	CreatedAt   time.Time `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 }
 
 func (u *User) IsShop() bool     { return u.Role == RoleShop }

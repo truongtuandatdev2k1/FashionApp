@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"time"
+
+	authRepositories "myfashion/internal/modules/auth/repositories"
 )
 
 // PromotionModel ánh xạ tới bảng `promotions`
@@ -24,6 +26,9 @@ type PromotionModel struct {
 	TargetGroup    string    `gorm:"size:50;not null"`
 	CreatedAt      time.Time `gorm:"autoCreateTime"`
 	UpdatedAt      time.Time `gorm:"autoUpdateTime"`
+
+	ApplicableUsers []PromotionUserModel `gorm:"foreignKey:PromotionID;constraint:OnDelete:CASCADE"`
+	ApplicableTiers []PromotionTierModel `gorm:"foreignKey:PromotionID;constraint:OnDelete:CASCADE"`
 }
 
 func (PromotionModel) TableName() string {
@@ -32,8 +37,11 @@ func (PromotionModel) TableName() string {
 
 // PromotionUserModel ánh xạ tới bảng `promotion_users`
 type PromotionUserModel struct {
-	PromotionID uint `gorm:"primaryKey"`
-	UserID      uint `gorm:"primaryKey"`
+	PromotionID uint `gorm:"primaryKey;autoIncrement:false"`
+	UserID      uint `gorm:"primaryKey;autoIncrement:false"`
+
+	Promotion PromotionModel             `gorm:"foreignKey:PromotionID;constraint:OnDelete:CASCADE"`
+	User      authRepositories.UserModel `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
 func (PromotionUserModel) TableName() string {
@@ -42,8 +50,10 @@ func (PromotionUserModel) TableName() string {
 
 // PromotionTierModel ánh xạ tới bảng `promotion_tiers`
 type PromotionTierModel struct {
-	PromotionID uint   `gorm:"primaryKey"`
-	TierName    string `gorm:"primaryKey;size:50"`
+	PromotionID uint   `gorm:"primaryKey;autoIncrement:false"`
+	TierName    string `gorm:"primaryKey;size:50;autoIncrement:false"`
+
+	Promotion PromotionModel `gorm:"foreignKey:PromotionID;constraint:OnDelete:CASCADE"`
 }
 
 func (PromotionTierModel) TableName() string {

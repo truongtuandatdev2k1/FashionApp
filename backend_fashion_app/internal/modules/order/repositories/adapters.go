@@ -38,11 +38,11 @@ func (r *CartRepositoryAdapter) FindItemsByIDs(ctx context.Context, itemIDs []ui
 	result := make([]services.CartItemData, len(cartItems))
 	for i, item := range cartItems {
 		result[i] = services.CartItemData{
-			ID:            item.ID,
-			CartID:        item.CartID,
-			ProductID:     item.ProductID,
-			Quantity:      item.Quantity,
-			PriceSnapshot: item.PriceSnapshot,
+			ID:               item.ID,
+			CartID:           item.CartID,
+			ProductVariantID: item.ProductVariantID,
+			Quantity:         item.Quantity,
+			PriceSnapshot:    item.PriceSnapshot,
 		}
 	}
 
@@ -99,33 +99,39 @@ func NewProductRepositoryAdapter(db *gorm.DB) *ProductRepositoryAdapter {
 	return &ProductRepositoryAdapter{db: db}
 }
 
-func (r *ProductRepositoryAdapter) FindByID(ctx context.Context, productID uint) (services.ProductData, error) {
-	var product catalogEntities.Product
+func (r *ProductRepositoryAdapter) FindVariantByID(ctx context.Context, variantID uint) (services.ProductData, error) {
+	var variant catalogEntities.ProductVariant
 
 	err := r.db.WithContext(ctx).
-		Where("id = ?", productID).
-		First(&product).Error
+		Preload("Product").
+		Preload("ProductColor").
+		Where("id = ?", variantID).
+		First(&variant).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return services.ProductData{}, errors.New("product not found")
+			return services.ProductData{}, errors.New("product variant not found")
 		}
 		return services.ProductData{}, err
 	}
 
 	return services.ProductData{
-		ID:         product.ID,
-		Name:       product.Name,
-		ImageURL:   product.ImageURL,
-		PriceAfter: product.PriceAfter,
-		Stock:      product.Stock,
+		VariantID: variant.ID,
+		ProductID: variant.ProductID,
+		Name:      variant.Product.Name,
+		ImageURL:  variant.Product.ImageURL,
+		Price:     variant.Product.PriceAfter,
+		Stock:     variant.Stock,
+		SKU:       variant.Sku,
+		Color:     variant.ProductColor.ColorName,
+		Size:      variant.SizeCode,
 	}, nil
 }
 
-func (r *ProductRepositoryAdapter) DecrementStock(ctx context.Context, productID uint, quantity int) error {
+func (r *ProductRepositoryAdapter) DecrementVariantStock(ctx context.Context, variantID uint, quantity int) error {
 	result := r.db.WithContext(ctx).
-		Model(&catalogEntities.Product{}).
-		Where("id = ? AND stock >= ?", productID, quantity).
+		Model(&catalogEntities.ProductVariant{}).
+		Where("id = ? AND stock >= ?", variantID, quantity).
 		Update("stock", gorm.Expr("stock - ?", quantity))
 
 	if result.Error != nil {
@@ -133,7 +139,7 @@ func (r *ProductRepositoryAdapter) DecrementStock(ctx context.Context, productID
 	}
 
 	if result.RowsAffected == 0 {
-		return errors.New("insufficient stock or product not found")
+		return errors.New("insufficient stock or product variant not found")
 	}
 
 	return nil

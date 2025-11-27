@@ -54,3 +54,16 @@ func (r *styleGormRepo) Update(ctx context.Context, style *entities.Style) error
 func (r *styleGormRepo) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&StyleModel{}, id).Error
 }
+
+func (r *styleGormRepo) GetByIDs(ctx context.Context, ids []uint) ([]entities.Style, error) {
+	var models []StyleModel
+	if err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	var result []entities.Style
+	for _, model := range models {
+		result = append(result, *model.ToEntity())
+	}
+	return result, nil
+}

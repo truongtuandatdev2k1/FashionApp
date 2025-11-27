@@ -7,10 +7,28 @@ import (
 )
 
 func Migrate(db *gorm.DB) error {
-	return db.AutoMigrate(
+	if err := db.AutoMigrate(
 		&repositories.CategoryModel{},
 		&repositories.StyleModel{},
+		&repositories.BrandModel{},
 		&repositories.ProductModel{},
-		&repositories.ProductImageModel{},
-	)
+		&repositories.ProductVariantModel{},
+		&repositories.ProductColorModel{},
+		&repositories.ProductColorImageModel{},
+		&repositories.ProductStatsModel{},
+	); err != nil {
+		return err
+	}
+	// Drop legacy tables if they still exist
+	if db.Migrator().HasTable("product_images") {
+		if err := db.Migrator().DropTable("product_images"); err != nil {
+			return err
+		}
+	}
+	if db.Migrator().HasTable("colors") {
+		if err := db.Migrator().DropTable("colors"); err != nil {
+			return err
+		}
+	}
+	return nil
 }

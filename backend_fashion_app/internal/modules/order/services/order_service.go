@@ -10,10 +10,11 @@ import (
 )
 
 type OrderService struct {
-	orderRepo   OrderRepository
-	cartRepo    CartRepository
-	addressRepo AddressRepository
-	productRepo ProductRepository
+	orderRepo    OrderRepository
+	cartRepo     CartRepository
+	addressRepo  AddressRepository
+	productRepo  ProductRepository
+	promoService PromotionService
 }
 
 func NewOrderService(
@@ -21,12 +22,14 @@ func NewOrderService(
 	cartRepo CartRepository,
 	addressRepo AddressRepository,
 	productRepo ProductRepository,
+	promoService PromotionService,
 ) *OrderService {
 	return &OrderService{
-		orderRepo:   orderRepo,
-		cartRepo:    cartRepo,
-		addressRepo: addressRepo,
-		productRepo: productRepo,
+		orderRepo:    orderRepo,
+		cartRepo:     cartRepo,
+		addressRepo:  addressRepo,
+		productRepo:  productRepo,
+		promoService: promoService,
 	}
 }
 
@@ -67,6 +70,7 @@ func (s *OrderService) CreateOrderFromCart(
 	cartItemIDs []uint,
 	paymentMethod entities.PaymentMethod,
 	note string,
+	promotionCodes []string,
 ) (*entities.Order, error) {
 	// 1. Validate input
 	if len(cartItemIDs) == 0 {
@@ -79,54 +83,67 @@ func (s *OrderService) CreateOrderFromCart(
 		return nil, entities.ErrInvalidShippingAddress
 	}
 
-	// 3. Get cart items
+	// 3. Get cart items and product information
 	cartItems, err := s.cartRepo.FindItemsByIDs(ctx, cartItemIDs, customerID)
 	if err != nil {
 		return nil, err
 	}
-
 	if len(cartItems) == 0 {
 		return nil, entities.ErrEmptyCart
 	}
 
-	// 4. Get product information and validate stock
 	orderItems := make([]entities.OrderItem, 0, len(cartItems))
-
+	var subtotal float64
 	for _, cartItem := range cartItems {
-		product, err := s.productRepo.FindByID(ctx, cartItem.ProductID)
+		variantData, err := s.productRepo.FindVariantByID(ctx, cartItem.ProductVariantID)
 		if err != nil {
-			return nil, err
+			return nil, err // Or a more specific error
+		}
+		if variantData.Stock < cartItem.Quantity {
+			return nil, entities.ErrInsufficientStock // TODO: Create specific error for insufficient stock
 		}
 
-		// Check stock availability
-		if product.Stock < cartItem.Quantity {
-			return nil, entities.ErrEmptyCart // TODO: Create specific error for insufficient stock
-		}
+		itemSubtotal := variantData.Price * float64(cartItem.Quantity)
+		subtotal += itemSubtotal
 
-		// Create order item
-		orderItem := entities.OrderItem{
-			ID:           uuid.New(),
-			ProductID:    product.ID,
-			ProductName:  product.Name,
-			ProductSKU:   "", // SKU không có trong Product entity
-			ProductImage: product.ImageURL,
-			Size:         "", // TODO: Add size/color to cart items
-			Color:        "",
-			Quantity:     cartItem.Quantity,
-			Price:        product.PriceAfter,
-			Subtotal:     product.PriceAfter * float64(cartItem.Quantity),
-			CreatedAt:    time.Now(),
-		}
-		orderItems = append(orderItems, orderItem)
+		orderItems = append(orderItems, entities.OrderItem{
+			ID:               uuid.New(),
+			ProductID:        variantData.ProductID,
+			ProductVariantID: variantData.VariantID,
+			ProductName:      variantData.Name,
+			ProductSKU:       variantData.SKU,
+			ProductImage:     variantData.ImageURL,
+			Color:            variantData.Color,
+			Size:             variantData.Size,
+			Quantity:         cartItem.Quantity,
+			Price:            variantData.Price,
+			Subtotal:         itemSubtotal,
+			CreatedAt:        time.Now(),
+		})
 	}
 
-	// 5. Create order (ShopID = 1 vì chỉ có 1 shop duy nhất)
-	order := entities.NewOrder(customerID, 1)
+	// 4. Validate promotions and calculate discount
+	shippingFee := 30000.0 // TODO: Calculate shipping fee
+	var totalDiscount float64
+	var promoResult *PromotionValidationOutput
 
-	// Set shipping info from address
+	if s.promoService != nil && len(promotionCodes) > 0 {
+		var err error
+		promoResult, err = s.promoService.ValidatePromotions(ctx, customerID, PromotionValidationInput{
+			Codes:         promotionCodes,
+			OrderSubtotal: subtotal,
+			ShippingFee:   shippingFee,
+		})
+		if err != nil {
+			return nil, err // Propagate promotion validation error
+		}
+		totalDiscount = promoResult.TotalOrderDiscount + promoResult.TotalShippingDiscount
+	}
+
+	// 5. Create order entity
+	order := entities.NewOrder(customerID, 1) // Assuming ShopID = 1
 	order.ShippingName = address.RecipientName
 	order.ShippingPhone = address.PhoneNumber
-
 	fullAddress := address.AddressLine1
 	if address.AddressLine2 != "" {
 		fullAddress += ", " + address.AddressLine2
@@ -135,30 +152,27 @@ func (s *OrderService) CreateOrderFromCart(
 	order.ShippingWard = address.Ward
 	order.ShippingDistrict = address.District
 	order.ShippingProvince = address.City
-
 	order.PaymentMethod = paymentMethod
 	order.Note = note
-	order.ShippingFee = 30000 // TODO: Calculate shipping fee based on location
-	order.DiscountAmount = 0  // TODO: Apply discount/voucher if any
+	order.ShippingFee = shippingFee
+	order.DiscountAmount = totalDiscount
 	order.Items = orderItems
 
-	// Set order ID for all items
 	for i := range order.Items {
 		order.Items[i].OrderID = order.ID
 	}
 
-	// Calculate totals
 	order.CalculateTotals()
 
-	// 6. Save order to database
+	// 6. Save order to database (transaction recommended)
 	if err := s.orderRepo.Create(ctx, order); err != nil {
 		return nil, err
 	}
 
 	// 7. Decrement product stock
 	for _, item := range orderItems {
-		if err := s.productRepo.DecrementStock(ctx, item.ProductID, item.Quantity); err != nil {
-			// TODO: Implement rollback mechanism
+		if err := s.productRepo.DecrementVariantStock(ctx, item.ProductVariantID, item.Quantity); err != nil {
+			// TODO: Implement rollback mechanism for created order
 			return nil, err
 		}
 	}
@@ -166,7 +180,17 @@ func (s *OrderService) CreateOrderFromCart(
 	// 8. Remove items from cart
 	if err := s.cartRepo.DeleteItems(ctx, cartItemIDs); err != nil {
 		// Log error but don't fail the order creation
-		// The order is already created successfully
+	}
+
+	// 9. Update promotion usage counts
+	if promoResult != nil && len(promoResult.AppliedPromotions) > 0 {
+		appliedCodes := make([]string, len(promoResult.AppliedPromotions))
+		for i, p := range promoResult.AppliedPromotions {
+			appliedCodes[i] = p.Code
+		}
+		if err := s.promoService.RecordUsage(ctx, appliedCodes); err != nil {
+			// Log error but don't fail the order creation
+		}
 	}
 
 	return order, nil

@@ -28,11 +28,11 @@ type CartRepository interface {
 
 // CartItemData represents cart item data needed for order creation
 type CartItemData struct {
-	ID            uint
-	CartID        uint
-	ProductID     uint
-	Quantity      int
-	PriceSnapshot float64
+	ID               uint
+	CartID           uint
+	ProductVariantID uint
+	Quantity         int
+	PriceSnapshot    float64
 }
 
 // AddressRepository defines the interface for address data access
@@ -54,15 +54,48 @@ type AddressData struct {
 
 // ProductRepository defines the interface for product data access
 type ProductRepository interface {
-	FindByID(ctx context.Context, productID uint) (ProductData, error)
-	DecrementStock(ctx context.Context, productID uint, quantity int) error
+	FindVariantByID(ctx context.Context, variantID uint) (ProductData, error)
+	DecrementVariantStock(ctx context.Context, variantID uint, quantity int) error
 }
 
 // ProductData represents product data needed for order creation
 type ProductData struct {
-	ID         uint
-	Name       string
-	ImageURL   string
-	PriceAfter float64
-	Stock      int
+	VariantID uint
+	ProductID uint
+	Name      string  // Product Name
+	ImageURL  string  // Product Image
+	Price     float64 // Variant Price
+	Stock     int     // Variant Stock
+	SKU       string  // Variant SKU
+	Color     string  // Variant Color
+	Size      string  // Variant Size
+}
+
+// --- Promotion Service Interface ---
+
+// PromotionValidationInput represents the data needed to validate promotions.
+type PromotionValidationInput struct {
+	Codes         []string
+	OrderSubtotal float64
+	ShippingFee   float64
+}
+
+// PromotionValidationOutput represents the result of a promotion validation.
+type PromotionValidationOutput struct {
+	TotalOrderDiscount    float64
+	TotalShippingDiscount float64
+	FinalAmount           float64
+	AppliedPromotions     []AppliedPromotion
+}
+
+// AppliedPromotion represents a promotion that was successfully applied.
+type AppliedPromotion struct {
+	Code           string
+	DiscountAmount float64
+}
+
+// PromotionService defines the interface for promotion-related operations needed by the order module.
+type PromotionService interface {
+	ValidatePromotions(ctx context.Context, userID uint, input PromotionValidationInput) (*PromotionValidationOutput, error)
+	RecordUsage(ctx context.Context, codes []string) error
 }

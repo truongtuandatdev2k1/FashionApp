@@ -1,7 +1,7 @@
 package api
 
 type RegisterRequest struct {
-	Email           string `json:"email" example:"alice@gmail.com" format:"email" validate:"required,email,gmail"`
+	Email           string `json:"email" example:"alice@example.com" format:"email" validate:"required,email"`
 	PhoneNumber     string `json:"phone_number" validate:"required,vn_phone"`
 	Password        string `json:"password" validate:"required,password"`
 	ConfirmPassword string `json:"confirmPassword" validate:"required,eqfield=Password"`
@@ -9,12 +9,8 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Credential string `json:"credential" example:"test@gmail.com/0965744926" validate:"required,email,gmail"`
+	Credential string `json:"credential" example:"test@example.com/0912345678" validate:"required,email,gmail"`
 	Password   string `json:"password" example:"Cong123@" validate:"required,password"`
-}
-
-type GoogleLoginRequest struct {
-	IDToken string `json:"idToken"`
 }
 
 // UserInfo holds basic user information.

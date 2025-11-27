@@ -9,5 +9,6 @@ var (
 	ErrInvalidStatusTransition = errors.New("invalid status transition")
 	ErrEmptyCart               = errors.New("cart is empty")
 	ErrInvalidShippingAddress  = errors.New("invalid shipping address")
+	ErrInsufficientStock       = errors.New("insufficient stock for one or more items")
 	ErrUnauthorizedAccess      = errors.New("unauthorized access to order")
 )

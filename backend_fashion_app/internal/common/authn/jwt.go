@@ -47,7 +47,16 @@ func GetClaims(ctx context.Context) *Claims {
 	return nil
 }
 
+// BlacklistChecker interface để kiểm tra token blacklist
+type BlacklistChecker interface {
+	IsBlacklisted(token string) (bool, error)
+}
+
 func AuthRequired(secret string) func(http.Handler) http.Handler {
+	return AuthRequiredWithBlacklist(secret, nil)
+}
+
+func AuthRequiredWithBlacklist(secret string, blacklistChecker BlacklistChecker) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			auth := r.Header.Get("Authorization")
@@ -56,6 +65,20 @@ func AuthRequired(secret string) func(http.Handler) http.Handler {
 				return
 			}
 			tok := strings.TrimPrefix(auth, "Bearer ")
+
+			// Kiểm tra token có trong blacklist không
+			if blacklistChecker != nil {
+				isBlacklisted, err := blacklistChecker.IsBlacklisted(tok)
+				if err != nil {
+					http.Error(w, "internal server error", http.StatusInternalServerError)
+					return
+				}
+				if isBlacklisted {
+					http.Error(w, "token has been revoked", http.StatusUnauthorized)
+					return
+				}
+			}
+
 			parsed, err := jwt.ParseWithClaims(tok, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, errors.New("unexpected signing method")

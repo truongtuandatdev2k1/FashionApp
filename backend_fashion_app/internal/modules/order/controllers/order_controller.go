@@ -74,7 +74,7 @@ func (c *OrderController) handleServiceError(w http.ResponseWriter, err error) {
 // --- Handlers ---
 
 // @Summary Create Order
-// @Description Tạo đơn hàng mới từ giỏ hàng (customer)
+// @Description Tạo đơn hàng mới từ giỏ hàng (customer), các loại thanh toán: cod, bank_transfer, e_wallet
 // @Security Bearer
 // @Tags Order
 // @Accept json
@@ -114,6 +114,7 @@ func (c *OrderController) CreateOrder(w http.ResponseWriter, r *http.Request) {
 		req.CartItemIDs,
 		paymentMethod,
 		req.Note,
+		req.PromotionCodes,
 	)
 	if err != nil {
 		c.handleServiceError(w, err)

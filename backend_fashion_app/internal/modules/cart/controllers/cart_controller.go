@@ -3,13 +3,16 @@ package controllers
 import (
 	"encoding/json"
 	"errors"
+	"net/http"
+	"regexp"
+	"strconv"
+	"strings"
+
 	"myfashion/internal/common/authn"
 	"myfashion/internal/common/resp"
 	"myfashion/internal/common/validation"
 	"myfashion/internal/modules/cart/api"
 	"myfashion/internal/modules/cart/services"
-	"net/http"
-	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
@@ -60,6 +63,65 @@ func (c *CartController) handleServiceError(w http.ResponseWriter, err error) {
 }
 
 // --- Handlers ---
+
+// @Summary Change Cart Item Variant
+// @Description Đổi màu/size cho một sản phẩm trong giỏ; sẽ gộp số lượng nếu cart đã có item cùng biến thể mới
+// @Security Bearer
+// @Tags Cart
+// @Accept json
+// @Produce json
+// @Param id path int true "ID của Cart Item"
+// @Param body body api.ChangeCartItemVariantRequest true "Màu/Size mới"
+// @Success 200 {object} resp.Envelope{data=api.CartItemResponse}
+// @Failure 400 {object} resp.Envelope
+// @Failure 401 {object} resp.Envelope
+// @Failure 403 {object} resp.Envelope
+// @Failure 404 {object} resp.Envelope
+// @Router /cart/items/{id}/variant [put]
+func (c *CartController) ChangeCartItemVariant(w http.ResponseWriter, r *http.Request) {
+	userID, ok := c.getUserID(r)
+	if !ok {
+		resp.Error(w, http.StatusUnauthorized, "yêu cầu đăng nhập")
+		return
+	}
+	itemID, ok := c.parseID(w, r, "id")
+	if !ok {
+		return
+	}
+	var req api.ChangeCartItemVariantRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		resp.Error(w, http.StatusBadRequest, "invalid body")
+		return
+	}
+	// validate: at least one provided
+	if strings.TrimSpace(req.ColorHex) == "" && strings.TrimSpace(req.SizeCode) == "" {
+		resp.Error(w, http.StatusBadRequest, "at least one of color_hex or size_code is required")
+		return
+	}
+	// validate color hex if provided
+	if strings.TrimSpace(req.ColorHex) != "" {
+		if !regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`).MatchString(req.ColorHex) {
+			resp.Error(w, http.StatusBadRequest, "invalid color_hex format")
+			return
+		}
+	}
+	// validate size if provided
+	if v := strings.ToUpper(strings.TrimSpace(req.SizeCode)); v != "" {
+		switch v {
+		case "S", "M", "L", "XL", "2XL":
+			// ok
+		default:
+			resp.Error(w, http.StatusBadRequest, "invalid size_code")
+			return
+		}
+	}
+	updated, err := c.svc.ChangeCartItemVariant(r.Context(), userID, itemID, req.ColorHex, req.SizeCode)
+	if err != nil {
+		c.handleServiceError(w, err)
+		return
+	}
+	resp.OK(w, updated)
+}
 
 // @Summary Get Cart
 // @Description Lấy thông tin giỏ hàng của người dùng hiện tại

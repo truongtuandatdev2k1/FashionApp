@@ -13,7 +13,14 @@ type Config struct {
 	JWT_RefreshSecret string
 	JWT_AccessTTLMin  int
 	JWT_RefreshTTLD   int
-	GoogleClientID    string
+
+	// PayOS
+	PayOSClientID        string
+	PayOSAPIKey          string
+	PayOSChecksumKey     string
+	PayOSReturnURL       string
+	PayOSCancelURL       string
+	PaymentExpireMinutes int
 }
 
 func Load() Config {
@@ -24,7 +31,13 @@ func Load() Config {
 		JWT_RefreshSecret: getEnv("JWT_REFRESH_SECRET", ""),
 		JWT_AccessTTLMin:  getEnvInt("JWT_ACCESS_TTL_MIN", 60),
 		JWT_RefreshTTLD:   getEnvInt("JWT_REFRESH_TTL_DAYS", 30),
-		GoogleClientID:    getEnv("GOOGLE_CLIENT_ID", ""),
+
+		PayOSClientID:        getEnv("PAYOS_CLIENT_ID", ""),
+		PayOSAPIKey:          getEnv("PAYOS_API_KEY", ""),
+		PayOSChecksumKey:     getEnv("PAYOS_CHECKSUM_KEY", ""),
+		PayOSReturnURL:       getEnv("PAYOS_RETURN_URL", ""),
+		PayOSCancelURL:       getEnv("PAYOS_CANCEL_URL", ""),
+		PaymentExpireMinutes: getEnvInt("PAYMENT_EXPIRE_MINUTES", 10),
 	}
 }
 

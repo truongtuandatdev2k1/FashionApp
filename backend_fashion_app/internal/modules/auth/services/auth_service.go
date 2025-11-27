@@ -5,46 +5,55 @@ import (
 	"errors"
 	"time"
 
+	"myfashion/internal/common/authn"
 	"myfashion/internal/common/security"
 	"myfashion/internal/modules/auth/entities"
-
-	"google.golang.org/api/idtoken"
+	"myfashion/internal/modules/auth/repositories"
 )
 
+var (
+	// ErrRefreshTokenExpired là lỗi trả về khi refresh token đã hết hạn.
+	ErrRefreshTokenExpired = errors.New("refresh token has expired")
+	// ErrRefreshTokenRevoked là lỗi trả về khi refresh token đã bị thu hồi hoặc đang bị tái sử dụng.
+	ErrRefreshTokenRevoked = errors.New("refresh token has been revoked or reused")
+)
+
+// AuthService chứa logic nghiệp vụ cho việc xác thực người dùng.
 type AuthService struct {
-	repo   UserRepository
-	tokens RefreshTokenRepository
+	repo   *repositories.UserRepository
+	tokens *repositories.RefreshTokenRepository
 	pwd    security.PasswordHasher
 }
 
-func NewAuthService(repo UserRepository, tokens RefreshTokenRepository, pwd security.PasswordHasher) *AuthService {
+// NewAuthService tạo một instance mới của AuthService.
+func NewAuthService(repo *repositories.UserRepository, tokens *repositories.RefreshTokenRepository, pwd security.PasswordHasher) *AuthService {
 	return &AuthService{repo: repo, tokens: tokens, pwd: pwd}
 }
 
-// RegisterCustomer đăng ký tài khoản customer (shop được cấp thủ công)
+// RegisterCustomer đăng ký một tài khoản customer mới.
 func (s *AuthService) RegisterCustomer(ctx context.Context, email, rawPwd, phoneNumber string) (*entities.User, error) {
 	if ex, _ := s.repo.GetByEmail(ctx, email); ex != nil {
 		return nil, errors.New("email already exists")
+	}
+	if ex, _ := s.repo.GetByPhone(ctx, phoneNumber); ex != nil {
+		return nil, errors.New("phone number already exists")
 	}
 	hash, err := s.pwd.Hash(rawPwd)
 	if err != nil {
 		return nil, err
 	}
-	// Chỉ tạo tài khoản customer, GoogleSub = nil cho local account
-	u := &entities.User{Email: email, Password: hash, PhoneNumber: phoneNumber, Role: entities.RoleCustomer, Provider: entities.ProviderLocal, GoogleSub: nil}
+	u := &entities.User{Email: email, Password: hash, PhoneNumber: phoneNumber, Role: entities.RoleCustomer}
 	if err := s.repo.Create(ctx, u); err != nil {
 		return nil, err
 	}
 	return u, nil
 }
 
+// Login xử lý đăng nhập local bằng email/số điện thoại và mật khẩu.
 func (s *AuthService) Login(ctx context.Context, credential, rawPwd string) (*entities.User, error) {
 	u, err := s.repo.GetByCredential(ctx, credential)
 	if err != nil || u == nil {
 		return nil, errors.New("invalid credentials")
-	}
-	if u.Provider != entities.ProviderLocal {
-		return nil, errors.New("account is not local")
 	}
 	if !s.pwd.Verify(u.Password, rawPwd) {
 		return nil, errors.New("invalid credentials")
@@ -52,63 +61,94 @@ func (s *AuthService) Login(ctx context.Context, credential, rawPwd string) (*en
 	return u, nil
 }
 
-func (s *AuthService) LoginGoogle(ctx context.Context, idToken, audienceClientID string) (*entities.User, error) {
-	payload, err := idtoken.Validate(ctx, idToken, audienceClientID)
+// IssueRefreshToken tạo một refresh token mới và lưu vào DB.
+// Hàm này thường được gọi sau khi đăng nhập thành công.
+// Trả về token dưới dạng plaintext để gửi cho client.
+func (s *AuthService) IssueRefreshToken(ctx context.Context, userID uint, ttlDays int) (string, error) {
+	tokenPlain, err := security.GenerateRandomToken(32)
 	if err != nil {
-		return nil, errors.New("invalid google token")
-	}
-	email, _ := payload.Claims["email"].(string)
-	sub, _ := payload.Claims["sub"].(string)
-	if email == "" || sub == "" {
-		return nil, errors.New("google token missing claims")
+		return "", err
 	}
 
-	if u, err := s.repo.GetByGoogleSub(ctx, sub); err != nil {
-		return nil, err
-	} else if u != nil {
-		return u, nil
-	}
-	if u, _ := s.repo.GetByEmail(ctx, email); u != nil {
-		u.Provider = entities.ProviderGoogle
-		u.GoogleSub = &sub
-		return u, nil // demo: skip DB update for speed
-	}
-	u := &entities.User{Email: email, Role: entities.RoleCustomer, Provider: entities.ProviderGoogle, GoogleSub: &sub}
-	if err := s.repo.Create(ctx, u); err != nil {
-		return nil, err
-	}
-	return u, nil
-}
-
-func (s *AuthService) IssueRefreshToken(ctx context.Context, userID uint, ttlDays int, tokenPlain string) (*entities.RefreshToken, error) {
 	rt := &entities.RefreshToken{
 		UserID:    userID,
 		TokenHash: security.HashTokenSHA256(tokenPlain),
 		ExpiresAt: time.Now().Add(time.Duration(ttlDays) * 24 * time.Hour),
-		Revoked:   false,
 	}
+
 	if err := s.tokens.Create(ctx, rt); err != nil {
-		return nil, err
+		return "", err
 	}
-	return rt, nil
+	return tokenPlain, nil
 }
 
-func (s *AuthService) VerifyAndRotateRefreshToken(ctx context.Context, tokenPlain string, newTokenPlain string, ttlDays int) (*entities.RefreshToken, error) {
-	hash := security.HashTokenSHA256(tokenPlain)
-	found, err := s.tokens.GetByHash(ctx, hash)
-	if err != nil || found == nil {
-		return nil, errors.New("invalid refresh token")
+// RotateRefreshToken thực hiện xoay vòng refresh token một cách an toàn.
+// Nó vô hiệu hóa token cũ, tạo token mới, và có cơ chế phát hiện tái sử dụng token.
+func (s *AuthService) RotateRefreshToken(ctx context.Context, oldTokenPlain string, ttlDays int, jwtCfg authn.JWTConfig) (*entities.User, string, string, error) {
+	oldTokenHash := security.HashTokenSHA256(oldTokenPlain)
+	oldToken, err := s.tokens.GetByHash(ctx, oldTokenHash)
+	if err != nil {
+		return nil, "", "", err // Lỗi DB
 	}
-	if found.Revoked || time.Now().After(found.ExpiresAt) {
-		return nil, errors.New("refresh token expired or revoked")
+	// Nếu không tìm thấy token, có thể nó đã bị thu hồi do tấn công, hoặc là token giả.
+	if oldToken == nil {
+		return nil, "", "", ErrRefreshTokenRevoked
 	}
-	// revoke old and create new
-	if err := s.tokens.RevokeByHash(ctx, hash); err != nil {
-		return nil, err
+
+	// **Cơ chế 1: Phát hiện Tái sử dụng (Reuse Detection)**
+	// Nếu token đã bị thu hồi (RevokedAt != nil), đây là dấu hiệu của việc token đã bị rò rỉ.
+	if oldToken.RevokedAt != nil {
+		// Hành động bảo mật: Thu hồi toàn bộ "gia đình" token bắt nguồn từ token bị rò rỉ này.
+		if oldToken.ReplacedByTokenHash != nil {
+			_ = s.tokens.RevokeDescendants(ctx, *oldToken.ReplacedByTokenHash)
+		}
+		return nil, "", "", ErrRefreshTokenRevoked
 	}
-	return s.IssueRefreshToken(ctx, found.UserID, ttlDays, newTokenPlain)
+
+	// Kiểm tra xem token có hết hạn hay không.
+	if time.Now().After(oldToken.ExpiresAt) {
+		return nil, "", "", ErrRefreshTokenExpired
+	}
+
+	// --- Bắt đầu quá trình Xoay vòng (Rotation) ---
+
+	// 1. Lấy thông tin người dùng để tạo access token mới.
+	user, err := s.GetUserByID(ctx, oldToken.UserID)
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	// 2. Tạo một refresh token mới hoàn toàn.
+	newRefreshTokenPlain, err := s.IssueRefreshToken(ctx, user.ID, ttlDays)
+	if err != nil {
+		return nil, "", "", err
+	}
+	newRefreshTokenHash := security.HashTokenSHA256(newRefreshTokenPlain)
+
+	// 3. Thu hồi token cũ và ghi nhận nó đã được thay thế bởi token mới.
+	now := time.Now()
+	oldToken.RevokedAt = &now
+	oldToken.ReplacedByTokenHash = &newRefreshTokenHash
+	if err := s.tokens.Save(ctx, oldToken); err != nil {
+		return nil, "", "", err
+	}
+
+	// 4. Tạo access token mới tương ứng.
+	newAccessToken, err := authn.GenerateToken(jwtCfg, user.ID, string(user.Role))
+	if err != nil {
+		return nil, "", "", err
+	}
+
+	return user, newAccessToken, newRefreshTokenPlain, nil
 }
 
+// RevokeAllUserTokens thu hồi tất cả các refresh token đang hoạt động của một người dùng.
+// Thường được sử dụng cho chức năng "Đăng xuất khỏi tất cả các thiết bị".
 func (s *AuthService) RevokeAllUserTokens(ctx context.Context, userID uint) error {
 	return s.tokens.RevokeAllByUser(ctx, userID)
+}
+
+// GetUserByID lấy thông tin người dùng bằng ID.
+func (s *AuthService) GetUserByID(ctx context.Context, userID uint) (*entities.User, error) {
+	return s.repo.GetByID(ctx, userID)
 }

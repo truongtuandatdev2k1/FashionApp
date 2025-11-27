@@ -33,6 +33,10 @@ definitions:
         - e_wallet
         example: cod
         type: string
+      promotion_codes:
+        items:
+          type: string
+        type: array
     required:
     - address_id
     - cart_item_ids
@@ -114,6 +118,9 @@ definitions:
       note:
         example: Giao hàng giờ hành chính
         type: string
+      order_code:
+        example: 1731570000123456789
+        type: integer
       order_number:
         example: ORD-20240121-abc123
         type: string
@@ -177,14 +184,14 @@ definitions:
     type: object
   api.AddToCartRequest:
     properties:
-      product_id:
+      product_variant_id:
         minimum: 1
         type: integer
       quantity:
         minimum: 1
         type: integer
     required:
-    - product_id
+    - product_variant_id
     - quantity
     type: object
   api.AddressResponse:
@@ -227,6 +234,46 @@ definitions:
       type:
         type: string
     type: object
+  api.AuthResponse:
+    properties:
+      refreshToken:
+        type: string
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/api.UserInfo'
+    type: object
+  api.BrandListResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/api.BrandResponse'
+        type: array
+      meta:
+        $ref: '#/definitions/api.PaginationMeta'
+    type: object
+  api.BrandRequest:
+    properties:
+      logo_url:
+        type: string
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  api.BrandResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      logo_url:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
   api.CartItemResponse:
     properties:
       created_at:
@@ -235,6 +282,7 @@ definitions:
         description: Giá hiện tại
         type: number
       id:
+        description: CartItem ID
         type: integer
       price_changed:
         description: Có thay đổi giá không?
@@ -244,7 +292,7 @@ definitions:
         type: number
       product:
         $ref: '#/definitions/api.ProductInfo'
-      product_id:
+      product_variant_id:
         type: integer
       quantity:
         type: integer
@@ -305,6 +353,13 @@ definitions:
       id:
         type: integer
       name:
+        type: string
+    type: object
+  api.ChangeCartItemVariantRequest:
+    properties:
+      color_hex:
+        type: string
+      size_code:
         type: string
     type: object
   api.CreateAddressRequest:
@@ -435,11 +490,6 @@ definitions:
     required:
     - name
     type: object
-  api.GoogleLoginRequest:
-    properties:
-      idToken:
-        type: string
-    type: object
   api.InvalidPromotion:
     properties:
       code:
@@ -450,7 +500,7 @@ definitions:
   api.LoginRequest:
     properties:
       credential:
-        example: test@gmail.com/0965744926
+        example: test@example.com/0912345678
         type: string
       password:
         example: Cong123@
@@ -479,6 +529,54 @@ definitions:
       total_pages:
         type: integer
     type: object
+  api.ProductColorItem:
+    properties:
+      color_hex:
+        type: string
+      color_name:
+        type: string
+    type: object
+  api.ProductDetailResponse:
+    properties:
+      brand:
+        $ref: '#/definitions/api.BrandResponse'
+      colors:
+        items:
+          $ref: '#/definitions/api.ProductColorItem'
+        type: array
+      created_at:
+        type: string
+      description:
+        type: string
+      discount_pct:
+        type: integer
+      id:
+        type: integer
+      image_url:
+        type: string
+      name:
+        type: string
+      price:
+        type: number
+      priceAfter:
+        type: number
+      rating_avg:
+        type: number
+      sizes:
+        items:
+          type: string
+        type: array
+      sold_count:
+        type: integer
+      total_stock:
+        type: integer
+      updated_at:
+        type: string
+      variants:
+        items:
+          $ref: '#/definitions/api.ProductVariantResponse'
+        type: array
+    type: object
   api.ProductImageResponse:
     properties:
       id:
@@ -488,16 +586,28 @@ definitions:
     type: object
   api.ProductInfo:
     properties:
+      color:
+        type: string
       current_price:
-        description: Giá hiện tại từ DB
+        description: Variant Price
         type: number
-      id:
-        type: integer
       image_url:
+        description: Can be from Product or Variant
         type: string
       name:
+        description: Product Name
+        type: string
+      product_id:
+        type: integer
+      size:
+        type: string
+      sku:
+        description: Variant SKU
         type: string
       stock:
+        description: Variant Stock
+        type: integer
+      variant_id:
         type: integer
     type: object
   api.ProductListRequest:
@@ -509,45 +619,6 @@ definitions:
         type: integer
       page:
         type: integer
-    type: object
-  api.ProductResponse:
-    properties:
-      age_range:
-        type: string
-      categories:
-        items:
-          $ref: '#/definitions/api.CategoryResponse'
-        type: array
-      color:
-        type: string
-      created_at:
-        type: string
-      description:
-        type: string
-      discount_pct:
-        type: integer
-      id:
-        type: integer
-      image_url:
-        type: string
-      images:
-        items:
-          $ref: '#/definitions/api.ProductImageResponse'
-        type: array
-      name:
-        type: string
-      price:
-        type: number
-      price_after:
-        type: number
-      stock:
-        type: integer
-      styles:
-        items:
-          $ref: '#/definitions/api.StyleResponse'
-        type: array
-      updated_at:
-        type: string
     type: object
   api.ProductSummaryResponse:
     properties:
@@ -561,8 +632,29 @@ definitions:
         type: string
       price:
         type: number
-      price_after:
+      priceAfter:
         type: number
+    type: object
+  api.ProductVariantResponse:
+    properties:
+      color_hex:
+        type: string
+      color_name:
+        type: string
+      id:
+        type: integer
+      images:
+        items:
+          $ref: '#/definitions/api.ProductImageResponse'
+        type: array
+      price:
+        type: number
+      size_code:
+        type: string
+      sku:
+        type: string
+      stock:
+        type: integer
     type: object
   api.PromotionResponse:
     properties:
@@ -632,7 +724,7 @@ definitions:
       confirmPassword:
         type: string
       email:
-        example: alice@gmail.com
+        example: alice@example.com
         format: email
         type: string
       password:
@@ -697,6 +789,13 @@ definitions:
         type: string
     required:
     - name
+    type: object
+  api.UserInfo:
+    properties:
+      id:
+        type: integer
+      role:
+        type: string
     type: object
   api.ValidatePromotionRequest:
     properties:
@@ -1016,6 +1115,254 @@ paths:
       summary: Get default address
       tags:
       - Address
+  /admin/brands:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Tạo mới một thương hiệu (chỉ dành cho shop/admin)
+      parameters:
+      - description: Brand name
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Logo image file (jpg, jpeg, png, gif)
+        in: formData
+        name: logo
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.BrandResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create brand
+      tags:
+      - Brands
+  /admin/brands/{id}:
+    delete:
+      description: Xoá một thương hiệu
+      parameters:
+      - description: Brand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Delete brand
+      tags:
+      - Brands
+    put:
+      consumes:
+      - application/json
+      description: Cập nhật thông tin một thương hiệu
+      parameters:
+      - description: Brand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Brand payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.BrandRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.BrandResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Update brand
+      tags:
+      - Brands
+  /admin/products/{id}/variants:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 'Bước 2: Xóa toàn bộ biến thể/màu/ảnh cũ và tạo mới từ form-data;
+        trạng thái chuyển ACTIVE/INACTIVE theo tổng tồn kho.\n\nCách gửi:\n- payload
+        (JSON string):\n  {\n    "colors": [ { "hex": "#FF0000", "image_keys": ["color_0_images"]
+        }, { "hex": "#0000FF", "image_keys": ["color_1_images"] } ],\n    "variants":
+        [ { "color_hex": "#FF0000", "size_code": "S", "stock": 10, "sku": "RED-S-001"
+        }, { "color_hex": "#0000FF", "size_code": "M", "stock": 5 } ]\n  }\n- color_{i}_images:
+        tập ảnh cho màu thứ i (multi files).\n- size hợp lệ: S, M, L, XL, 2XL. SKU
+        có thể bỏ trống, BE sẽ tự sinh nếu thiếu.'
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: JSON payload (colors, variants)
+        in: formData
+        name: payload
+        required: true
+        type: string
+      - description: Ảnh cho màu index 0 (gửi nhiều file)
+        in: formData
+        name: color_0_images
+        type: file
+      - description: Ảnh cho màu index 1 (gửi nhiều file)
+        in: formData
+        name: color_1_images
+        type: file
+      - description: Ảnh cho màu index 2 (gửi nhiều file)
+        in: formData
+        name: color_2_images
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.ProductDetailResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Replace variants/colors/images and finalize product
+      tags:
+      - Products
+  /admin/products/basic:
+    post:
+      consumes:
+      - multipart/form-data
+      description: 'Bước 1: Tạo sản phẩm ở trạng thái DRAFT với thông tin cơ bản và
+        ảnh đại diện tải lên cùng (img_url). Giá sau giảm sẽ được tính tự động từ
+        price và discount_pct.'
+      parameters:
+      - description: Tên sản phẩm
+        in: formData
+        name: name
+        required: true
+        type: string
+      - description: Giá ban đầu
+        in: formData
+        name: price
+        required: true
+        type: number
+      - description: '% giảm giá (0..100)'
+        in: formData
+        name: discount_pct
+        type: integer
+      - description: ID thương hiệu
+        in: formData
+        name: brand_id
+        type: integer
+      - collectionFormat: multi
+        description: Danh sách category id (chọn nhiều)
+        in: formData
+        items:
+          type: integer
+        name: category_ids
+        type: array
+      - collectionFormat: multi
+        description: Danh sách style id (chọn nhiều)
+        in: formData
+        items:
+          type: integer
+        name: style_ids
+        type: array
+      - description: Hot trend
+        in: formData
+        name: is_hot_trend
+        type: boolean
+      - description: Độ tuổi
+        in: formData
+        name: age_range
+        type: string
+      - description: Mô tả
+        in: formData
+        name: description
+        type: string
+      - description: Ảnh đại diện (.jpg/.jpeg/.png/.gif)
+        in: formData
+        name: img_url
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.ProductDetailResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create basic product (DRAFT)
+      tags:
+      - Products
   /admin/promotions:
     post:
       consumes:
@@ -1057,32 +1404,6 @@ paths:
       summary: Create Promotion
       tags:
       - Promotion
-  /auth/google:
-    post:
-      consumes:
-      - application/json
-      description: Xác thực Google ID Token; nếu chưa có user thì tạo (role=customer)
-      parameters:
-      - description: payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/api.GoogleLoginRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/resp.Envelope'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/resp.Envelope'
-      summary: Login Google
-      tags:
-      - Auth
   /auth/login:
     post:
       consumes:
@@ -1101,7 +1422,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/resp.Envelope'
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AuthResponse'
+              type: object
         "401":
           description: Unauthorized
           schema:
@@ -1111,7 +1437,7 @@ paths:
       - Auth
   /auth/logout:
     post:
-      description: Thu hồi tất cả refresh token của người dùng hiện tại
+      description: Thu hồi tất cả refresh token và blacklist access token hiện tại
       produces:
       - application/json
       responses:
@@ -1151,7 +1477,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Đổi refresh token lấy access token mới (rotate)
+      description: Đổi refresh token lấy access token mới (có xoay vòng và phát hiện
+        tái sử dụng)
       parameters:
       - description: payload
         in: body
@@ -1165,9 +1492,18 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/resp.Envelope'
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AuthResponse'
+              type: object
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
           schema:
             $ref: '#/definitions/resp.Envelope'
       summary: Refresh access token
@@ -1191,7 +1527,12 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/resp.Envelope'
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AuthResponse'
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -1199,6 +1540,70 @@ paths:
       summary: Register
       tags:
       - Auth
+  /brands:
+    get:
+      description: Lấy danh sách thương hiệu (có tìm kiếm và phân trang nhẹ)
+      parameters:
+      - description: Keyword search
+        in: query
+        name: q
+        type: string
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.BrandListResponse'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: List brands
+      tags:
+      - Brands
+  /brands/{id}:
+    get:
+      description: Lấy thông tin chi tiết một thương hiệu
+      parameters:
+      - description: Brand ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.BrandResponse'
+              type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      summary: Get brand
+      tags:
+      - Brands
   /cart:
     delete:
       description: Xóa toàn bộ sản phẩm trong giỏ hàng
@@ -1364,6 +1769,57 @@ paths:
       summary: Update Cart Item
       tags:
       - Cart
+  /cart/items/{id}/variant:
+    put:
+      consumes:
+      - application/json
+      description: Đổi màu/size cho một sản phẩm trong giỏ; sẽ gộp số lượng nếu cart
+        đã có item cùng biến thể mới
+      parameters:
+      - description: ID của Cart Item
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Màu/Size mới
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.ChangeCartItemVariantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CartItemResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Change Cart Item Variant
+      tags:
+      - Cart
   /cart/summary:
     get:
       description: Lấy tóm tắt giỏ hàng để chuẩn bị thanh toán
@@ -1407,7 +1863,7 @@ paths:
               type: object
       summary: List Categories
       tags:
-      - Catalog
+      - Categories
     post:
       consumes:
       - application/json
@@ -1443,7 +1899,7 @@ paths:
       - Bearer: []
       summary: Create Category
       tags:
-      - Catalog
+      - Categories
   /categories/{id}:
     delete:
       description: Delete a category (Shop only)
@@ -1472,7 +1928,7 @@ paths:
       - Bearer: []
       summary: Delete Category
       tags:
-      - Catalog
+      - Categories
     get:
       description: Get a category by ID
       parameters:
@@ -1499,7 +1955,7 @@ paths:
             $ref: '#/definitions/resp.Envelope'
       summary: Get Category
       tags:
-      - Catalog
+      - Categories
     put:
       consumes:
       - application/json
@@ -1544,7 +2000,7 @@ paths:
       - Bearer: []
       summary: Update Category
       tags:
-      - Catalog
+      - Categories
   /orders:
     get:
       description: Lấy danh sách đơn hàng của tôi (customer hoặc shop)
@@ -1599,7 +2055,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Tạo đơn hàng mới từ giỏ hàng (customer)
+      description: 'Tạo đơn hàng mới từ giỏ hàng (customer), các loại thanh toán:
+        cod, bank_transfer, e_wallet'
       parameters:
       - description: Order info
         in: body
@@ -1836,103 +2293,6 @@ paths:
       summary: Update Order Status
       tags:
       - Order
-  /products:
-    post:
-      consumes:
-      - multipart/form-data
-      description: |-
-        Create a new product. Supports uploading images via file or providing image URLs.
-        At least one of `background_image` (file) or `background_image_url` (text) is required.
-      parameters:
-      - description: Product Name
-        in: formData
-        name: name
-        required: true
-        type: string
-      - description: Comma-separated category IDs (e.g., '1,2')
-        in: formData
-        name: category_ids
-        required: true
-        type: string
-      - description: Comma-separated style IDs (e.g., '3,4')
-        in: formData
-        name: style_ids
-        required: true
-        type: string
-      - description: Product Price
-        in: formData
-        name: price
-        required: true
-        type: number
-      - description: Stock quantity
-        in: formData
-        name: stock
-        required: true
-        type: integer
-      - description: Discount Percentage
-        in: formData
-        name: discount_pct
-        type: integer
-      - description: Product Color
-        in: formData
-        name: color
-        type: string
-      - description: Age Range
-        in: formData
-        name: age_range
-        type: string
-      - description: Product Description
-        in: formData
-        name: description
-        type: string
-      - description: Mark as a hot trend product
-        in: formData
-        name: is_hot_trend
-        type: boolean
-      - description: Background image file (required if URL is not provided)
-        in: formData
-        name: background_image
-        type: file
-      - description: Background image URL (required if file is not provided)
-        in: formData
-        name: background_image_url
-        type: string
-      - collectionFormat: multi
-        description: Other image files (can be combined with URLs)
-        in: formData
-        items:
-          type: file
-        name: other_images
-        type: array
-      - description: Other image URLs (comma-separated)
-        in: formData
-        name: other_image_urls
-        type: string
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            allOf:
-            - $ref: '#/definitions/resp.Envelope'
-            - properties:
-                data:
-                  $ref: '#/definitions/api.ProductResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/resp.Envelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/resp.Envelope'
-      security:
-      - Bearer: []
-      summary: Create Product
-      tags:
-      - Catalog
   /products/{id}:
     delete:
       description: Delete a product (Shop only)
@@ -1961,9 +2321,9 @@ paths:
       - Bearer: []
       summary: Delete Product
       tags:
-      - Catalog
+      - Products
     get:
-      description: Get a product by ID
+      description: Get a product by ID with full details
       parameters:
       - description: Product ID
         in: path
@@ -1980,7 +2340,7 @@ paths:
             - $ref: '#/definitions/resp.Envelope'
             - properties:
                 data:
-                  $ref: '#/definitions/api.ProductResponse'
+                  $ref: '#/definitions/api.ProductDetailResponse'
               type: object
         "404":
           description: Not Found
@@ -1988,116 +2348,16 @@ paths:
             $ref: '#/definitions/resp.Envelope'
       summary: Get Product
       tags:
-      - Catalog
-    put:
-      consumes:
-      - multipart/form-data
-      description: Update a product. Supports uploading images via file or providing
-        image URLs.
-      parameters:
-      - description: Product ID
-        in: path
-        name: id
-        required: true
-        type: integer
-      - description: Product Name
-        in: formData
-        name: name
-        type: string
-      - description: Comma-separated category IDs
-        in: formData
-        name: category_ids
-        type: string
-      - description: Comma-separated style IDs
-        in: formData
-        name: style_ids
-        type: string
-      - description: Product Price
-        in: formData
-        name: price
-        type: number
-      - description: Stock quantity
-        in: formData
-        name: stock
-        type: integer
-      - description: Discount Percentage
-        in: formData
-        name: discount_pct
-        type: integer
-      - description: Product Color
-        in: formData
-        name: color
-        type: string
-      - description: Age Range
-        in: formData
-        name: age_range
-        type: string
-      - description: Product Description
-        in: formData
-        name: description
-        type: string
-      - description: Set as hot trend (true/false)
-        in: formData
-        name: is_hot_trend
-        type: boolean
-      - description: New background image file (optional)
-        in: formData
-        name: background_image
-        type: file
-      - description: New background image URL (optional)
-        in: formData
-        name: background_image_url
-        type: string
-      - collectionFormat: multi
-        description: New other image files (optional)
-        in: formData
-        items:
-          type: file
-        name: other_images
-        type: array
-      - description: New other image URLs (comma-separated, optional)
-        in: formData
-        name: other_image_urls
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/resp.Envelope'
-            - properties:
-                data:
-                  $ref: '#/definitions/api.ProductResponse'
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/resp.Envelope'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/resp.Envelope'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/resp.Envelope'
-      security:
-      - Bearer: []
-      summary: Update Product
-      tags:
-      - Catalog
+      - Products
   /products/list:
     post:
       consumes:
       - application/json
       description: |-
-        Lấy danh sách sản phẩm với phân trang và bộ lọc.
-        Filter options: `all`, `bestseller`, `new`, `hottrend`.
+        Lấy danh sách sản phẩm với phân trang và bộ lọc (dành cho mobile)
+        Filter options: `all`, `hot`, `new`, `best`, `recommend`
       parameters:
-      - description: Tùy chọn phân trang và bộ lọc. Để trống body để dùng giá trị
-          mặc định.
+      - description: Tùy chọn phân trang và bộ lọc
         in: body
         name: body
         schema:
@@ -2116,7 +2376,7 @@ paths:
               type: object
       summary: List Products
       tags:
-      - Catalog
+      - Products
   /profiles/me:
     get:
       produces:
@@ -2246,7 +2506,7 @@ paths:
               type: object
       summary: List Styles
       tags:
-      - Catalog
+      - Styles
     post:
       consumes:
       - application/json
@@ -2282,7 +2542,7 @@ paths:
       - Bearer: []
       summary: Create Style
       tags:
-      - Catalog
+      - Styles
   /styles/{id}:
     delete:
       description: Delete a style (Shop only)
@@ -2311,7 +2571,7 @@ paths:
       - Bearer: []
       summary: Delete Style
       tags:
-      - Catalog
+      - Styles
     get:
       description: Get a style by ID
       parameters:
@@ -2338,7 +2598,7 @@ paths:
             $ref: '#/definitions/resp.Envelope'
       summary: Get Style
       tags:
-      - Catalog
+      - Styles
     put:
       consumes:
       - application/json
@@ -2383,7 +2643,7 @@ paths:
       - Bearer: []
       summary: Update Style
       tags:
-      - Catalog
+      - Styles
 schemes:
 - http
 securityDefinitions:

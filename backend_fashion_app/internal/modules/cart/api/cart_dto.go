@@ -6,8 +6,8 @@ import "time"
 
 // AddToCartRequest - Thêm sản phẩm vào giỏ hàng
 type AddToCartRequest struct {
-	ProductID uint `json:"product_id" validate:"required,min=1"`
-	Quantity  int  `json:"quantity" validate:"required,min=1"`
+	ProductVariantID uint `json:"product_variant_id" validate:"required,min=1"`
+	Quantity         int  `json:"quantity" validate:"required,min=1"`
 }
 
 // UpdateCartItemRequest - Cập nhật số lượng sản phẩm trong giỏ
@@ -15,29 +15,40 @@ type UpdateCartItemRequest struct {
 	Quantity int `json:"quantity" validate:"required,min=1"`
 }
 
+// ChangeCartItemVariantRequest - Đổi màu/size của một item trong giỏ
+// Ít nhất 1 trong 2 trường phải có. Nếu thiếu trường nào sẽ dùng giá trị hiện tại của item.
+type ChangeCartItemVariantRequest struct {
+	ColorHex string `json:"color_hex,omitempty"`
+	SizeCode string `json:"size_code,omitempty"`
+}
+
 // ========== RESPONSE DTOs ==========
 
 // ProductInfo - Thông tin sản phẩm trong giỏ hàng
 type ProductInfo struct {
-	ID           uint    `json:"id"`
-	Name         string  `json:"name"`
-	ImageURL     string  `json:"image_url"`
-	Stock        int     `json:"stock"`
-	CurrentPrice float64 `json:"current_price"` // Giá hiện tại từ DB
+	ProductID    uint    `json:"product_id"`
+	VariantID    uint    `json:"variant_id"`
+	Name         string  `json:"name"` // Product Name
+	SKU          string  `json:"sku"`  // Variant SKU
+	Color        string  `json:"color"`
+	Size         string  `json:"size"`
+	ImageURL     string  `json:"image_url"`     // Can be from Product or Variant
+	Stock        int     `json:"stock"`         // Variant Stock
+	CurrentPrice float64 `json:"current_price"` // Variant Price
 }
 
 // CartItemResponse - Thông tin chi tiết một item trong giỏ hàng
 type CartItemResponse struct {
-	ID            uint        `json:"id"`
-	ProductID     uint        `json:"product_id"`
-	Product       ProductInfo `json:"product"`
-	Quantity      int         `json:"quantity"`
-	PriceSnapshot float64     `json:"price_snapshot"` // Giá lúc thêm vào giỏ
-	CurrentPrice  float64     `json:"current_price"`  // Giá hiện tại
-	PriceChanged  bool        `json:"price_changed"`  // Có thay đổi giá không?
-	StockIssue    bool        `json:"stock_issue"`    // Số lượng trong giỏ > tồn kho?
-	Subtotal      float64     `json:"subtotal"`       // Tổng tiền = quantity * current_price
-	CreatedAt     time.Time   `json:"created_at"`
+	ID               uint        `json:"id"` // CartItem ID
+	ProductVariantID uint        `json:"product_variant_id"`
+	Product          ProductInfo `json:"product"`
+	Quantity         int         `json:"quantity"`
+	PriceSnapshot    float64     `json:"price_snapshot"` // Giá lúc thêm vào giỏ
+	CurrentPrice     float64     `json:"current_price"`  // Giá hiện tại
+	PriceChanged     bool        `json:"price_changed"`  // Có thay đổi giá không?
+	StockIssue       bool        `json:"stock_issue"`    // Số lượng trong giỏ > tồn kho?
+	Subtotal         float64     `json:"subtotal"`       // Tổng tiền = quantity * current_price
+	CreatedAt        time.Time   `json:"created_at"`
 }
 
 // CartResponse - Thông tin giỏ hàng đầy đủ

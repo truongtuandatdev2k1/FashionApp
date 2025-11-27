@@ -40,58 +40,68 @@ const (
 
 // Order represents a customer order
 type Order struct {
-	ID          uuid.UUID
-	OrderNumber string // Mã đơn hàng (unique)
-	CustomerID  uint
-	ShopID      uint
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
+	OrderNumber string    `gorm:"type:varchar(50);unique;not null"` // Mã đơn hàng (unique)
+	OrderCode   uint64    `gorm:"unique;not null"`                  // Mã đơn dạng số (phục vụ PayOS)
+	CustomerID  uint      `gorm:"not null;index"`
+	ShopID      uint      `gorm:"not null;index"`
 
 	// Shipping info
-	ShippingName     string
-	ShippingPhone    string
-	ShippingAddress  string
-	ShippingProvince string
-	ShippingDistrict string
-	ShippingWard     string
+	ShippingName     string `gorm:"type:varchar(255)"`
+	ShippingPhone    string `gorm:"type:varchar(20)"`
+	ShippingAddress  string `gorm:"type:text"`
+	ShippingProvince string `gorm:"type:varchar(100)"`
+	ShippingDistrict string `gorm:"type:varchar(100)"`
+	ShippingWard     string `gorm:"type:varchar(100)"`
 
 	// Order details
-	Items          []OrderItem
-	TotalAmount    float64
-	ShippingFee    float64
-	DiscountAmount float64
-	FinalAmount    float64
+	Items          []OrderItem `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
+	TotalAmount    float64     `gorm:"type:decimal(10,2)"`
+	ShippingFee    float64     `gorm:"type:decimal(10,2)"`
+	DiscountAmount float64     `gorm:"type:decimal(10,2)"`
+	FinalAmount    float64     `gorm:"type:decimal(10,2)"`
 
 	// Payment
-	PaymentMethod PaymentMethod
-	PaymentStatus PaymentStatus
+	PaymentMethod PaymentMethod `gorm:"type:varchar(20)"`
+	PaymentStatus PaymentStatus `gorm:"type:varchar(20)"`
 
 	// Status
-	Status       OrderStatus
-	Note         string
-	CancelReason string
+	Status       OrderStatus `gorm:"type:varchar(20)"`
+	Note         string      `gorm:"type:text"`
+	CancelReason string      `gorm:"type:text"`
 
 	// Timestamps
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
+	CreatedAt   time.Time `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 	ConfirmedAt *time.Time
 	ShippedAt   *time.Time
 	DeliveredAt *time.Time
 	CancelledAt *time.Time
 }
 
+func (Order) TableName() string {
+	return "orders"
+}
+
 // OrderItem represents an item in an order
 type OrderItem struct {
-	ID           uuid.UUID
-	OrderID      uuid.UUID
-	ProductID    uint
-	ProductName  string
-	ProductSKU   string
-	ProductImage string
-	Size         string
-	Color        string
-	Quantity     int
-	Price        float64 // Giá tại thời điểm đặt hàng
-	Subtotal     float64 // Price * Quantity
-	CreatedAt    time.Time
+	ID               uuid.UUID `gorm:"type:uuid;primaryKey"`
+	OrderID          uuid.UUID `gorm:"type:uuid;not null;index"`
+	ProductID        uint      `gorm:"not null;index"`
+	ProductVariantID uint      `gorm:"not null;index"`
+	ProductName      string    `gorm:"type:varchar(255)"`
+	ProductSKU       string    `gorm:"type:varchar(100)"`
+	ProductImage     string    `gorm:"type:varchar(255)"`
+	Size             string    `gorm:"type:varchar(20)"`
+	Color            string    `gorm:"type:varchar(50)"`
+	Quantity         int       `gorm:"not null"`
+	Price            float64   `gorm:"type:decimal(10,2)"` // Giá tại thời điểm đặt hàng
+	Subtotal         float64   `gorm:"type:decimal(10,2)"` // Price * Quantity
+	CreatedAt        time.Time `gorm:"autoCreateTime"`
+}
+
+func (OrderItem) TableName() string {
+	return "order_items"
 }
 
 // NewOrder creates a new order
@@ -99,6 +109,7 @@ func NewOrder(customerID, shopID uint) *Order {
 	return &Order{
 		ID:            uuid.New(),
 		OrderNumber:   generateOrderNumber(),
+		OrderCode:     generateOrderCodeNumeric(),
 		CustomerID:    customerID,
 		ShopID:        shopID,
 		Status:        OrderStatusPending,
@@ -106,6 +117,12 @@ func NewOrder(customerID, shopID uint) *Order {
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
+}
+
+// generateOrderCodeNumeric generates a unique numeric code for payment providers (e.g., PayOS)
+func generateOrderCodeNumeric() uint64 {
+	// Simple implementation: timestamp in nanoseconds
+	return uint64(time.Now().UnixNano())
 }
 
 // generateOrderNumber generates a unique order number

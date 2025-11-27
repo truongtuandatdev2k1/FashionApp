@@ -2,225 +2,245 @@ package services
 
 import (
 	"context"
+	"errors"
 	"myfashion/internal/modules/catalog/api"
 	"myfashion/internal/modules/catalog/entities"
 )
 
-// CatalogService provides catalog-related services.
-type CatalogService struct {
-	catRepo   CategoryRepository
-	styleRepo StyleRepository
-	prodRepo  ProductRepository
+// CategoryService cung cấp nghiệp vụ cho danh mục sản phẩm.
+type CategoryService struct {
+	repo CategoryRepository
 }
 
-// NewCatalogService creates a new CatalogService.
-func NewCatalogService(catRepo CategoryRepository, styleRepo StyleRepository, prodRepo ProductRepository) *CatalogService {
-	return &CatalogService{
-		catRepo:   catRepo,
-		styleRepo: styleRepo,
-		prodRepo:  prodRepo,
-	}
+func NewCategoryService(repo CategoryRepository) *CategoryService {
+	return &CategoryService{repo: repo}
 }
 
-// --- Category Services ---
-
-func (s *CatalogService) CreateCategory(ctx context.Context, req api.CreateCategoryRequest) (*entities.Category, error) {
-	category := &entities.Category{
-		Name: req.Name,
-	}
-	if err := s.catRepo.Create(ctx, category); err != nil {
+func (s *CategoryService) CreateCategory(ctx context.Context, req api.CreateCategoryRequest) (*entities.Category, error) {
+	category := &entities.Category{Name: req.Name}
+	if err := s.repo.Create(ctx, category); err != nil {
 		return nil, err
 	}
 	return category, nil
 }
 
-func (s *CatalogService) GetCategory(ctx context.Context, id uint) (*entities.Category, error) {
-	return s.catRepo.GetByID(ctx, id)
+func (s *CategoryService) GetCategory(ctx context.Context, id uint) (*entities.Category, error) {
+	return s.repo.GetByID(ctx, id)
 }
 
-func (s *CatalogService) ListCategories(ctx context.Context) ([]*entities.Category, error) {
-	return s.catRepo.GetAll(ctx)
+func (s *CategoryService) ListCategories(ctx context.Context) ([]*entities.Category, error) {
+	return s.repo.GetAll(ctx)
 }
 
-func (s *CatalogService) UpdateCategory(ctx context.Context, id uint, req api.UpdateCategoryRequest) (*entities.Category, error) {
-	category, err := s.catRepo.GetByID(ctx, id)
+func (s *CategoryService) UpdateCategory(ctx context.Context, id uint, req api.UpdateCategoryRequest) (*entities.Category, error) {
+	category, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	category.Name = req.Name
-	if err := s.catRepo.Update(ctx, category); err != nil {
+	if err := s.repo.Update(ctx, category); err != nil {
 		return nil, err
 	}
 	return category, nil
 }
 
-func (s *CatalogService) DeleteCategory(ctx context.Context, id uint) error {
-	return s.catRepo.Delete(ctx, id)
+func (s *CategoryService) DeleteCategory(ctx context.Context, id uint) error {
+	return s.repo.Delete(ctx, id)
 }
 
-// --- Style Services ---
+// StyleService cung cấp nghiệp vụ cho phong cách sản phẩm.
+type StyleService struct {
+	repo StyleRepository
+}
 
-func (s *CatalogService) CreateStyle(ctx context.Context, req api.CreateStyleRequest) (*entities.Style, error) {
-	style := &entities.Style{
-		Name: req.Name,
-	}
-	if err := s.styleRepo.Create(ctx, style); err != nil {
+func NewStyleService(repo StyleRepository) *StyleService { return &StyleService{repo: repo} }
+
+func (s *StyleService) CreateStyle(ctx context.Context, req api.CreateStyleRequest) (*entities.Style, error) {
+	style := &entities.Style{Name: req.Name}
+	if err := s.repo.Create(ctx, style); err != nil {
 		return nil, err
 	}
 	return style, nil
 }
 
-func (s *CatalogService) GetStyle(ctx context.Context, id uint) (*entities.Style, error) {
-	return s.styleRepo.GetByID(ctx, id)
+func (s *StyleService) GetStyle(ctx context.Context, id uint) (*entities.Style, error) {
+	return s.repo.GetByID(ctx, id)
 }
 
-func (s *CatalogService) ListStyles(ctx context.Context) ([]*entities.Style, error) {
-	return s.styleRepo.GetAll(ctx)
+func (s *StyleService) ListStyles(ctx context.Context) ([]*entities.Style, error) {
+	return s.repo.GetAll(ctx)
 }
 
-func (s *CatalogService) UpdateStyle(ctx context.Context, id uint, req api.UpdateStyleRequest) (*entities.Style, error) {
-	style, err := s.styleRepo.GetByID(ctx, id)
+func (s *StyleService) UpdateStyle(ctx context.Context, id uint, req api.UpdateStyleRequest) (*entities.Style, error) {
+	style, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 	style.Name = req.Name
-	if err := s.styleRepo.Update(ctx, style); err != nil {
+	if err := s.repo.Update(ctx, style); err != nil {
 		return nil, err
 	}
 	return style, nil
 }
 
-func (s *CatalogService) DeleteStyle(ctx context.Context, id uint) error {
-	return s.styleRepo.Delete(ctx, id)
+func (s *StyleService) DeleteStyle(ctx context.Context, id uint) error { return s.repo.Delete(ctx, id) }
+
+// ProductService cung cấp nghiệp vụ cho sản phẩm.
+type ProductService struct {
+	prodRepo  ProductRepository
+	catRepo   CategoryRepository
+	styleRepo StyleRepository
 }
 
-// --- Product Services ---
-
-func (s *CatalogService) CreateProduct(ctx context.Context, req api.CreateProductRequest) (*entities.Product, error) {
-	priceAfter := req.Price * (1 - float64(req.DiscountPct)/100)
-
-	product := &entities.Product{
-		CategoryIDs: req.CategoryIDs,
-		StyleIDs:    req.StyleIDs,
-		Name:        req.Name,
-		Price:       req.Price,
-		DiscountPct: req.DiscountPct,
-		PriceAfter:  priceAfter,
-		Stock:       req.Stock,
-		IsHotTrend:  req.IsHotTrend,
-		Color:       req.Color,
-		AgeRange:    req.AgeRange,
-		Description: req.Description,
-	}
-
-	if err := s.prodRepo.Create(ctx, product); err != nil {
-		return nil, err
-	}
-	return s.prodRepo.GetByID(ctx, product.ID)
+func NewProductService(prodRepo ProductRepository, catRepo CategoryRepository, styleRepo StyleRepository) *ProductService {
+	return &ProductService{prodRepo: prodRepo, catRepo: catRepo, styleRepo: styleRepo}
 }
 
-func (s *CatalogService) GetProduct(ctx context.Context, id uint) (*entities.Product, error) {
+func (s *ProductService) GetProduct(ctx context.Context, id uint) (*entities.Product, error) {
 	return s.prodRepo.GetByID(ctx, id)
 }
 
-func (s *CatalogService) ListProducts(ctx context.Context) ([]*entities.Product, error) {
+func (s *ProductService) ListProducts(ctx context.Context) ([]*entities.Product, error) {
 	return s.prodRepo.GetAll(ctx)
 }
 
-func (s *CatalogService) ListProductsPaginated(ctx context.Context, filter string, page, limit int) ([]*entities.Product, int64, error) {
-	// Set default values if not provided
+func (s *ProductService) ListProductsPaginated(ctx context.Context, filter string, page, limit int) ([]*entities.Product, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
-		limit = 20 // Default to 20 items per page
+		limit = 20
 	}
 	return s.prodRepo.GetAllPaginated(ctx, filter, page, limit)
 }
 
-func (s *CatalogService) UpdateProduct(ctx context.Context, id uint, req api.UpdateProductRequest) (*entities.Product, error) {
-	product, err := s.prodRepo.GetByID(ctx, id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Track if price or discount changed to recalculate price_after
-	priceChanged := false
-	discountChanged := false
-
-	// Update fields if they are provided in the request
-	if req.Name != "" {
-		product.Name = req.Name
-	}
-	if req.CategoryIDs != "" {
-		product.CategoryIDs = req.CategoryIDs
-	}
-	if req.StyleIDs != "" {
-		product.StyleIDs = req.StyleIDs
-	}
-	if req.Price > 0 {
-		product.Price = req.Price
-		priceChanged = true
-	}
-
-	// Only update discount if explicitly provided (pointer is not nil)
-	if req.DiscountPct != nil {
-		product.DiscountPct = *req.DiscountPct
-		discountChanged = true
-	}
-
-	// Only update stock if explicitly provided (pointer is not nil)
-	if req.Stock != nil {
-		product.Stock = *req.Stock
-	}
-
-	// Only update IsHotTrend if explicitly provided (pointer is not nil)
-	if req.IsHotTrend != nil {
-		product.IsHotTrend = *req.IsHotTrend
-	}
-
-	// Recalculate price_after only if price or discount changed
-	if priceChanged || discountChanged {
-		product.PriceAfter = product.Price * (1 - float64(product.DiscountPct)/100)
-	}
-
-	if req.Color != "" {
-		product.Color = req.Color
-	}
-	if req.AgeRange != "" {
-		product.AgeRange = req.AgeRange
-	}
-	if req.Description != "" {
-		product.Description = req.Description
-	}
-	if req.BackgroundImageURL != "" {
-		product.ImageURL = req.BackgroundImageURL
-	} else if req.ImageURL != "" { // Giữ lại để tương thích với logic cũ nếu cần
-		product.ImageURL = req.ImageURL
-	}
-
-	if err := s.prodRepo.Update(ctx, product); err != nil {
-		return nil, err
-	}
-	return s.prodRepo.GetByID(ctx, id)
-}
-
-func (s *CatalogService) DeleteProduct(ctx context.Context, id uint) error {
+func (s *ProductService) DeleteProduct(ctx context.Context, id uint) error {
 	return s.prodRepo.Delete(ctx, id)
 }
 
-func (s *CatalogService) AddProductImages(ctx context.Context, productID uint, imageURLs []string) ([]entities.ProductImage, error) {
-	var images []entities.ProductImage
-	for _, url := range imageURLs {
-		image := &entities.ProductImage{
-			ProductID: productID,
-			URL:       url,
-		}
-		if err := s.prodRepo.CreateImage(ctx, image); err != nil {
-			// In a real app, you might want to handle this more gracefully (e.g., transaction)
-			return nil, err
-		}
-		images = append(images, *image)
+func (s *ProductService) AssignCategoriesToProduct(ctx context.Context, productID uint, categoryIDs []uint) error {
+	product, err := s.prodRepo.GetByID(ctx, productID)
+	if err != nil {
+		return err
 	}
-	return images, nil
+
+	if len(categoryIDs) == 0 {
+		product.Categories = []entities.Category{}
+		return s.prodRepo.Update(ctx, product)
+	}
+
+	categories, err := s.catRepo.GetByIDs(ctx, categoryIDs)
+	if err != nil {
+		return err
+	}
+
+	product.Categories = categories
+	return s.prodRepo.Update(ctx, product)
 }
+
+func (s *ProductService) AssignStylesToProduct(ctx context.Context, productID uint, styleIDs []uint) error {
+	product, err := s.prodRepo.GetByID(ctx, productID)
+	if err != nil {
+		return err
+	}
+
+	if len(styleIDs) == 0 {
+		product.Styles = []entities.Style{}
+		return s.prodRepo.Update(ctx, product)
+	}
+
+	styles, err := s.styleRepo.GetByIDs(ctx, styleIDs)
+	if err != nil {
+		return err
+	}
+
+	product.Styles = styles
+	return s.prodRepo.Update(ctx, product)
+}
+
+// BrandService provides brand-related operations.
+type BrandService struct{ brandRepo BrandRepository }
+
+func NewBrandService(brandRepo BrandRepository) *BrandService {
+	return &BrandService{brandRepo: brandRepo}
+}
+
+func (s *BrandService) Create(ctx context.Context, name, logoURL string) (*entities.Brand, error) {
+	if name == "" {
+		return nil, errors.New("brand name is required")
+	}
+	brand := &entities.Brand{Name: name, LogoURL: logoURL}
+	if err := s.brandRepo.Create(ctx, brand); err != nil {
+		return nil, err
+	}
+	return brand, nil
+}
+
+func (s *BrandService) GetByID(ctx context.Context, id uint) (*entities.Brand, error) {
+	return s.brandRepo.GetByID(ctx, id)
+}
+
+func (s *BrandService) List(ctx context.Context, q string, limit, offset int) ([]*entities.Brand, int64, error) {
+	return s.brandRepo.List(ctx, q, limit, offset)
+}
+
+func (s *BrandService) Update(ctx context.Context, id uint, name, logoURL string) (*entities.Brand, error) {
+	brand, err := s.brandRepo.GetByID(ctx, id)
+	if err != nil {
+		return nil, errors.New("brand not found")
+	}
+	if name != "" {
+		brand.Name = name
+	}
+	if logoURL != "" {
+		brand.LogoURL = logoURL
+	}
+	if err := s.brandRepo.Update(ctx, brand); err != nil {
+		return nil, err
+	}
+	return brand, nil
+}
+
+func (s *BrandService) Delete(ctx context.Context, id uint) error {
+	if _, err := s.brandRepo.GetByID(ctx, id); err != nil {
+		return errors.New("brand not found")
+	}
+	return s.brandRepo.Delete(ctx, id)
+}
+
+// --- Color Service ---
+
+type ColorService struct{ repo ColorRepository }
+
+func NewColorService(repo ColorRepository) *ColorService { return &ColorService{repo: repo} }
+
+func (s *ColorService) Create(ctx context.Context, req api.CreateColorRequest) (*entities.Color, error) {
+	color := &entities.Color{Name: req.Name, HexCode: req.HexCode}
+	if err := s.repo.Create(ctx, color); err != nil {
+		return nil, err
+	}
+	return color, nil
+}
+
+func (s *ColorService) GetAll(ctx context.Context) ([]*entities.Color, error) {
+	return s.repo.GetAll(ctx)
+}
+
+func (s *ColorService) Update(ctx context.Context, id uint, req api.UpdateColorRequest) (*entities.Color, error) {
+	color, err := s.repo.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if req.Name != "" {
+		color.Name = req.Name
+	}
+	if req.HexCode != "" {
+		color.HexCode = req.HexCode
+	}
+	if err := s.repo.Update(ctx, color); err != nil {
+		return nil, err
+	}
+	return color, nil
+}
+
+func (s *ColorService) Delete(ctx context.Context, id uint) error { return s.repo.Delete(ctx, id) }

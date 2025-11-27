@@ -54,3 +54,16 @@ func (r *categoryGormRepo) Update(ctx context.Context, category *entities.Catego
 func (r *categoryGormRepo) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&CategoryModel{}, id).Error
 }
+
+func (r *categoryGormRepo) GetByIDs(ctx context.Context, ids []uint) ([]entities.Category, error) {
+	var models []CategoryModel
+	if err := r.db.WithContext(ctx).Where("id IN ?", ids).Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	var result []entities.Category
+	for _, model := range models {
+		result = append(result, *model.ToEntity())
+	}
+	return result, nil
+}

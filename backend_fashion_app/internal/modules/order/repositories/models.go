@@ -3,6 +3,9 @@ package repositories
 import (
 	"time"
 
+	authRepositories "myfashion/internal/modules/auth/repositories"
+	catalogRepositories "myfashion/internal/modules/catalog/repositories"
+
 	"github.com/google/uuid"
 )
 
@@ -10,6 +13,7 @@ import (
 type OrderModel struct {
 	ID          uuid.UUID `gorm:"type:char(36);primaryKey"`
 	OrderNumber string    `gorm:"type:varchar(50);uniqueIndex;not null"`
+	OrderCode   uint64    `gorm:"uniqueIndex;not null"`
 	CustomerID  uint      `gorm:"not null;index"`
 	ShopID      uint      `gorm:"not null;index"`
 
@@ -37,15 +41,17 @@ type OrderModel struct {
 	CancelReason string `gorm:"type:text"`
 
 	// Timestamps
-	CreatedAt   time.Time `gorm:"not null"`
-	UpdatedAt   time.Time `gorm:"not null"`
+	CreatedAt   time.Time `gorm:"autoCreateTime"`
+	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 	ConfirmedAt *time.Time
 	ShippedAt   *time.Time
 	DeliveredAt *time.Time
 	CancelledAt *time.Time
 
 	// Relations
-	Items []OrderItemModel `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
+	Items    []OrderItemModel           `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
+	Customer authRepositories.UserModel `gorm:"foreignKey:CustomerID"`
+	Shop     authRepositories.UserModel `gorm:"foreignKey:ShopID"`
 }
 
 func (OrderModel) TableName() string {
@@ -56,7 +62,7 @@ func (OrderModel) TableName() string {
 type OrderItemModel struct {
 	ID           uuid.UUID `gorm:"type:char(36);primaryKey"`
 	OrderID      uuid.UUID `gorm:"type:char(36);not null;index"`
-	ProductID    uint      `gorm:"not null"`
+	ProductID    uint      `gorm:"not null;index"`
 	ProductName  string    `gorm:"type:varchar(255);not null"`
 	ProductSKU   string    `gorm:"type:varchar(100)"`
 	ProductImage string    `gorm:"type:text"`
@@ -65,7 +71,11 @@ type OrderItemModel struct {
 	Quantity     int       `gorm:"not null"`
 	Price        float64   `gorm:"type:decimal(15,2);not null"`
 	Subtotal     float64   `gorm:"type:decimal(15,2);not null"`
-	CreatedAt    time.Time `gorm:"not null"`
+	CreatedAt    time.Time `gorm:"autoCreateTime"`
+
+	// Relations
+	Order   OrderModel                       `gorm:"foreignKey:OrderID;constraint:OnDelete:CASCADE"`
+	Product catalogRepositories.ProductModel `gorm:"foreignKey:ProductID"`
 }
 
 func (OrderItemModel) TableName() string {

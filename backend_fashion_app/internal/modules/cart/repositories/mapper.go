@@ -30,34 +30,34 @@ func ToCartModel(e *entities.Cart) *CartModel {
 	}
 }
 
-// ToCartItemEntity chuyển đổi từ CartItemModel sang CartItem entity
+// ToCartItemEntity converts CartItemModel to CartItem entity
 func ToCartItemEntity(m *CartItemModel) *entities.CartItem {
 	if m == nil {
 		return nil
 	}
 	return &entities.CartItem{
-		ID:            m.ID,
-		CartID:        m.CartID,
-		ProductID:     m.ProductID,
-		Quantity:      m.Quantity,
-		PriceSnapshot: m.PriceSnapshot,
-		CreatedAt:     m.CreatedAt,
-		UpdatedAt:     m.UpdatedAt,
+		ID:               m.ID,
+		CartID:           m.CartID,
+		ProductVariantID: m.ProductVariantID,
+		Quantity:         m.Quantity,
+		PriceSnapshot:    m.PriceSnapshot,
+		CreatedAt:        m.CreatedAt,
+		UpdatedAt:        m.UpdatedAt,
 	}
 }
 
-// ToCartItemModel chuyển đổi từ CartItem entity sang CartItemModel
+// ToCartItemModel converts CartItem entity to CartItemModel
 func ToCartItemModel(e *entities.CartItem) *CartItemModel {
 	if e == nil {
 		return nil
 	}
 	return &CartItemModel{
-		ID:            e.ID,
-		CartID:        e.CartID,
-		ProductID:     e.ProductID,
-		Quantity:      e.Quantity,
-		PriceSnapshot: e.PriceSnapshot,
-		CreatedAt:     e.CreatedAt,
-		UpdatedAt:     e.UpdatedAt,
+		ID:               e.ID,
+		CartID:           e.CartID,
+		ProductVariantID: e.ProductVariantID,
+		Quantity:         e.Quantity,
+		PriceSnapshot:    e.PriceSnapshot,
+		CreatedAt:        e.CreatedAt,
+		UpdatedAt:        e.UpdatedAt,
 	}
 }

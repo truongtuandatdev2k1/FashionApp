@@ -444,6 +444,392 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/brands": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Tạo mới một thương hiệu (chỉ dành cho shop/admin)",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Brands"
+                ],
+                "summary": "Create brand",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Brand name",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Logo image file (jpg, jpeg, png, gif)",
+                        "name": "logo",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.BrandResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/brands/{id}": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Cập nhật thông tin một thương hiệu",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Brands"
+                ],
+                "summary": "Update brand",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Brand ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Brand payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.BrandRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.BrandResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Xoá một thương hiệu",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Brands"
+                ],
+                "summary": "Delete brand",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Brand ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/products/basic": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Bước 1: Tạo sản phẩm ở trạng thái DRAFT với thông tin cơ bản và ảnh đại diện tải lên cùng (img_url). Giá sau giảm sẽ được tính tự động từ price và discount_pct.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Create basic product (DRAFT)",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tên sản phẩm",
+                        "name": "name",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "number",
+                        "description": "Giá ban đầu",
+                        "name": "price",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "% giảm giá (0..100)",
+                        "name": "discount_pct",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID thương hiệu",
+                        "name": "brand_id",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Danh sách category id (chọn nhiều)",
+                        "name": "category_ids",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        },
+                        "collectionFormat": "multi",
+                        "description": "Danh sách style id (chọn nhiều)",
+                        "name": "style_ids",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "boolean",
+                        "description": "Hot trend",
+                        "name": "is_hot_trend",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Độ tuổi",
+                        "name": "age_range",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Mô tả",
+                        "name": "description",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Ảnh đại diện (.jpg/.jpeg/.png/.gif)",
+                        "name": "img_url",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.ProductDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/admin/products/{id}/variants": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Bước 2: Xóa toàn bộ biến thể/màu/ảnh cũ và tạo mới từ form-data; trạng thái chuyển ACTIVE/INACTIVE theo tổng tồn kho.\\n\\nCách gửi:\\n- payload (JSON string):\\n  {\\n    \"colors\": [ { \"hex\": \"#FF0000\", \"image_keys\": [\"color_0_images\"] }, { \"hex\": \"#0000FF\", \"image_keys\": [\"color_1_images\"] } ],\\n    \"variants\": [ { \"color_hex\": \"#FF0000\", \"size_code\": \"S\", \"stock\": 10, \"sku\": \"RED-S-001\" }, { \"color_hex\": \"#0000FF\", \"size_code\": \"M\", \"stock\": 5 } ]\\n  }\\n- color_{i}_images: tập ảnh cho màu thứ i (multi files).\\n- size hợp lệ: S, M, L, XL, 2XL. SKU có thể bỏ trống, BE sẽ tự sinh nếu thiếu.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Replace variants/colors/images and finalize product",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "JSON payload (colors, variants)",
+                        "name": "payload",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "Ảnh cho màu index 0 (gửi nhiều file)",
+                        "name": "color_0_images",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Ảnh cho màu index 1 (gửi nhiều file)",
+                        "name": "color_1_images",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "file",
+                        "description": "Ảnh cho màu index 2 (gửi nhiều file)",
+                        "name": "color_2_images",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.ProductDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/promotions": {
             "post": {
                 "security": [
@@ -513,46 +899,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/google": {
-            "post": {
-                "description": "Xác thực Google ID Token; nếu chưa có user thì tạo (role=customer)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Auth"
-                ],
-                "summary": "Login Google",
-                "parameters": [
-                    {
-                        "description": "payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.GoogleLoginRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
-                        }
-                    }
-                }
-            }
-        },
         "/auth/login": {
             "post": {
                 "description": "Đăng nhập local (email/password)",
@@ -581,7 +927,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "401": {
@@ -600,7 +958,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Thu hồi tất cả refresh token của người dùng hiện tại",
+                "description": "Thu hồi tất cả refresh token và blacklist access token hiện tại",
                 "produces": [
                     "application/json"
                 ],
@@ -657,7 +1015,7 @@ const docTemplate = `{
         },
         "/auth/refresh": {
             "post": {
-                "description": "Đổi refresh token lấy access token mới (rotate)",
+                "description": "Đổi refresh token lấy access token mới (có xoay vòng và phát hiện tái sử dụng)",
                 "consumes": [
                     "application/json"
                 ],
@@ -683,11 +1041,29 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/resp.Envelope"
                         }
@@ -723,11 +1099,129 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.AuthResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/brands": {
+            "get": {
+                "description": "Lấy danh sách thương hiệu (có tìm kiếm và phân trang nhẹ)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Brands"
+                ],
+                "summary": "List brands",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Keyword search",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Limit",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.BrandListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
+        "/brands/{id}": {
+            "get": {
+                "description": "Lấy thông tin chi tiết một thương hiệu",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Brands"
+                ],
+                "summary": "Get brand",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Brand ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.BrandResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/resp.Envelope"
                         }
@@ -1008,6 +1502,88 @@ const docTemplate = `{
                 }
             }
         },
+        "/cart/items/{id}/variant": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "Đổi màu/size cho một sản phẩm trong giỏ; sẽ gộp số lượng nếu cart đã có item cùng biến thể mới",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cart"
+                ],
+                "summary": "Change Cart Item Variant",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID của Cart Item",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Màu/Size mới",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.ChangeCartItemVariantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.CartItemResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
         "/cart/summary": {
             "get": {
                 "security": [
@@ -1058,7 +1634,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Categories"
                 ],
                 "summary": "List Categories",
                 "responses": {
@@ -1099,7 +1675,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Categories"
                 ],
                 "summary": "Create Category",
                 "parameters": [
@@ -1154,7 +1730,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Categories"
                 ],
                 "summary": "Get Category",
                 "parameters": [
@@ -1207,7 +1783,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Categories"
                 ],
                 "summary": "Update Category",
                 "parameters": [
@@ -1278,7 +1854,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Categories"
                 ],
                 "summary": "Delete Category",
                 "parameters": [
@@ -1397,7 +1973,7 @@ const docTemplate = `{
                         "Bearer": []
                     }
                 ],
-                "description": "Tạo đơn hàng mới từ giỏ hàng (customer)",
+                "description": "Tạo đơn hàng mới từ giỏ hàng (customer), các loại thanh toán: cod, bank_transfer, e_wallet",
                 "consumes": [
                     "application/json"
                 ],
@@ -1787,156 +2363,9 @@ const docTemplate = `{
                 }
             }
         },
-        "/products": {
-            "post": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Create a new product. Supports uploading images via file or providing image URLs.\nAt least one of ` + "`" + `background_image` + "`" + ` (file) or ` + "`" + `background_image_url` + "`" + ` (text) is required.",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Catalog"
-                ],
-                "summary": "Create Product",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Product Name",
-                        "name": "name",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated category IDs (e.g., '1,2')",
-                        "name": "category_ids",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated style IDs (e.g., '3,4')",
-                        "name": "style_ids",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "number",
-                        "description": "Product Price",
-                        "name": "price",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Stock quantity",
-                        "name": "stock",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Discount Percentage",
-                        "name": "discount_pct",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Product Color",
-                        "name": "color",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Age Range",
-                        "name": "age_range",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Product Description",
-                        "name": "description",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Mark as a hot trend product",
-                        "name": "is_hot_trend",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "Background image file (required if URL is not provided)",
-                        "name": "background_image",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Background image URL (required if file is not provided)",
-                        "name": "background_image_url",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "file"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "Other image files (can be combined with URLs)",
-                        "name": "other_images",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Other image URLs (comma-separated)",
-                        "name": "other_image_urls",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/resp.Envelope"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/api.ProductResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
-                        }
-                    }
-                }
-            }
-        },
         "/products/list": {
             "post": {
-                "description": "Lấy danh sách sản phẩm với phân trang và bộ lọc.\nFilter options: ` + "`" + `all` + "`" + `, ` + "`" + `bestseller` + "`" + `, ` + "`" + `new` + "`" + `, ` + "`" + `hottrend` + "`" + `.",
+                "description": "Lấy danh sách sản phẩm với phân trang và bộ lọc (dành cho mobile)\nFilter options: ` + "`" + `all` + "`" + `, ` + "`" + `hot` + "`" + `, ` + "`" + `new` + "`" + `, ` + "`" + `best` + "`" + `, ` + "`" + `recommend` + "`" + `",
                 "consumes": [
                     "application/json"
                 ],
@@ -1944,12 +2373,12 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Products"
                 ],
                 "summary": "List Products",
                 "parameters": [
                     {
-                        "description": "Tùy chọn phân trang và bộ lọc. Để trống body để dùng giá trị mặc định.",
+                        "description": "Tùy chọn phân trang và bộ lọc",
                         "name": "body",
                         "in": "body",
                         "schema": {
@@ -1981,12 +2410,12 @@ const docTemplate = `{
         },
         "/products/{id}": {
             "get": {
-                "description": "Get a product by ID",
+                "description": "Get a product by ID with full details",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Products"
                 ],
                 "summary": "Get Product",
                 "parameters": [
@@ -2010,164 +2439,11 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/api.ProductResponse"
+                                            "$ref": "#/definitions/api.ProductDetailResponse"
                                         }
                                     }
                                 }
                             ]
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Update a product. Supports uploading images via file or providing image URLs.",
-                "consumes": [
-                    "multipart/form-data"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Catalog"
-                ],
-                "summary": "Update Product",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Product ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Product Name",
-                        "name": "name",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated category IDs",
-                        "name": "category_ids",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated style IDs",
-                        "name": "style_ids",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "number",
-                        "description": "Product Price",
-                        "name": "price",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Stock quantity",
-                        "name": "stock",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Discount Percentage",
-                        "name": "discount_pct",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Product Color",
-                        "name": "color",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Age Range",
-                        "name": "age_range",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Product Description",
-                        "name": "description",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Set as hot trend (true/false)",
-                        "name": "is_hot_trend",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "file",
-                        "description": "New background image file (optional)",
-                        "name": "background_image",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "New background image URL (optional)",
-                        "name": "background_image_url",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "file"
-                        },
-                        "collectionFormat": "multi",
-                        "description": "New other image files (optional)",
-                        "name": "other_images",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "New other image URLs (comma-separated, optional)",
-                        "name": "other_image_urls",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/resp.Envelope"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/api.ProductResponse"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/resp.Envelope"
                         }
                     },
                     "404": {
@@ -2189,7 +2465,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Products"
                 ],
                 "summary": "Delete Product",
                 "parameters": [
@@ -2405,7 +2681,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Styles"
                 ],
                 "summary": "List Styles",
                 "responses": {
@@ -2446,7 +2722,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Styles"
                 ],
                 "summary": "Create Style",
                 "parameters": [
@@ -2501,7 +2777,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Styles"
                 ],
                 "summary": "Get Style",
                 "parameters": [
@@ -2554,7 +2830,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Styles"
                 ],
                 "summary": "Update Style",
                 "parameters": [
@@ -2625,7 +2901,7 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "Catalog"
+                    "Styles"
                 ],
                 "summary": "Delete Style",
                 "parameters": [
@@ -2710,6 +2986,12 @@ const docTemplate = `{
                         "e_wallet"
                     ],
                     "example": "cod"
+                },
+                "promotion_codes": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -2818,6 +3100,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "Giao hàng giờ hành chính"
                 },
+                "order_code": {
+                    "type": "integer",
+                    "example": 1731570000123456789
+                },
                 "order_number": {
                     "type": "string",
                     "example": "ORD-20240121-abc123"
@@ -2903,11 +3189,11 @@ const docTemplate = `{
         "api.AddToCartRequest": {
             "type": "object",
             "required": [
-                "product_id",
+                "product_variant_id",
                 "quantity"
             ],
             "properties": {
-                "product_id": {
+                "product_variant_id": {
                     "type": "integer",
                     "minimum": 1
                 },
@@ -2978,6 +3264,68 @@ const docTemplate = `{
                 }
             }
         },
+        "api.AuthResponse": {
+            "type": "object",
+            "properties": {
+                "refreshToken": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/api.UserInfo"
+                }
+            }
+        },
+        "api.BrandListResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.BrandResponse"
+                    }
+                },
+                "meta": {
+                    "$ref": "#/definitions/api.PaginationMeta"
+                }
+            }
+        },
+        "api.BrandRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.BrandResponse": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "logo_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
         "api.CartItemResponse": {
             "type": "object",
             "properties": {
@@ -2989,6 +3337,7 @@ const docTemplate = `{
                     "type": "number"
                 },
                 "id": {
+                    "description": "CartItem ID",
                     "type": "integer"
                 },
                 "price_changed": {
@@ -3002,7 +3351,7 @@ const docTemplate = `{
                 "product": {
                     "$ref": "#/definitions/api.ProductInfo"
                 },
-                "product_id": {
+                "product_variant_id": {
                     "type": "integer"
                 },
                 "quantity": {
@@ -3091,6 +3440,17 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ChangeCartItemVariantRequest": {
+            "type": "object",
+            "properties": {
+                "color_hex": {
+                    "type": "string"
+                },
+                "size_code": {
                     "type": "string"
                 }
             }
@@ -3272,14 +3632,6 @@ const docTemplate = `{
                 }
             }
         },
-        "api.GoogleLoginRequest": {
-            "type": "object",
-            "properties": {
-                "idToken": {
-                    "type": "string"
-                }
-            }
-        },
         "api.InvalidPromotion": {
             "type": "object",
             "properties": {
@@ -3300,7 +3652,7 @@ const docTemplate = `{
             "properties": {
                 "credential": {
                     "type": "string",
-                    "example": "test@gmail.com/0965744926"
+                    "example": "test@example.com/0912345678"
                 },
                 "password": {
                     "type": "string",
@@ -3339,67 +3691,28 @@ const docTemplate = `{
                 }
             }
         },
-        "api.ProductImageResponse": {
+        "api.ProductColorItem": {
             "type": "object",
             "properties": {
-                "id": {
-                    "type": "integer"
+                "color_hex": {
+                    "type": "string"
                 },
-                "url": {
+                "color_name": {
                     "type": "string"
                 }
             }
         },
-        "api.ProductInfo": {
+        "api.ProductDetailResponse": {
             "type": "object",
             "properties": {
-                "current_price": {
-                    "description": "Giá hiện tại từ DB",
-                    "type": "number"
+                "brand": {
+                    "$ref": "#/definitions/api.BrandResponse"
                 },
-                "id": {
-                    "type": "integer"
-                },
-                "image_url": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "stock": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.ProductListRequest": {
-            "type": "object",
-            "properties": {
-                "filter": {
-                    "description": "all, bestseller, new, hottrend",
-                    "type": "string"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "page": {
-                    "type": "integer"
-                }
-            }
-        },
-        "api.ProductResponse": {
-            "type": "object",
-            "properties": {
-                "age_range": {
-                    "type": "string"
-                },
-                "categories": {
+                "colors": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.CategoryResponse"
+                        "$ref": "#/definitions/api.ProductColorItem"
                     }
-                },
-                "color": {
-                    "type": "string"
                 },
                 "created_at": {
                     "type": "string"
@@ -3416,32 +3729,101 @@ const docTemplate = `{
                 "image_url": {
                     "type": "string"
                 },
-                "images": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/api.ProductImageResponse"
-                    }
-                },
                 "name": {
                     "type": "string"
                 },
                 "price": {
                     "type": "number"
                 },
-                "price_after": {
+                "priceAfter": {
                     "type": "number"
                 },
-                "stock": {
-                    "type": "integer"
+                "rating_avg": {
+                    "type": "number"
                 },
-                "styles": {
+                "sizes": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/api.StyleResponse"
+                        "type": "string"
                     }
+                },
+                "sold_count": {
+                    "type": "integer"
+                },
+                "total_stock": {
+                    "type": "integer"
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "variants": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ProductVariantResponse"
+                    }
+                }
+            }
+        },
+        "api.ProductImageResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ProductInfo": {
+            "type": "object",
+            "properties": {
+                "color": {
+                    "type": "string"
+                },
+                "current_price": {
+                    "description": "Variant Price",
+                    "type": "number"
+                },
+                "image_url": {
+                    "description": "Can be from Product or Variant",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Product Name",
+                    "type": "string"
+                },
+                "product_id": {
+                    "type": "integer"
+                },
+                "size": {
+                    "type": "string"
+                },
+                "sku": {
+                    "description": "Variant SKU",
+                    "type": "string"
+                },
+                "stock": {
+                    "description": "Variant Stock",
+                    "type": "integer"
+                },
+                "variant_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.ProductListRequest": {
+            "type": "object",
+            "properties": {
+                "filter": {
+                    "description": "all, bestseller, new, hottrend",
+                    "type": "string"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "page": {
+                    "type": "integer"
                 }
             }
         },
@@ -3463,8 +3845,40 @@ const docTemplate = `{
                 "price": {
                     "type": "number"
                 },
-                "price_after": {
+                "priceAfter": {
                     "type": "number"
+                }
+            }
+        },
+        "api.ProductVariantResponse": {
+            "type": "object",
+            "properties": {
+                "color_hex": {
+                    "type": "string"
+                },
+                "color_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/api.ProductImageResponse"
+                    }
+                },
+                "price": {
+                    "type": "number"
+                },
+                "size_code": {
+                    "type": "string"
+                },
+                "sku": {
+                    "type": "string"
+                },
+                "stock": {
+                    "type": "integer"
                 }
             }
         },
@@ -3579,7 +3993,7 @@ const docTemplate = `{
                 "email": {
                     "type": "string",
                     "format": "email",
-                    "example": "alice@gmail.com"
+                    "example": "alice@example.com"
                 },
                 "password": {
                     "type": "string"
@@ -3668,6 +4082,17 @@ const docTemplate = `{
             ],
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.UserInfo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "role": {
                     "type": "string"
                 }
             }

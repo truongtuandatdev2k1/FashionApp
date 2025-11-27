@@ -7,8 +7,8 @@ type Cart struct {
 	ID        uint       `gorm:"primaryKey"`
 	UserID    uint       `gorm:"not null;uniqueIndex"` // Mỗi user chỉ có 1 giỏ hàng
 	Items     []CartItem `gorm:"foreignKey:CartID;constraint:OnDelete:CASCADE"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	CreatedAt time.Time  `gorm:"autoCreateTime"`
+	UpdatedAt time.Time  `gorm:"autoUpdateTime"`
 }
 
 func (Cart) TableName() string {

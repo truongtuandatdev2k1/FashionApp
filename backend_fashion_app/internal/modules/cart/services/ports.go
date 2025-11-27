@@ -13,7 +13,7 @@ type CartRepository interface {
 	ClearCart(ctx context.Context, cartID uint) error
 
 	// --- CartItem Methods ---
-	FindItemByCartAndProduct(ctx context.Context, cartID, productID uint) (*entities.CartItem, error)
+	FindItemByCartAndVariant(ctx context.Context, cartID, variantID uint) (*entities.CartItem, error)
 	FindItemByID(ctx context.Context, itemID uint) (*entities.CartItem, error)
 	CreateItem(ctx context.Context, item *entities.CartItem) error
 	UpdateItem(ctx context.Context, item *entities.CartItem) error

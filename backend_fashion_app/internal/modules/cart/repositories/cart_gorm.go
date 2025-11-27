@@ -61,16 +61,16 @@ func (r *CartGormRepo) ClearCart(ctx context.Context, cartID uint) error {
 
 // ========== CartItem Methods ==========
 
-// FindItemByCartAndProduct tìm item trong giỏ hàng theo productID
-func (r *CartGormRepo) FindItemByCartAndProduct(ctx context.Context, cartID, productID uint) (*entities.CartItem, error) {
+// FindItemByCartAndVariant finds a cart item by cart ID and variant ID.
+func (r *CartGormRepo) FindItemByCartAndVariant(ctx context.Context, cartID, variantID uint) (*entities.CartItem, error) {
 	var model CartItemModel
 	err := r.db.WithContext(ctx).
-		Where("cart_id = ? AND product_id = ?", cartID, productID).
+		Where("cart_id = ? AND product_variant_id = ?", cartID, variantID).
 		First(&model).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil // Không tìm thấy -> trả về nil, không phải lỗi
+			return nil, nil // Not found is not an error in this case
 		}
 		return nil, err
 	}

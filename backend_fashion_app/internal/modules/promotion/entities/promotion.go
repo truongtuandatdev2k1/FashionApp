@@ -26,24 +26,28 @@ const (
 
 // Promotion là entity chính cho một chương trình khuyến mãi
 type Promotion struct {
-	ID              uint          // ID của khuyến mãi
-	Code            string        // Mã khuyến mãi duy nhất, ví dụ: "SALE50", "FREESHIP"
-	Name            string        // Tên chương trình, ví dụ: "Giảm giá 50k"
-	Description     string        // Mô tả chi tiết về chương trình
-	Type            PromotionType // Loại khuyến mãi: 'order_fixed', 'order_percentage', 'shipping_fixed', 'free_shipping'
-	Value           float64       // Giá trị của khuyến mãi (ví dụ: 50000 hoặc 10 cho 10%)
-	MaxDiscount     *float64      // Số tiền giảm tối đa, chỉ áp dụng cho 'order_percentage' và 'shipping_fixed'
-	MinOrderValue   float64       // Giá trị đơn hàng tối thiểu (chưa tính phí ship) để được áp dụng mã
-	StartDate       time.Time     // Ngày bắt đầu hiệu lực
-	EndDate         time.Time     // Ngày kết thúc hiệu lực
-	UsageLimit      int           // Tổng số lượt sử dụng tối đa của mã này (0 = không giới hạn)
-	UsageCount      int           // Số lượt đã được sử dụng
-	UserUsageLimit  int           // Số lần mỗi người dùng được sử dụng mã này (0 = không giới hạn)
-	IsActive        bool          // Mã có đang được kích hoạt hay không
-	IsStackable     bool          // Có cho phép dùng chung (cộng dồn) với các mã khuyến mãi khác không
-	TargetGroup     TargetGroup   // Nhóm khách hàng mục tiêu: 'all', 'new_customer', 'specific_users', 'customer_tier'
-	ApplicableTiers []string      // Danh sách các hạng được áp dụng (khi TargetGroup = 'customer_tier'), ví dụ: ["gold", "silver"]
-	ApplicableUsers []uint        // Danh sách user ID được áp dụng (khi TargetGroup = 'specific_users')
-	CreatedAt       time.Time
-	UpdatedAt       time.Time
+	ID              uint          `gorm:"primaryKey"`
+	Code            string        `gorm:"type:varchar(50);unique;not null"`
+	Name            string        `gorm:"type:varchar(255);not null"`
+	Description     string        `gorm:"type:text"`
+	Type            PromotionType `gorm:"type:varchar(20);not null"`
+	Value           float64       `gorm:"type:decimal(10,2);not null"`
+	MaxDiscount     *float64      `gorm:"type:decimal(10,2)"`
+	MinOrderValue   float64       `gorm:"type:decimal(10,2);default:0"`
+	StartDate       time.Time     `gorm:"not null"`
+	EndDate         time.Time     `gorm:"not null"`
+	UsageLimit      int           `gorm:"default:0"`
+	UsageCount      int           `gorm:"default:0"`
+	UserUsageLimit  int           `gorm:"default:0"`
+	IsActive        bool          `gorm:"default:true"`
+	IsStackable     bool          `gorm:"default:false"`
+	TargetGroup     TargetGroup   `gorm:"type:varchar(20);not null"`
+	ApplicableTiers []string      `gorm:"-"` // Not a DB field, handled by logic
+	ApplicableUsers []uint        `gorm:"-"` // Not a DB field, handled by logic
+	CreatedAt       time.Time     `gorm:"autoCreateTime"`
+	UpdatedAt       time.Time     `gorm:"autoUpdateTime"`
+}
+
+func (Promotion) TableName() string {
+	return "promotions"
 }

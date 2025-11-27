@@ -1,6 +1,10 @@
 package repositories
 
-import "time"
+import (
+	"time"
+
+	authRepositories "myfashion/internal/modules/auth/repositories"
+)
 
 type AddressModel struct {
 	ID            uint      `gorm:"primaryKey"`
@@ -16,6 +20,8 @@ type AddressModel struct {
 	IsDefault     bool      `gorm:"default:false;index:idx_user_default"`
 	CreatedAt     time.Time `gorm:"autoCreateTime"`
 	UpdatedAt     time.Time `gorm:"autoUpdateTime"`
+
+	User authRepositories.UserModel `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
 }
 
 func (AddressModel) TableName() string {

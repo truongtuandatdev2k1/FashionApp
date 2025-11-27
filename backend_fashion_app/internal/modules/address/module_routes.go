@@ -5,13 +5,15 @@ import (
 	"myfashion/internal/common/config"
 	"myfashion/internal/modules/address/controllers"
 	"myfashion/internal/modules/address/repositories"
+	authRepos "myfashion/internal/modules/auth/repositories"
 
 	"github.com/go-chi/chi/v5"
 	"gorm.io/gorm"
 )
 
 // RegisterRoutes registers all routes for the Address module
-func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB) {
+// RegisterRoutes registers all routes for the Address module
+func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *authRepos.BlacklistedTokenRepository) {
 	// Initialize repositories
 	addressRepo := repositories.NewAddressGormRepository(db)
 
@@ -20,7 +22,7 @@ func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB) {
 
 	// All Address routes require authentication
 	r.Group(func(r chi.Router) {
-		r.Use(authn.AuthRequired(cfg.JWT_Secret))
+		r.Use(authn.AuthRequiredWithBlacklist(cfg.JWT_Secret, blacklistRepo))
 
 		// Address routes
 		r.Get("/addresses", h.GetAllAddresses)                      // Get all addresses

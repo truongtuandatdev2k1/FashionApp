@@ -150,6 +150,22 @@ func (s *PromotionService) validateSinglePromotion(ctx context.Context, userID u
 }
 
 // calculateSummary tính toán tổng tiền sau khi đã có danh sách mã hợp lệ
+// RecordUsage increases the usage count for a list of promotions.
+func (s *PromotionService) RecordUsage(ctx context.Context, codes []string) error {
+	for _, code := range codes {
+		p, err := s.promoRepo.FindByCode(ctx, code)
+		if err != nil {
+			// Log or ignore error for promotions that might have been deleted in the meantime
+			continue
+		}
+		if err := s.promoRepo.IncrementUsageCount(ctx, p.ID, 1); err != nil {
+			// Log or handle error, but don't stop the loop
+			continue
+		}
+	}
+	return nil
+}
+
 func (s *PromotionService) calculateSummary(response *api.ValidatePromotionResponse, promotions []*entities.Promotion, req *api.ValidatePromotionRequest) {
 	var totalOrderDiscount float64
 	var totalShippingDiscount float64
