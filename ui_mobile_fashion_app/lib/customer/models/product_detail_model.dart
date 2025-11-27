@@ -1,4 +1,5 @@
 // lib/customer/models/product_detail_model.dart
+
 class ProductDetailModel {
   final int id;
   final String name;
@@ -6,7 +7,7 @@ class ProductDetailModel {
   final int priceAfter;
   final int discountPct;
   final String description;
-  final String imageUrl; // ảnh chính
+  final String imageUrl;
   final Brand brand;
   final List<Variant> variants;
   final List<String> sizes;
@@ -32,29 +33,24 @@ class ProductDetailModel {
     required this.ratingAvg,
   });
 
+  // Getter gom tất cả ảnh
+  List<String> get allImages {
+    final Set<String> images = {};
+    for (var v in variants) images.addAll(v.images);
+    if (images.isEmpty) images.add(imageUrl);
+    return images.toList();
+  }
+
   factory ProductDetailModel.fromJson(
     Map<String, dynamic> json,
     String baseUrl,
   ) {
     final data = json['data'];
     final brand = Brand.fromJson(data['brand'], baseUrl);
-
     final variants =
         (data['variants'] as List)
             .map((v) => Variant.fromJson(v, baseUrl))
             .toList();
-
-    // Lấy tất cả ảnh từ các variant (không trùng)
-    final Set<String> allImageUrls = {};
-    for (var v in variants) {
-      for (var img in v.images) {
-        allImageUrls.add(img);
-      }
-    }
-    // Nếu không có ảnh variant thì dùng ảnh chính
-    if (allImageUrls.isEmpty) {
-      allImageUrls.add(baseUrl + data['image_url']);
-    }
 
     return ProductDetailModel(
       id: data['id'],
@@ -88,13 +84,44 @@ class Brand {
   }
 }
 
+// ĐÃ SỬA: Thêm đầy đủ field
 class Variant {
+  final int id;
+  final int price;
+  final int stock;
+  final String sku;
+  final String colorName;
+  final String colorHex;
+  final String sizeCode;
   final List<String> images;
-  Variant(this.images);
+
+  Variant({
+    required this.id,
+    required this.price,
+    required this.stock,
+    required this.sku,
+    required this.colorName,
+    required this.colorHex,
+    required this.sizeCode,
+    required this.images,
+  });
+
   factory Variant.fromJson(Map<String, dynamic> json, String baseUrl) {
     final imgs =
-        (json['images'] as List).map((i) => baseUrl + i['url']).toList();
-    return Variant(imgs);
+        (json['images'] as List)
+            .map((i) => baseUrl + i['url'] as String)
+            .toList();
+
+    return Variant(
+      id: json['id'],
+      price: json['price'],
+      stock: json['stock'],
+      sku: json['sku'],
+      colorName: json['color_name'],
+      colorHex: json['color_hex'],
+      sizeCode: json['size_code'],
+      images: imgs,
+    );
   }
 }
 

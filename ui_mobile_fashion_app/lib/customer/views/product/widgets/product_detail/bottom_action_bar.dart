@@ -1,22 +1,33 @@
 // lib/customer/views/product/widgets/product_detail/bottom_action_bar.dart
 import 'package:flutter/material.dart';
+import 'package:ui_mobile_fashion_app/customer/views/product/product_detail_screen.dart';
 import 'size_color_selector_sheet.dart';
 
 class BottomActionBar extends StatelessWidget {
   const BottomActionBar({super.key});
 
+  // lib/customer/views/product/widgets/product_detail/bottom_action_bar.dart
   void _showSelectorSheet(BuildContext context, {required bool isBuyNow}) {
+    final state = context.findAncestorStateOfType<ProductDetailScreenState>();
+    final product = state?.currentProduct;
+
+    if (product == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Đang tải sản phẩm...')));
+      return;
+    }
+
     SizeColorSelectorSheet.show(
       context,
+      product: product,
       isBuyNow: isBuyNow,
       onConfirm: () {
-        final message = isBuyNow
-            ? 'Đã chọn "Mua ngay" thành công!'
-            : 'Đã thêm vào giỏ hàng thành công!';
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
-        // TODO: Gọi API add to cart / navigate to checkout ở đây
+        final message =
+            isBuyNow ? 'Đã chọn "Mua ngay"!' : 'Đã thêm vào giỏ hàng!';
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
       },
     );
   }
@@ -44,11 +55,17 @@ class BottomActionBar extends StatelessWidget {
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 50),
                 side: const BorderSide(color: Colors.black, width: 2),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: const Text(
                 'Add Cart',
-                style: TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
           ),
@@ -60,7 +77,9 @@ class BottomActionBar extends StatelessWidget {
                 backgroundColor: const Color(0xFF0079C2),
                 foregroundColor: Colors.white,
                 minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: const Text(
                 'Buy Now',

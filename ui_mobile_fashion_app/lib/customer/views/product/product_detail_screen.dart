@@ -1,4 +1,5 @@
 // lib/customer/views/product/widgets/product_detail/product_detail_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/product/product_detail_api.dart';
 import 'package:ui_mobile_fashion_app/customer/models/product_detail_model.dart';
@@ -15,16 +16,41 @@ class ProductDetailScreen extends StatefulWidget {
   const ProductDetailScreen({super.key, required this.productId});
 
   @override
-  State<ProductDetailScreen> createState() => _ProductDetailScreenState();
+  State<ProductDetailScreen> createState() => ProductDetailScreenState();
 }
 
-class _ProductDetailScreenState extends State<ProductDetailScreen> {
+class ProductDetailScreenState extends State<ProductDetailScreen> {
   late Future<ProductDetailModel> _productFuture;
+
+  // 1. Biến snapshot để truy cập từ ngoài builder
+  AsyncSnapshot<ProductDetailModel> _snapshot = const AsyncSnapshot.nothing();
 
   @override
   void initState() {
     super.initState();
     _productFuture = ProductDetailApi.getProduct(widget.productId);
+  }
+
+  // 2. Getter mà BottomActionBar sẽ dùng để lấy product hiện tại
+  ProductDetailModel? get currentProduct {
+    if (!mounted) return null;
+    if (_snapshot.connectionState == ConnectionState.done &&
+        _snapshot.hasData) {
+      return _snapshot.data;
+    }
+    return null;
+  }
+
+  // 3. Hàm tiện ích để lấy danh sách ảnh (nếu cần dùng ở nhiều nơi)
+  List<String> get allProductImages {
+    final product = currentProduct;
+    if (product == null) return [];
+
+    final images = <String>{product.imageUrl};
+    for (var v in product.variants) {
+      images.addAll(v.images);
+    }
+    return images.toList();
   }
 
   @override
@@ -34,21 +60,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       body: FutureBuilder<ProductDetailModel>(
         future: _productFuture,
         builder: (context, snapshot) {
+          // Quan trọng: luôn cập nhật _snapshot ở đây
+          _snapshot = snapshot;
+
           if (snapshot.hasData) {
             final product = snapshot.data!;
-            final allImages = <String>{};
-            for (var v in product.variants) {
-              allImages.addAll(v.images);
-            }
-            final imageList =
-                allImages.isNotEmpty ? allImages.toList() : [product.imageUrl];
 
             return Stack(
               children: [
                 CustomScrollView(
                   slivers: [
                     SliverToBoxAdapter(
-                      child: ProductImageSection(imageUrls: imageList),
+                      child: ProductImageSection(imageUrls: allProductImages),
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
@@ -66,7 +89,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                               currentPrice: product.priceAfter.toDouble(),
                               oldPrice: product.price.toDouble(),
                               rating: product.ratingAvg,
-                              reviewCount: 0, // API chưa có
+                              reviewCount: 0,
                               soldCount: product.soldCount,
                             ),
                             const SizedBox(height: 24),
@@ -82,6 +105,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ],
                 ),
+
+                // Header
                 Positioned(
                   top: 0,
                   left: 0,
@@ -95,17 +120,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     },
                   ),
                 ),
+
+                // BottomActionBar KHÔNG cần truyền tham số nào cả
                 const Positioned(
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  child: BottomActionBar(),
+                  child: BottomActionBar(), // ← Như cũ, không đổi
                 ),
               ],
             );
-          } else if (snapshot.hasError) {
+          }
+
+          if (snapshot.hasError) {
             return Center(child: Text('Lỗi: ${snapshot.error}'));
           }
+
           return const Center(child: CircularProgressIndicator());
         },
       ),
