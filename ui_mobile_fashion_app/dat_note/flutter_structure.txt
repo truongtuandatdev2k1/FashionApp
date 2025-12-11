@@ -65,7 +65,7 @@
 │   │       ├── friendship.png
 │   │       └── happy_shopping.png
 │   └── logo_fas.png
-├── hazii_note
+├── dat_note
 │   ├── address_customer.txt
 │   ├── cart.txt
 │   ├── flutter_structure.txt
@@ -196,6 +196,7 @@
 │   │   ├── logic
 │   │   │   ├── address
 │   │   │   │   ├── address_api.dart
+│   │   │   │   ├── address_service.dart
 │   │   │   │   └── mock_address_data.dart
 │   │   │   ├── auth
 │   │   │   │   └── auth_api.dart
@@ -295,6 +296,8 @@
 │   └── main_customer.dart
 ├── test
 │   └── widget_test.dart
+├── .vscode
+│   └── launch.json
 ├── analysis_options.yaml
 ├── .env.dev
 ├── .flutter-plugins-dependencies
@@ -303,4 +306,4 @@
 ├── pubspec.yaml
 └── README.md
 
-120 directories, 184 files
+121 directories, 186 files

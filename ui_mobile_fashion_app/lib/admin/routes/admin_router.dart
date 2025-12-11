@@ -1,5 +1,4 @@
 // lib/admin/routes/admin_router.dart
-import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ui_mobile_fashion_app/admin/presentation/splash/admin_splash_screen.dart';
@@ -8,7 +7,7 @@ import 'package:ui_mobile_fashion_app/admin/features/dashboard/presentation/scre
 
 class AdminRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/',   // thêm dòng này để tránh lỗi mặc định
+    initialLocation: '/', // thêm dòng này để tránh lỗi mặc định
     routes: [
       GoRoute(
         path: '/',
@@ -16,7 +15,9 @@ class AdminRouter {
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => const LoginScreen(), // nếu class tên là AdminLoginScreen thì sửa thành AdminLoginScreen()
+        builder:
+            (context, state) =>
+                const LoginScreen(), // nếu class tên là AdminLoginScreen thì sửa thành AdminLoginScreen()
       ),
       GoRoute(
         path: '/dashboard',

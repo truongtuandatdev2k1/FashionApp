@@ -2,6 +2,8 @@
 
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import 'package:ui_mobile_fashion_app/customer/views/auth/complete_profile_screen.dart';
+import 'package:ui_mobile_fashion_app/customer/views/auth/register_screen.dart';
 // ***************************************************************
 // 1. CẬP NHẬT IMPORT: Trỏ đến file Navigation Shell MỚI
 import 'package:ui_mobile_fashion_app/customer/views/navigation_shell/customer_navigation_shell.dart';
@@ -24,6 +26,14 @@ class AppRouter {
         builder: (BuildContext context, GoRouterState state) {
           return const LoginScreen();
         },
+      ),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/complete-profile',
+        builder: (context, state) => const CompleteProfileScreen(),
       ),
       GoRoute(
         path: '/home',

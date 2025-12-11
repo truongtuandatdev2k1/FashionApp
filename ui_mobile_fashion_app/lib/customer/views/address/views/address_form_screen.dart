@@ -5,7 +5,7 @@ import 'package:ui_mobile_fashion_app/customer/models/address.dart';
 
 class AddressFormScreen extends StatefulWidget {
   final Address? address;
-  const AddressFormScreen({Key? key, this.address}) : super(key: key);
+  const AddressFormScreen({super.key, this.address});
 
   @override
   State<AddressFormScreen> createState() => _AddressFormScreenState();
@@ -19,7 +19,6 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
       _districtCtrl,
       _wardCtrl,
       _detailCtrl;
-  String _type = 'office';
   bool _isDefaultWhenCreate = true;
   bool _isLoading = false;
 
@@ -41,7 +40,6 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     _detailCtrl = TextEditingController(
       text: a != null ? _extractDetail(a.fullAddress) : '',
     );
-    if (a != null) _type = a.addressType;
   }
 
   @override
@@ -55,6 +53,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
     super.dispose();
   }
 
+  // Helper tách địa chỉ khi sửa
   String _extractCity(String s) => s.split(', ').last.trim();
   String _extractDistrict(String s) => s
       .split(', ')
@@ -94,7 +93,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           ward: _wardCtrl.text.trim(),
           addressLine1: line1,
           addressLine2: line2,
-          addressType: _type,
+          addressType: "home", // ← TỰ ĐỘNG GỬI "home"
         );
       } else {
         await AddressService.updateAddress(
@@ -106,7 +105,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
           ward: _wardCtrl.text.trim(),
           addressLine1: line1,
           addressLine2: line2,
-          addressType: _type,
+          addressType: "home", // ← TỰ ĐỘNG GỬI "home"
         );
       }
 
@@ -127,6 +126,7 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -198,17 +198,8 @@ class _AddressFormScreenState extends State<AddressFormScreen> {
                 validator: (v) => v!.trim().isEmpty ? "Bắt buộc" : null,
               ),
               const SizedBox(height: 24),
-              DropdownButtonFormField<String>(
-                value: _type,
-                decoration: const InputDecoration(labelText: "Loại địa chỉ"),
-                items: const [
-                  DropdownMenuItem(value: "office", child: Text("Công ty")),
-                  DropdownMenuItem(value: "home", child: Text("Nhà riêng")),
-                  DropdownMenuItem(value: "other", child: Text("Khác")),
-                ],
-                onChanged: (v) => setState(() => _type = v!),
-              ),
-              const SizedBox(height: 24),
+
+              // Checkbox "Đặt làm mặc định" – chỉ hiện khi thêm mới
               if (widget.address == null)
                 Row(
                   children: [

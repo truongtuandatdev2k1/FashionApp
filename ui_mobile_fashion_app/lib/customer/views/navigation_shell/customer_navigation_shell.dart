@@ -13,7 +13,8 @@ class CustomerNavigationShell extends StatefulWidget {
   const CustomerNavigationShell({super.key});
 
   @override
-  State<CustomerNavigationShell> createState() => _CustomerNavigationShellState();
+  State<CustomerNavigationShell> createState() =>
+      _CustomerNavigationShellState();
 }
 
 class _CustomerNavigationShellState extends State<CustomerNavigationShell> {
@@ -43,7 +44,7 @@ class _CustomerNavigationShellState extends State<CustomerNavigationShell> {
   Widget build(BuildContext context) {
     final List<BottomNavigationBarItem> navBarItems = List.generate(
       _pages.length,
-          (index) {
+      (index) {
         final isSelected = index == _selectedIndex;
         final size = isSelected ? 26.0 : 22.0;
         return BottomNavigationBarItem(

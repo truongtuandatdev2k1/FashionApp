@@ -9,12 +9,15 @@ import 'package:go_router/go_router.dart'; // THÊM
 class CustomerAuthApi {
   static final _dio = getIt<Dio>(); // hoặc ApiConfig.dio
 
-  static Future<Map<String, dynamic>> login(String credential, String password) async {
+  static Future<Map<String, dynamic>> login(
+    String credential,
+    String password,
+  ) async {
     try {
-      final response = await _dio.post('/auth/login', data: {
-        "credential": credential,
-        "password": password,
-      });
+      final response = await _dio.post(
+        '/auth/login',
+        data: {"credential": credential, "password": password},
+      );
 
       if (response.data['code'] == 'OK') {
         final data = response.data['data'];
@@ -60,13 +63,58 @@ class CustomerAuthApi {
       } else {
         throw Exception(response.data['message'] ?? 'Đăng xuất thất bại');
       }
-    } on DioException catch (e) {
+    } on DioException {
       // Nếu API lỗi (ví dụ: 401, mạng), vẫn xóa local và về login
       await TokenManager.clearTokens();
       await UserManager.clearUser();
       if (context.mounted) {
         context.go('/login');
       }
+    }
+  }
+
+  // lib/customer/logic/auth/auth_api.dart
+
+  static Future<void> register({
+    required String email,
+    required String phone,
+    required String password,
+  }) async {
+    try {
+      final response = await _dio.post(
+        '/auth/register',
+        data: {
+          "email": email,
+          "phone_number": phone,
+          "password": password,
+          "confirmPassword": password,
+        },
+      );
+
+      if (response.data['code'] != 'OK') {
+        throw Exception(response.data['message'] ?? 'Đăng ký thất bại');
+      }
+
+      // Đăng ký thành công → tự động đăng nhập luôn
+      final data = response.data['data'];
+      final token = data['token'] as String;
+      final refreshToken = data['refreshToken'] as String? ?? token;
+      final user = data['user'];
+
+      await TokenManager.saveTokens(
+        accessToken: token,
+        refreshToken: refreshToken,
+      );
+      await UserManager.saveUser(
+        id: user['id'],
+        role: user['role'],
+        name: "Khách hàng #${user['id']}",
+      );
+    } on DioException catch (e) {
+      final msg = e.response?.data?['message'] ?? 'Lỗi kết nối server';
+      throw Exception(msg);
+    } catch (e) {
+      rethrow;
     }
   }
 }

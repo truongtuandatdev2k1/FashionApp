@@ -1,3 +1,4 @@
+// file: lib/customer/views/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
@@ -95,31 +96,50 @@ class _LoginScreenState extends State<LoginScreen> {
               // Tài khoản
               const Text(
                 'Tài khoản',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 6),
               TextFormField(
                 controller: _emailController,
                 decoration: InputDecoration(
                   hintText: 'Email/số điện thoại của bạn',
-                  prefixIcon: const Icon(LucideIcons.user, size: 20, color: Color(0xff757575)),
+                  prefixIcon: const Icon(
+                    LucideIcons.user,
+                    size: 20,
+                    color: Color(0xff757575),
+                  ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10.0),
                     borderSide: BorderSide.none,
                   ),
                   filled: true,
                   fillColor: Colors.grey.shade100,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 14.0,
+                  ),
                 ),
                 keyboardType: TextInputType.emailAddress,
-                validator: (value) => value?.trim().isEmpty ?? true ? 'Vui lòng nhập tài khoản' : null,
+                validator:
+                    (value) =>
+                        value?.trim().isEmpty ?? true
+                            ? 'Vui lòng nhập tài khoản'
+                            : null,
               ),
               const SizedBox(height: 20),
 
               // Mật khẩu
               const Text(
                 'Mật khẩu',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
               ),
               const SizedBox(height: 6),
               TextFormField(
@@ -127,7 +147,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscureText: true,
                 decoration: InputDecoration(
                   hintText: 'Nhập mật khẩu của bạn',
-                  prefixIcon: const Icon(LucideIcons.lock, size: 20, color: Color(0xff757575)),
+                  prefixIcon: const Icon(
+                    LucideIcons.lock,
+                    size: 20,
+                    color: Color(0xff757575),
+                  ),
                   suffixIcon: IconButton(
                     icon: const Icon(LucideIcons.eyeOff, size: 20),
                     onPressed: () {
@@ -140,9 +164,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   filled: true,
                   fillColor: Colors.grey.shade100,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14.0, horizontal: 14.0),
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 14.0,
+                    horizontal: 14.0,
+                  ),
                 ),
-                validator: (value) => value?.isEmpty ?? true ? 'Vui lòng nhập mật khẩu' : null,
+                validator:
+                    (value) =>
+                        value?.isEmpty ?? true
+                            ? 'Vui lòng nhập mật khẩu'
+                            : null,
               ),
               const SizedBox(height: 10),
 
@@ -153,7 +184,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () => print('Go to Forgot Password screen'),
                   child: const Text(
                     'Quên mật khẩu?',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.black87),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
                   ),
                 ),
               ),
@@ -166,21 +201,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   backgroundColor: Colors.black87,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 50),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
-                ),
-                child: _isLoading
-                    ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12.0),
                   ),
-                )
-                    : const Text(
-                  'Đăng Nhập',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
                 ),
+                child:
+                    _isLoading
+                        ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                        : const Text(
+                          'Đăng Nhập',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
               ),
               const SizedBox(height: 50),
 
@@ -196,7 +237,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     onTap: _navigateToRegister,
                     child: const Text(
                       'Đăng ký ngay',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black87),
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
                     ),
                   ),
                 ],

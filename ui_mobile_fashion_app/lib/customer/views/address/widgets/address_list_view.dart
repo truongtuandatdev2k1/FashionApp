@@ -9,8 +9,7 @@ class AddressListView extends StatelessWidget {
   final List<Address> addresses;
   final VoidCallback? onRefresh;
 
-  const AddressListView({Key? key, required this.addresses, this.onRefresh})
-    : super(key: key);
+  const AddressListView({super.key, required this.addresses, this.onRefresh});
 
   @override
   Widget build(BuildContext context) {
@@ -59,7 +58,7 @@ class AddressListView extends StatelessWidget {
                 if (success) onRefresh?.call();
               }
             },
-            onRefresh: onRefresh,
+            // onRefresh: onRefresh,
           ),
         );
       },

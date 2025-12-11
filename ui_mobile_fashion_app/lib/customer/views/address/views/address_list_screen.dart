@@ -14,23 +14,38 @@ class AddressListScreen extends StatefulWidget {
 }
 
 class _AddressListScreenState extends State<AddressListScreen> {
-  late Future<List<Address>> _addressesFuture;
+  // Dùng ValueNotifier thay vì FutureBuilder + setState → KHÔNG BAO GIỜ BỊ LOCKED
+  final ValueNotifier<List<Address>> _addressesNotifier = ValueNotifier([]);
 
   @override
   void initState() {
     super.initState();
-    _addressesFuture = AddressApi.getAddresses();
+    _loadAddresses();
   }
 
-  void _refresh() {
-    setState(() {
-      _addressesFuture = AddressApi.getAddresses();
-    });
+  Future<void> _loadAddresses() async {
+    try {
+      final addresses = await AddressApi.getAddresses();
+      if (mounted) {
+        _addressesNotifier.value = addresses;
+      }
+    } catch (e) {
+      if (mounted) {
+        _addressesNotifier.value = [];
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _addressesNotifier.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
@@ -45,31 +60,38 @@ class _AddressListScreenState extends State<AddressListScreen> {
         ),
         centerTitle: true,
       ),
-      body: FutureBuilder<List<Address>>(
-        future: _addressesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
+      body: ValueListenableBuilder<List<Address>>(
+        valueListenable: _addressesNotifier,
+        builder: (context, addresses, _) {
+          // Loading đầu tiên
+          if (addresses.isEmpty && _addressesNotifier.value.isEmpty) {
             return const Center(child: CircularProgressIndicator());
           }
-
-          final addresses = snapshot.data ?? [];
 
           if (addresses.isEmpty) {
             return const EmptyAddressView();
           }
 
-          return AddressListView(addresses: addresses, onRefresh: _refresh);
+          return AddressListView(
+            addresses: addresses,
+            onRefresh: _loadAddresses, // refresh khi xóa/sửa
+          );
         },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.black,
         child: const Icon(Icons.add, color: Colors.white),
         onPressed: () async {
+          // QUAN TRỌNG: KHÔNG gọi setState hay refresh ở đây
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const AddressFormScreen()),
           );
-          if (result == true) _refresh();
+
+          // Chỉ refresh nếu thêm/sửa thành công và widget còn sống
+          if (result == true && mounted) {
+            _loadAddresses();
+          }
         },
       ),
     );
