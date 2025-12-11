@@ -7,7 +7,7 @@ import 'package:ui_mobile_fashion_app/core/utils/extensions.dart';
 const Color kPrimaryColor = Colors.black;
 
 class ProfileMenuList extends StatelessWidget {
-  const ProfileMenuList({Key? key}) : super(key: key);
+  const ProfileMenuList({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +23,12 @@ class ProfileMenuList extends StatelessWidget {
           text: "Địa Chỉ Nhận Hàng",
           iconData: LucideIcons.mapPin,
           onTap: () => context.go('/addresses'),
+        ),
+        // THÊM MỤC ĐƠN HÀNG CỦA TÔI
+        ProfileMenuItem(
+          text: "Đơn hàng của tôi",
+          iconData: LucideIcons.shoppingBag, // Hoặc icon phù hợp
+          onTap: () => context.go('/my-orders'), // Điều hướng đến màn hình mới
         ),
         ProfileMenuItem(
           text: "Thông Báo",
@@ -51,20 +57,24 @@ class ProfileMenuList extends StatelessWidget {
   Future<void> _showLogoutDialog(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Đăng xuất'),
-        content: const Text('Bạn có chắc muốn đăng xuất?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Hủy'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Đăng xuất'),
+            content: const Text('Bạn có chắc muốn đăng xuất?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Hủy'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text(
+                  'Đăng xuất',
+                  style: TextStyle(color: Colors.red),
+                ),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Đăng xuất', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
 
     if (confirm == true) {
@@ -80,11 +90,11 @@ class ProfileMenuItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const ProfileMenuItem({
-    Key? key,
+    super.key,
     required this.text,
     required this.iconData,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +104,9 @@ class ProfileMenuItem extends StatelessWidget {
         style: TextButton.styleFrom(
           foregroundColor: kPrimaryColor,
           padding: const EdgeInsets.all(20),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
           backgroundColor: const Color(0xFFF5F6F9),
         ),
         onPressed: onTap,
@@ -114,11 +126,7 @@ class ProfileMenuItem extends StatelessWidget {
               ),
             ),
             // MŨI TÊN: Luôn màu đen
-            const Icon(
-              Icons.arrow_forward_ios,
-              color: kPrimaryColor,
-              size: 16,
-            ),
+            const Icon(Icons.arrow_forward_ios, color: kPrimaryColor, size: 16),
           ],
         ),
       ),

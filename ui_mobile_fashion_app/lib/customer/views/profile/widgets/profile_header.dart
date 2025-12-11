@@ -9,10 +9,7 @@ const Color kPrimaryColor = Colors.black;
 class ProfileHeader extends StatelessWidget {
   final Map<String, dynamic>? userData;
 
-  const ProfileHeader({
-    Key? key,
-    required this.userData,
-  }) : super(key: key);
+  const ProfileHeader({super.key, required this.userData});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +28,8 @@ class ProfileHeader extends StatelessWidget {
     final String displayUrl = ImageUrlHelper.build(imgUrl);
     const String defaultAvatarUrl =
         'https://i.pinimg.com/736x/bc/43/98/bc439871417621836a0eeea768d60944.jpg';
-    final String finalUrl = displayUrl.isNotEmpty ? displayUrl : defaultAvatarUrl;
+    final String finalUrl =
+        displayUrl.isNotEmpty ? displayUrl : defaultAvatarUrl;
 
     return SizedBox(
       height: 115,
@@ -47,14 +45,20 @@ class ProfileHeader extends StatelessWidget {
               child: CachedNetworkImage(
                 imageUrl: finalUrl,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => Container(
-                  color: Colors.grey[300],
-                  child: const CircularProgressIndicator(strokeWidth: 2),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: Colors.grey[300],
-                  child: const Icon(Icons.person, size: 50, color: Colors.grey),
-                ),
+                placeholder:
+                    (context, url) => Container(
+                      color: Colors.grey[300],
+                      child: const CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                errorWidget:
+                    (context, url, error) => Container(
+                      color: Colors.grey[300],
+                      child: const Icon(
+                        Icons.person,
+                        size: 50,
+                        color: Colors.grey,
+                      ),
+                    ),
               ),
             ),
           ),
@@ -74,7 +78,11 @@ class ProfileHeader extends StatelessWidget {
                   backgroundColor: const Color(0xFFF5F6F9),
                 ),
                 onPressed: () {},
-                child: const Icon(LucideIcons.camera, color: kPrimaryColor, size: 20),
+                child: const Icon(
+                  LucideIcons.camera,
+                  color: kPrimaryColor,
+                  size: 20,
+                ),
               ),
             ),
           ),

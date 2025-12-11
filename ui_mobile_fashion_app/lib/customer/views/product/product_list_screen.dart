@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/product/product_list_controller.dart';
-import 'package:ui_mobile_fashion_app/customer/models/product_data.dart';
 import 'package:ui_mobile_fashion_app/customer/views/product/product_detail_screen.dart';
 import 'widgets/product_grid_item.dart';
 
