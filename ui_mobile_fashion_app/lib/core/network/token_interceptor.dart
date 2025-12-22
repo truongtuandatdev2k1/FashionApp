@@ -1,6 +1,5 @@
 // lib/core/network/token_interceptor.dart
 import 'package:dio/dio.dart';
-import 'package:ui_mobile_fashion_app/core/di/locator.dart';
 import 'package:ui_mobile_fashion_app/core/network/token_manager.dart';
 
 class TokenInterceptor extends Interceptor {

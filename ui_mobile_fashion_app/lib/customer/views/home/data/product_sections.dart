@@ -1,7 +1,6 @@
 // lib/customer/views/home/data/product_sections.dart
 import 'package:flutter/material.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/product/product_api.dart';
-import 'package:ui_mobile_fashion_app/customer/models/product_data.dart';
 import '../widgets/horizontal_product_section.dart';
 
 // KHAI BÁO FILTER → TỰ ĐỘNG GỌI API
