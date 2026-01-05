@@ -52,10 +52,6 @@ class AdminMainLayout extends StatelessWidget {
               icon: const Icon(Icons.menu),
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
-          const Text(
-            'Fashion Admin Panel',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
           const Spacer(),
           const Icon(Icons.notifications_none, color: Colors.grey),
           const SizedBox(width: 20),

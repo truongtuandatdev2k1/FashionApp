@@ -1,4 +1,4 @@
-UI_MOBILE_FASHION_APP
+ui_mobile_fashion_app/ kiến trúc dự án flutter
 ├── android
 │   ├── app
 │   │   ├── src
@@ -52,7 +52,6 @@ UI_MOBILE_FASHION_APP
 │   │       └── gradle-wrapper.properties
 │   ├── .kotlin
 │   │   └── sessions
-│   │       └── kotlin-compiler-9448170317118986805.salive
 │   ├── build.gradle.kts
 │   ├── .gitignore
 │   ├── gradle.properties
@@ -136,7 +135,9 @@ UI_MOBILE_FASHION_APP
 │   ├── admin
 │   │   ├── features
 │   │   │   ├── auth
+│   │   │   │   ├── folder
 │   │   │   │   └── presentation
+│   │   │   │       ├── folder
 │   │   │   │       └── screens
 │   │   │   │           └── login_screen.dart
 │   │   │   ├── dashboard
@@ -150,6 +151,12 @@ UI_MOBILE_FASHION_APP
 │   │   │           └── screens
 │   │   │               └── product_list_screen.dart
 │   │   ├── presentation
+│   │   │   ├── folder
+│   │   │   ├── navigation
+│   │   │   │   ├── widgets
+│   │   │   │   │   └── admin_main_layout.dart
+│   │   │   │   ├── sidebar_config.dart
+│   │   │   │   └── sidebar_wrapper.dart
 │   │   │   └── splash
 │   │   │       └── admin_splash_screen.dart
 │   │   └── routes
@@ -334,4 +341,4 @@ UI_MOBILE_FASHION_APP
 ├── pubspec.yaml
 └── README.md
 
-129 directories, 206 files
+134 directories, 208 files
