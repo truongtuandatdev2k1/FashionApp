@@ -18,17 +18,16 @@ class ProfileMenuList extends StatelessWidget {
           iconData: LucideIcons.user,
           onTap: () {},
         ),
-        // THÊM MỤC ĐỊA CHỈ NHẬN HÀNG
+        // Chỉ sửa 2 dòng onTap
         ProfileMenuItem(
           text: "Địa Chỉ Nhận Hàng",
           iconData: LucideIcons.mapPin,
-          onTap: () => context.go('/addresses'),
+          onTap: () => context.go('/profile/addresses'),
         ),
-        // THÊM MỤC ĐƠN HÀNG CỦA TÔI
         ProfileMenuItem(
           text: "Đơn hàng của tôi",
-          iconData: LucideIcons.shoppingBag, // Hoặc icon phù hợp
-          onTap: () => context.go('/my-orders'), // Điều hướng đến màn hình mới
+          iconData: LucideIcons.shoppingBag,
+          onTap: () => context.go('/profile/my-orders'),
         ),
         ProfileMenuItem(
           text: "Thông Báo",
@@ -76,7 +75,6 @@ class ProfileMenuList extends StatelessWidget {
             ],
           ),
     );
-
     if (confirm == true) {
       await CustomerAuthApi.logout(context);
     }

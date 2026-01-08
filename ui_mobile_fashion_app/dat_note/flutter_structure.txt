@@ -1,4 +1,4 @@
-.
+ui_mobile_fashion_app/ kiến trúc dự án flutter
 ├── android
 │   ├── app
 │   │   ├── src
@@ -66,14 +66,9 @@
 │   │       └── happy_shopping.png
 │   └── logo_fas.png
 ├── dat_note
-│   ├── address_customer.txt
-│   ├── cart.txt
 │   ├── flutter_structure.txt
-│   ├── product_detail_cus.txt
 │   ├── run_and_build.txt
-│   ├── tuan_dat.jpg
-│   ├── ui_admin.txt
-│   └── ui_customer.txt
+│   └── tuan_dat.jpg
 ├── ios
 │   ├── Flutter
 │   │   ├── ephemeral
@@ -140,11 +135,15 @@
 │   ├── admin
 │   │   ├── features
 │   │   │   ├── auth
+│   │   │   │   ├── folder
 │   │   │   │   └── presentation
+│   │   │   │       ├── folder
 │   │   │   │       └── screens
 │   │   │   │           └── login_screen.dart
 │   │   │   ├── dashboard
+│   │   │   │   ├── folder
 │   │   │   │   └── presentation
+│   │   │   │       ├── folder
 │   │   │   │       └── screens
 │   │   │   │           └── stats_screen.dart
 │   │   │   └── product
@@ -152,6 +151,12 @@
 │   │   │           └── screens
 │   │   │               └── product_list_screen.dart
 │   │   ├── presentation
+│   │   │   ├── folder
+│   │   │   ├── navigation
+│   │   │   │   ├── widgets
+│   │   │   │   │   └── admin_main_layout.dart
+│   │   │   │   ├── sidebar_config.dart
+│   │   │   │   └── sidebar_wrapper.dart
 │   │   │   └── splash
 │   │   │       └── admin_splash_screen.dart
 │   │   └── routes
@@ -196,12 +201,19 @@
 │   │   ├── logic
 │   │   │   ├── address
 │   │   │   │   ├── address_api.dart
+│   │   │   │   ├── address_default_api.dart
 │   │   │   │   ├── address_service.dart
 │   │   │   │   └── mock_address_data.dart
 │   │   │   ├── auth
 │   │   │   │   └── auth_api.dart
 │   │   │   ├── cart
-│   │   │   │   └── cart_mock_data.dart
+│   │   │   │   ├── add_to_cart_api.dart
+│   │   │   │   ├── cart_api.dart
+│   │   │   │   ├── cart_mock_data.dart
+│   │   │   │   └── delete_item_api.dart
+│   │   │   ├── order
+│   │   │   │   ├── create_order_api.dart
+│   │   │   │   └── get_orders_api.dart
 │   │   │   ├── product
 │   │   │   │   ├── product_api.dart
 │   │   │   │   ├── product_controller.dart
@@ -209,8 +221,12 @@
 │   │   │   │   └── product_list_controller.dart
 │   │   │   └── profile
 │   │   │       ├── profile_api.dart
-│   │   │       └── profile_controller.dart
+│   │   │       ├── profile_controller.dart
+│   │   │       └── update_profile_api.dart
 │   │   ├── models
+│   │   │   ├── order
+│   │   │   │   ├── order_request.dart
+│   │   │   │   └── order_response.dart
 │   │   │   ├── address.dart
 │   │   │   ├── product_data.dart
 │   │   │   └── product_detail_model.dart
@@ -226,7 +242,9 @@
 │   │   │   │       ├── address_list_view.dart
 │   │   │   │       └── empty_address_view.dart
 │   │   │   ├── auth
-│   │   │   │   └── login_screen.dart
+│   │   │   │   ├── complete_profile_screen.dart
+│   │   │   │   ├── login_screen.dart
+│   │   │   │   └── register_screen.dart
 │   │   │   ├── cart
 │   │   │   │   ├── views
 │   │   │   │   │   └── cart_screen.dart
@@ -251,6 +269,14 @@
 │   │   │   │       └── utility_access_bar.dart
 │   │   │   ├── navigation_shell
 │   │   │   │   └── customer_navigation_shell.dart
+│   │   │   ├── order
+│   │   │   │   ├── widgets
+│   │   │   │   │   ├── order_address_section.dart
+│   │   │   │   │   ├── order_failure_screen.dart
+│   │   │   │   │   ├── order_product_item.dart
+│   │   │   │   │   └── order_success_screen.dart
+│   │   │   │   ├── my_order_screen.dart
+│   │   │   │   └── order_screen.dart
 │   │   │   ├── product
 │   │   │   │   ├── widgets
 │   │   │   │   │   ├── product_detail
@@ -298,6 +324,15 @@
 │   └── widget_test.dart
 ├── .vscode
 │   └── launch.json
+├── web
+│   ├── icons
+│   │   ├── Icon-192.png
+│   │   ├── Icon-512.png
+│   │   ├── Icon-maskable-192.png
+│   │   └── Icon-maskable-512.png
+│   ├── favicon.png
+│   ├── index.html
+│   └── manifest.json
 ├── analysis_options.yaml
 ├── .env.dev
 ├── .flutter-plugins-dependencies
@@ -306,4 +341,4 @@
 ├── pubspec.yaml
 └── README.md
 
-121 directories, 186 files
+134 directories, 208 files

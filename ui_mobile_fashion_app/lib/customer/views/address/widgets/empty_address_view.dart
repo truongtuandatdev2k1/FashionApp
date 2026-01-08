@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 class EmptyAddressView extends StatelessWidget {
-  const EmptyAddressView({Key? key}) : super(key: key);
+  const EmptyAddressView({super.key});
 
   @override
   Widget build(BuildContext context) {

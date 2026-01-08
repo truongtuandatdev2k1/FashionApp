@@ -19,8 +19,8 @@ class HorizontalProductSection extends StatelessWidget {
     switch (title) {
       case 'Bán chạy nhất':
         return 'bestseller';
-      case 'Sản phẩm mới':
-        return 'new';
+      // case 'Sản phẩm mới':
+      //   return 'new';
       case 'Hot trend':
         return 'hottrend';
       default:
