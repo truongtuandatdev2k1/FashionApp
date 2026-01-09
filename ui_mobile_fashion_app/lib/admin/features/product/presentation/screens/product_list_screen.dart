@@ -1,3 +1,4 @@
+// file: lib/admin/features/product/presentation/screens/product_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/product_list_controller.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/widgets/product_card.dart';

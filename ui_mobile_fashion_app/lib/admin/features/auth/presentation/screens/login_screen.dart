@@ -15,7 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
 
-  // Controller xử lý logic đăng nhập (tách riêng)
+  // Controller xử lý logic đăng nhập
   final AdminLoginController _loginController = AdminLoginController();
 
   bool _isLoading = false;
@@ -40,7 +40,6 @@ class _LoginScreenState extends State<LoginScreen> {
         _isLoading = false;
       });
 
-      // Nếu đăng nhập thành công → chuyển hướng
       if (error == null) {
         context.go('/dashboard');
       }
@@ -56,153 +55,135 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Mã màu nền F2F3F4
+    const backgroundColor = Color(0xFFF2F3F4);
+
     return Scaffold(
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.green.shade50, Colors.white],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Container(
-              width: 450,
-              padding: const EdgeInsets.all(40.0),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
+      backgroundColor: backgroundColor, // Đặt màu nền cho Scaffold
+      body: Center(
+        child: SingleChildScrollView(
+          child: Container(
+            width: 450,
+            padding: const EdgeInsets.all(40.0),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Thay thế Icon bằng Logo ảnh
+                  Image.asset(
+                    'assets/logo_fas.png',
+                    height: 40, // Chiều cao logo tùy chỉnh cho cân đối
+                    fit: BoxFit.contain,
+                  ),
+                  const SizedBox(height: 24),
+
+                  const Text(
+                    'FASHION ADMIN',
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black, // Chuyển sang màu đen
+                      letterSpacing: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Vui lòng đăng nhập để quản lý hệ thống',
+                    style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  ),
+                  const SizedBox(height: 40),
+
+                  // Ô nhập Email
+                  _buildTextField(
+                    controller: emailController,
+                    label: 'Email quản trị',
+                    icon: Icons.email_outlined,
+                    validator:
+                        (value) =>
+                            value?.trim().isEmpty ?? true
+                                ? 'Vui lòng nhập email'
+                                : null,
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Ô nhập Mật khẩu
+                  _buildTextField(
+                    controller: passwordController,
+                    label: 'Mật khẩu',
+                    icon: Icons.lock_outline,
+                    isPassword: true,
+                    validator:
+                        (value) =>
+                            value?.isEmpty ?? true
+                                ? 'Vui lòng nhập mật khẩu'
+                                : null,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Hiển thị lỗi
+                  if (_errorMessage != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red, fontSize: 14),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: _isLoading ? null : () {},
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey.shade700,
+                      ),
+                      child: const Text('Quên mật khẩu?'),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Nút Đăng nhập
+                  ElevatedButton(
+                    onPressed: _isLoading ? null : _handleLogin,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black, // Màu nút chuyển sang Đen
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size(double.infinity, 55),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0, // Bỏ đổ bóng nút cho phẳng
+                    ),
+                    child:
+                        _isLoading
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Text(
+                              'ĐĂNG NHẬP',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                  ),
+                  const SizedBox(height: 20),
+                  const Text(
+                    '© 2025 Fashion App Management',
+                    style: TextStyle(color: Colors.grey, fontSize: 12),
                   ),
                 ],
-              ),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.admin_panel_settings_rounded,
-                      size: 70,
-                      color: Colors.green,
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'FASHION ADMIN',
-                      style: TextStyle(
-                        fontSize: 28,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.green,
-                        letterSpacing: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Vui lòng đăng nhập để quản lý hệ thống',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-
-                    // Ô nhập Email
-                    _buildTextField(
-                      controller: emailController,
-                      label: 'Email quản trị',
-                      icon: Icons.email_outlined,
-                      validator:
-                          (value) =>
-                              value?.trim().isEmpty ?? true
-                                  ? 'Vui lòng nhập email'
-                                  : null,
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Ô nhập Mật khẩu
-                    _buildTextField(
-                      controller: passwordController,
-                      label: 'Mật khẩu',
-                      icon: Icons.lock_outline,
-                      isPassword: true,
-                      validator:
-                          (value) =>
-                              value?.isEmpty ?? true
-                                  ? 'Vui lòng nhập mật khẩu'
-                                  : null,
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Hiển thị lỗi (nếu có)
-                    if (_errorMessage != null)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed:
-                            _isLoading
-                                ? null
-                                : () {}, // Có thể thêm chức năng quên mật khẩu sau
-                        child: const Text('Quên mật khẩu?'),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-
-                    // Nút Đăng nhập
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(double.infinity, 55),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        elevation: 2,
-                      ),
-                      child:
-                          _isLoading
-                              ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                              : const Text(
-                                'ĐĂNG NHẬP',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      '© 2025 Fashion App Management',
-                      style: TextStyle(color: Colors.grey, fontSize: 12),
-                    ),
-                  ],
-                ),
               ),
             ),
           ),
@@ -211,9 +192,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  /// Widget TextFormField đã được tối ưu cho Flutter Web
-  /// - Fix lag khi gõ mật khẩu
-  /// - Fix hiện ký tự thừa khi xóa hết
   Widget _buildTextField({
     required TextEditingController controller,
     required String label,
@@ -221,32 +199,38 @@ class _LoginScreenState extends State<LoginScreen> {
     bool isPassword = false,
     String? Function(String?)? validator,
   }) {
+    // Màu viền mặc định
+    const borderColor = Color(0xFFD9D9D9);
+
     return TextFormField(
       controller: controller,
       obscureText: isPassword,
-      autocorrect: !isPassword, // Tắt sửa lỗi chính tả cho mật khẩu
-      enableSuggestions: !isPassword, // Tắt gợi ý (rất quan trọng trên Web)
-      autofocus: false, // Tránh conflict focus với trình duyệt
-      enableInteractiveSelection: true, // Đảm bảo chọn văn bản tốt hơn trên Web
+      autocorrect: !isPassword,
+      enableSuggestions: !isPassword,
+      autofocus: false,
+      enableInteractiveSelection: true,
       validator: validator,
       enabled: !_isLoading,
+      cursorColor: Colors.black, // Màu con trỏ
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, size: 20),
+        labelStyle: TextStyle(color: Colors.grey.shade600),
+        prefixIcon: Icon(icon, size: 20, color: Colors.grey.shade600),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: borderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
+          borderSide: const BorderSide(color: borderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.green, width: 2),
+          // Khi focus chuyển sang màu đen thay vì xanh
+          borderSide: const BorderSide(color: Colors.black, width: 1.5),
         ),
         filled: true,
-        fillColor: Colors.grey.shade50,
+        fillColor: Colors.white, // Nền input trắng
       ),
     );
   }

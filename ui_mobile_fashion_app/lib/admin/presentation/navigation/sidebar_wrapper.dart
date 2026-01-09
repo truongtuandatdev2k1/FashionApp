@@ -1,3 +1,4 @@
+// file: lib/admin/presentation/navigation/sidebar_wrapper.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'sidebar_config.dart';
@@ -8,58 +9,116 @@ class AdminSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Lấy route hiện tại để xác định item nào đang được chọn
     final String currentLocation = GoRouterState.of(context).uri.toString();
 
     return Container(
       width: isMobile ? double.infinity : 260,
-      color: const Color(0xFF1A1F36),
+      color: Colors.white, // Nền trắng theo yêu cầu
       child: Column(
         children: [
-          const UserAccountsDrawerHeader(
-            decoration: BoxDecoration(color: Color(0xFF2E3552)),
-            currentAccountPicture: CircleAvatar(child: Icon(Icons.person)),
-            accountName: Text('Admin Manager'),
-            accountEmail: Text('admin@fashionapp.com'),
+          // Header: Logo / Admin Info
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+            alignment: Alignment.centerLeft,
+            child: Row(
+              children: [
+                // Logo placeholder
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: const BoxDecoration(
+                    color: Colors.black, // Logo đen đơn giản
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.stars, color: Colors.white),
+                ),
+                const SizedBox(width: 12),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'FASHION ADMIN',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: Colors.black,
+                      ),
+                    ),
+                    Text(
+                      'Manager',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
+
+          // Menu Items
           Expanded(
             child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
               itemCount: SidebarConfig.items.length,
               itemBuilder: (context, index) {
                 final item = SidebarConfig.items[index];
                 final isSelected = currentLocation.startsWith(item.route);
 
-                return ListTile(
-                  leading: Icon(
-                    item.icon,
-                    color: isSelected ? Colors.green : Colors.white70,
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 4),
+                  decoration: BoxDecoration(
+                    // Item được chọn có nền xám nhẹ, bo góc, không viền
+                    color:
+                        isSelected
+                            ? const Color(0xFFF2F3F4)
+                            : Colors.transparent,
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  title: Text(
-                    item.title,
-                    style: TextStyle(
-                      color: isSelected ? Colors.green : Colors.white70,
+                  child: ListTile(
+                    leading: Icon(
+                      item.icon,
+                      // Selected: Đen, Unselected: Xám
+                      color: isSelected ? Colors.black : Colors.grey,
+                      size: 22,
                     ),
+                    title: Text(
+                      item.title,
+                      style: TextStyle(
+                        // Selected: Đậm + Đen, Unselected: Xám
+                        color: isSelected ? Colors.black : Colors.grey[600],
+                        fontWeight:
+                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontSize: 14,
+                      ),
+                    ),
+                    onTap: () {
+                      context.go(item.route);
+                      if (isMobile) Navigator.pop(context);
+                    },
+                    // Bỏ hiệu ứng ripple mặc định để "phẳng" hơn
+                    hoverColor: Colors.transparent,
                   ),
-                  selected: isSelected,
-                  onTap: () {
-                    context.go(item.route);
-                    if (isMobile)
-                      Navigator.pop(context); // Đóng drawer nếu là mobile
-                  },
                 );
               },
             ),
           ),
-          const Divider(color: Colors.white12),
-          ListTile(
-            leading: const Icon(Icons.logout, color: Colors.redAccent),
-            title: const Text(
-              'Đăng xuất',
-              style: TextStyle(color: Colors.redAccent),
+
+          // Logout
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: ListTile(
+              leading: const Icon(
+                Icons.logout,
+                color: Colors.redAccent,
+                size: 20,
+              ),
+              title: const Text(
+                'Đăng xuất',
+                style: TextStyle(color: Colors.redAccent, fontSize: 14),
+              ),
+              onTap: () => context.go('/login'),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
-            onTap: () => context.go('/login'),
           ),
-          const SizedBox(height: 20),
         ],
       ),
     );

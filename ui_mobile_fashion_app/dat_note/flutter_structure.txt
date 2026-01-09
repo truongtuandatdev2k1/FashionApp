@@ -1,4 +1,4 @@
-ui_mobile_fashion_app/ kiến trúc dự án flutter
+ui_mobile_fashion_app/
 ├── android
 │   ├── app
 │   │   ├── src
@@ -135,9 +135,12 @@ ui_mobile_fashion_app/ kiến trúc dự án flutter
 │   ├── admin
 │   │   ├── features
 │   │   │   ├── auth
-│   │   │   │   ├── folder
+│   │   │   │   ├── data
+│   │   │   │   │   └── auth_repository.dart
 │   │   │   │   └── presentation
 │   │   │   │       ├── folder
+│   │   │   │       ├── logic
+│   │   │   │       │   └── admin_login_controller.dart
 │   │   │   │       └── screens
 │   │   │   │           └── login_screen.dart
 │   │   │   ├── dashboard
@@ -147,9 +150,16 @@ ui_mobile_fashion_app/ kiến trúc dự án flutter
 │   │   │   │       └── screens
 │   │   │   │           └── stats_screen.dart
 │   │   │   └── product
+│   │   │       ├── domain
+│   │   │       │   └── entities
+│   │   │       │       └── product_entity.dart
 │   │   │       └── presentation
-│   │   │           └── screens
-│   │   │               └── product_list_screen.dart
+│   │   │           ├── logic
+│   │   │           │   └── product_list_controller.dart
+│   │   │           ├── screens
+│   │   │           │   └── product_list_screen.dart
+│   │   │           └── widgets
+│   │   │               └── product_card.dart
 │   │   ├── presentation
 │   │   │   ├── folder
 │   │   │   ├── navigation
@@ -323,7 +333,8 @@ ui_mobile_fashion_app/ kiến trúc dự án flutter
 ├── test
 │   └── widget_test.dart
 ├── .vscode
-│   └── launch.json
+│   ├── launch.json
+│   └── settings.json
 ├── web
 │   ├── icons
 │   │   ├── Icon-192.png
@@ -341,4 +352,4 @@ ui_mobile_fashion_app/ kiến trúc dự án flutter
 ├── pubspec.yaml
 └── README.md
 
-134 directories, 208 files
+139 directories, 214 files

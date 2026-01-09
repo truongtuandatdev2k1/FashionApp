@@ -1,3 +1,4 @@
+// file: lib/admin/presentation/navigation/widgets/admin_main_layout.dart
 import 'package:flutter/material.dart';
 import 'package:ui_mobile_fashion_app/admin/presentation/navigation/sidebar_wrapper.dart';
 
@@ -12,20 +13,16 @@ class AdminMainLayout extends StatelessWidget {
     final bool isMobile = screenWidth < 800;
 
     return Scaffold(
-      // Drawer dùng chung cho Mobile
+      backgroundColor: const Color(0xFFF2F3F4), // Màu nền tổng thể theo yêu cầu
       drawer:
           isMobile ? const Drawer(child: AdminSidebar(isMobile: true)) : null,
       body: Row(
         children: [
-          // Sidebar cố định cho Web/Desktop
           if (!isMobile) const AdminSidebar(),
-
-          // Nội dung chính
           Expanded(
             child: Column(
               children: [
                 _buildTopBar(isMobile, context),
-                // Phần nội dung thay đổi theo Route
                 Expanded(child: child),
               ],
             ),
@@ -37,27 +34,33 @@ class AdminMainLayout extends StatelessWidget {
 
   Widget _buildTopBar(bool isMobile, BuildContext context) {
     return Container(
-      height: 70,
+      height: 60,
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
-        ],
-      ),
+      color: Colors.white, // Topbar trắng
+      // Không có BoxShadow hay Border để đảm bảo thiết kế phẳng
       child: Row(
         children: [
           if (isMobile)
             IconButton(
-              icon: const Icon(Icons.menu),
+              icon: const Icon(Icons.menu, color: Colors.black),
               onPressed: () => Scaffold.of(context).openDrawer(),
             ),
+          if (!isMobile)
+            // Tiêu đề hoặc Breadcrumb có thể để ở đây
+            const Text(
+              "Dashboard",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
           const Spacer(),
-          const Icon(Icons.notifications_none, color: Colors.grey),
-          const SizedBox(width: 20),
+          IconButton(
+            icon: const Icon(Icons.notifications_none, color: Colors.grey),
+            onPressed: () {},
+          ),
+          const SizedBox(width: 10),
           const CircleAvatar(
-            radius: 18,
-            backgroundImage: NetworkImage('https://i.pravatar.cc/150'),
+            radius: 16,
+            backgroundColor: Color(0xFFF2F3F4),
+            child: Icon(Icons.person, color: Colors.grey),
           ),
         ],
       ),
