@@ -15,11 +15,11 @@ class SidebarItemModel {
 
 class SidebarConfig {
   static const List<SidebarItemModel> items = [
-    SidebarItemModel(
-      title: 'Tổng Quan',
-      icon: Icons.dashboard_outlined,
-      route: '/dashboard',
-    ),
+    // SidebarItemModel(
+    //   title: 'Tổng Quan',
+    //   icon: Icons.dashboard_outlined,
+    //   route: '/dashboard',
+    // ),
     SidebarItemModel(
       title: 'Đơn Hàng',
       icon: Icons.shopping_cart_outlined,

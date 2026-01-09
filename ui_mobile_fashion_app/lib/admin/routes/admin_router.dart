@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_mobile_fashion_app/admin/features/auth/presentation/screens/login_screen.dart';
-import 'package:ui_mobile_fashion_app/admin/features/dashboard/presentation/screens/stats_screen.dart';
+import 'package:ui_mobile_fashion_app/admin/features/order/presentation/screens/order_list_screen.dart';
 import 'package:ui_mobile_fashion_app/admin/presentation/navigation/widgets/admin_main_layout.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/screens/product_list_screen.dart';
 
@@ -16,22 +16,23 @@ class AdminRouter {
           return AdminMainLayout(child: child);
         },
         routes: [
-          // 1. Tổng Quan
-          GoRoute(
-            path: '/dashboard',
-            builder: (context, state) => const StatsScreen(),
-          ),
+          // // 1. Tổng Quan
+          // GoRoute(
+          //   path: '/dashboard',
+          //   builder: (context, state) => const StatsScreen(),
+          // ),
           // 2. Sản Phẩm (Đã có logic)
           GoRoute(
             path: '/products',
             builder: (context, state) => const ProductListScreen(),
           ),
           // 3. Đơn Hàng
+          // Trong AdminRouter.router:
           GoRoute(
             path: '/orders',
             builder:
                 (context, state) =>
-                    const _SimplePage(title: 'Quản Lý Đơn Hàng'),
+                    const OrderListScreen(), // Thay _SimplePage bằng OrderListScreen
           ),
           // 4. Kho Hàng
           GoRoute(

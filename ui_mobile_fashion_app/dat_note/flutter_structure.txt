@@ -64,7 +64,6 @@
 │   │   └── images
 │   │       ├── friendship.png
 │   │       └── happy_shopping.png
-│   ├── .env.dev
 │   └── logo_fas.png
 ├── dat_note
 │   ├── flutter_structure.txt
@@ -150,6 +149,13 @@
 │   │   │   │       ├── folder
 │   │   │   │       └── screens
 │   │   │   │           └── stats_screen.dart
+│   │   │   ├── order
+│   │   │   │   ├── folder
+│   │   │   │   └── presentation
+│   │   │   │       ├── mock_data
+│   │   │   │       │   └── order_mock_data.dart
+│   │   │   │       └── screens
+│   │   │   │           └── order_list_screen.dart
 │   │   │   └── product
 │   │   │       ├── domain
 │   │   │       │   └── entities
@@ -346,6 +352,7 @@
 │   ├── index.html
 │   └── manifest.json
 ├── analysis_options.yaml
+├── .env.dev
 ├── .flutter-plugins-dependencies
 ├── .gitignore
 ├── install-flutter.sh
@@ -353,4 +360,4 @@
 ├── pubspec.yaml
 └── README.md
 
-139 directories, 215 files
+144 directories, 217 files
