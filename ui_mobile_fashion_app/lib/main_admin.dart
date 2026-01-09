@@ -8,10 +8,10 @@ import 'admin/routes/admin_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Load từ thư mục assets
   try {
-    // CHỈ để tên file, KHÔNG để "assets/.env.dev"
+    // Chỉ ghi tên file, không ghi đường dẫn assets/
     await dotenv.load(fileName: ".env.dev");
+    debugPrint("Env loaded successfully");
   } catch (e) {
     debugPrint("Env load error: $e");
   }
