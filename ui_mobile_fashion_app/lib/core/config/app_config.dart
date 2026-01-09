@@ -1,8 +1,7 @@
 // lib/core/config/app_config.dart
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+// import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConfig {
-  static String get baseUrl =>
-      '${dotenv.env['API_BASE_URL']}/api/${dotenv.env['API_VERSION']}';
-  static String get imageBaseUrl => dotenv.env['API_BASE_URL']!;
+  static String get baseUrl => 'http://160.191.244.37:4003/api/v1';
+  static String get imageBaseUrl => 'http://160.191.244.37:4003/api/v1';
 }
