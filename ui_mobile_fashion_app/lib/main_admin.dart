@@ -8,9 +8,6 @@ import 'admin/routes/admin_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // XÓA HOẶC COMMENT DÒNG NÀY:
-  // await dotenv.load(fileName: ".env.dev");
-
   await ApiConfig.init(); // Bây giờ nó dùng link cứng nên sẽ không lỗi
   await setupDependencies();
 
