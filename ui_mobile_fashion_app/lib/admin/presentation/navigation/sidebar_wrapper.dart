@@ -1,6 +1,7 @@
 // file: lib/admin/presentation/navigation/sidebar_wrapper.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
 import 'sidebar_config.dart';
 
 class AdminSidebar extends StatelessWidget {
@@ -16,41 +17,16 @@ class AdminSidebar extends StatelessWidget {
       color: Colors.white, // Nền trắng theo yêu cầu
       child: Column(
         children: [
-          // Header: Logo / Admin Info
+          // --- PHẦN HEADER CHỈ HIỂN THỊ LOGO CĂN GIỮA ---
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
-            alignment: Alignment.centerLeft,
-            child: Row(
-              children: [
-                // Logo placeholder
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.black, // Logo đen đơn giản
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.stars, color: Colors.white),
-                ),
-                const SizedBox(width: 12),
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'FASHION ADMIN',
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.black,
-                      ),
-                    ),
-                    Text(
-                      'Manager',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ],
+            padding: const EdgeInsets.symmetric(vertical: 30),
+            width:
+                double
+                    .infinity, // Đảm bảo container chiếm hết chiều rộng sidebar
+            alignment: Alignment.center, // Căn giữa logo theo cả hai chiều
+            child: Assets.logoFas.image(
+              height: 30, // Bạn có thể điều chỉnh kích thước lớn hơn nếu muốn
+              fit: BoxFit.contain,
             ),
           ),
 
