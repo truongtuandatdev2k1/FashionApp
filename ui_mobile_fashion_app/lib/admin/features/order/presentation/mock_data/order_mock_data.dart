@@ -1,5 +1,4 @@
-// file: lib/admin/features/order/mock_data/order_mock_data.dart
-
+// lib/admin/features/order/mock_data/order_mock_data.dart
 class OrderMock {
   final String id;
   final String customer;
@@ -7,7 +6,9 @@ class OrderMock {
   final String time; // Ví dụ: '08:30'
   final String date; // Định dạng DD/MM/YYYY
   final int quantity;
-  final String status;
+  final String status; // trạng thái đơn hàng
+  final String paymentStatus; // ← Thêm: "Đã thanh toán" hoặc "Chưa thanh toán"
+  final double totalAmount;
 
   OrderMock({
     required this.id,
@@ -17,157 +18,12 @@ class OrderMock {
     required this.date,
     required this.quantity,
     required this.status,
+    required this.paymentStatus, // ← required
+    required this.totalAmount,
   });
 }
 
 final List<OrderMock> mockOrders = [
-  // Dữ liệu cũ (6 đơn)
-  OrderMock(
-    id: '#ORD-1001',
-    customer: 'Nguyễn Văn A',
-    phone: '0901234567',
-    time: '08:30',
-    date: '10/01/2026',
-    quantity: 2,
-    status: 'Chờ xác nhận',
-  ),
-  OrderMock(
-    id: '#ORD-1002',
-    customer: 'Trần Thị B',
-    phone: '0912345678',
-    time: '09:15',
-    date: '09/01/2026',
-    quantity: 1,
-    status: 'Đang giao',
-  ),
-  OrderMock(
-    id: '#ORD-1003',
-    customer: 'Lê Văn C',
-    phone: '0987654321',
-    time: '14:45',
-    date: '08/01/2026',
-    quantity: 5,
-    status: 'Hoàn thành',
-  ),
-  OrderMock(
-    id: '#ORD-1004',
-    customer: 'Phạm Minh D',
-    phone: '0933445566',
-    time: '10:20',
-    date: '07/01/2026',
-    quantity: 3,
-    status: 'Đã hủy',
-  ),
-  OrderMock(
-    id: '#ORD-1005',
-    customer: 'Hoàng Văn E',
-    phone: '0944556677',
-    time: '16:00',
-    date: '06/01/2026',
-    quantity: 1,
-    status: 'Hoàn thành',
-  ),
-  OrderMock(
-    id: '#ORD-1006',
-    customer: 'Đỗ Thị F',
-    phone: '0966778899',
-    time: '11:10',
-    date: '05/01/2026',
-    quantity: 2,
-    status: 'Đang giao',
-  ),
-
-  // Thêm 20 đơn hàng mới (từ #ORD-1007 đến #ORD-1026)
-  OrderMock(
-    id: '#ORD-1007',
-    customer: 'Vũ Thị G',
-    phone: '0978123456',
-    time: '13:25',
-    date: '10/01/2026',
-    quantity: 4,
-    status: 'Chờ xác nhận',
-  ),
-  OrderMock(
-    id: '#ORD-1008',
-    customer: 'Đặng Văn H',
-    phone: '0923456789',
-    time: '17:40',
-    date: '09/01/2026',
-    quantity: 2,
-    status: 'Hoàn thành',
-  ),
-  OrderMock(
-    id: '#ORD-1009',
-    customer: 'Bùi Thị K',
-    phone: '0989123456',
-    time: '07:55',
-    date: '09/01/2026',
-    quantity: 3,
-    status: 'Đang giao',
-  ),
-  OrderMock(
-    id: '#ORD-1010',
-    customer: 'Ngô Minh L',
-    phone: '0918765432',
-    time: '12:10',
-    date: '08/01/2026',
-    quantity: 1,
-    status: 'Đã hủy',
-  ),
-  OrderMock(
-    id: '#ORD-1011',
-    customer: 'Phan Thị M',
-    phone: '0935678901',
-    time: '15:30',
-    date: '08/01/2026',
-    quantity: 6,
-    status: 'Hoàn thành',
-  ),
-  OrderMock(
-    id: '#ORD-1012',
-    customer: 'Trương Văn N',
-    phone: '0909876543',
-    time: '19:05',
-    date: '07/01/2026',
-    quantity: 2,
-    status: 'Chờ xác nhận',
-  ),
-  OrderMock(
-    id: '#ORD-1013',
-    customer: 'Lý Thị O',
-    phone: '0965432109',
-    time: '09:45',
-    date: '07/01/2026',
-    quantity: 4,
-    status: 'Đang giao',
-  ),
-  OrderMock(
-    id: '#ORD-1014',
-    customer: 'Hồ Văn P',
-    phone: '0943210987',
-    time: '11:20',
-    date: '06/01/2026',
-    quantity: 3,
-    status: 'Hoàn thành',
-  ),
-  OrderMock(
-    id: '#ORD-1015',
-    customer: 'Mai Thị Q',
-    phone: '0976543210',
-    time: '14:55',
-    date: '06/01/2026',
-    quantity: 1,
-    status: 'Đã hủy',
-  ),
-  OrderMock(
-    id: '#ORD-1016',
-    customer: 'Đinh Văn R',
-    phone: '0921098765',
-    time: '16:35',
-    date: '05/01/2026',
-    quantity: 5,
-    status: 'Hoàn thành',
-  ),
   OrderMock(
     id: '#ORD-1017',
     customer: 'Cao Thị S',
@@ -176,6 +32,8 @@ final List<OrderMock> mockOrders = [
     date: '05/01/2026',
     quantity: 2,
     status: 'Đang giao',
+    paymentStatus: 'Đã thanh toán',
+    totalAmount: 1700000.0,
   ),
   OrderMock(
     id: '#ORD-1018',
@@ -185,6 +43,8 @@ final List<OrderMock> mockOrders = [
     date: '04/01/2026',
     quantity: 3,
     status: 'Chờ xác nhận',
+    paymentStatus: 'Chưa thanh toán',
+    totalAmount: 2100000.0,
   ),
   OrderMock(
     id: '#ORD-1019',
@@ -194,6 +54,8 @@ final List<OrderMock> mockOrders = [
     date: '04/01/2026',
     quantity: 4,
     status: 'Hoàn thành',
+    paymentStatus: 'Đã thanh toán',
+    totalAmount: 3400000.0,
   ),
   OrderMock(
     id: '#ORD-1020',
@@ -203,6 +65,8 @@ final List<OrderMock> mockOrders = [
     date: '03/01/2026',
     quantity: 1,
     status: 'Đã hủy',
+    paymentStatus: 'Chưa thanh toán',
+    totalAmount: 1450000.0,
   ),
   OrderMock(
     id: '#ORD-1021',
@@ -212,6 +76,8 @@ final List<OrderMock> mockOrders = [
     date: '03/01/2026',
     quantity: 2,
     status: 'Đang giao',
+    paymentStatus: 'Đã thanh toán',
+    totalAmount: 1900000.0,
   ),
   OrderMock(
     id: '#ORD-1022',
@@ -221,6 +87,8 @@ final List<OrderMock> mockOrders = [
     date: '02/01/2026',
     quantity: 5,
     status: 'Hoàn thành',
+    paymentStatus: 'Đã thanh toán',
+    totalAmount: 3750000.0,
   ),
   OrderMock(
     id: '#ORD-1023',
@@ -230,6 +98,8 @@ final List<OrderMock> mockOrders = [
     date: '02/01/2026',
     quantity: 3,
     status: 'Chờ xác nhận',
+    paymentStatus: 'Chưa thanh toán',
+    totalAmount: 2400000.0,
   ),
   OrderMock(
     id: '#ORD-1024',
@@ -239,6 +109,8 @@ final List<OrderMock> mockOrders = [
     date: '01/01/2026',
     quantity: 2,
     status: 'Đang giao',
+    paymentStatus: 'Đã thanh toán',
+    totalAmount: 1650000.0,
   ),
   OrderMock(
     id: '#ORD-1025',
@@ -248,6 +120,8 @@ final List<OrderMock> mockOrders = [
     date: '01/01/2026',
     quantity: 4,
     status: 'Hoàn thành',
+    paymentStatus: 'Đã thanh toán',
+    totalAmount: 3200000.0,
   ),
   OrderMock(
     id: '#ORD-1026',
@@ -257,5 +131,7 @@ final List<OrderMock> mockOrders = [
     date: '31/12/2025',
     quantity: 1,
     status: 'Đã hủy',
+    paymentStatus: 'Chưa thanh toán',
+    totalAmount: 1100000.0,
   ),
 ];

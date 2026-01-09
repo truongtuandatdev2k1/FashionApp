@@ -25,6 +25,11 @@ class OrderTableHeader extends StatelessWidget {
           const SizedBox(width: 140, child: _HeaderText('Ngày đặt')),
           const SizedBox(width: 80, child: Center(child: _HeaderText('SL'))),
           const SizedBox(width: 200, child: _HeaderText('Trạng thái')),
+          const SizedBox(width: 180, child: _HeaderText('Tổng tiền')),
+          const SizedBox(
+            width: 180,
+            child: _HeaderText('Thanh toán'),
+          ), // ← Cột mới
           const SizedBox(
             width: 100,
             child: Center(child: _HeaderText('Thao tác')),
