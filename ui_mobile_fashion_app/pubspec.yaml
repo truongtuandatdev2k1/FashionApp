@@ -46,7 +46,7 @@ flutter:
 
   # --- Phần Assets đã được thêm vào ---
   assets:
-    - assets/.env.dev
+    - .env.dev
     - assets/customer/
     - assets/customer/images/
 #    - assets/admin/

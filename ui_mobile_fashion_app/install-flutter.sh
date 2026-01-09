@@ -1,22 +1,15 @@
-# file: ui_mobile_fashion_app/install-flutter.sh
 #!/bin/bash
+# ... (phần clone flutter giữ nguyên)
 
-# 1. Cấu hình PATH
-export PATH="$PATH:$HOME/flutter/bin"
+# SỬA TẠI ĐÂY: Tạo file ở ngay thư mục gốc của dự án
+echo "API_BASE_URL=$API_BASE_URL" > .env.dev
+echo "API_VERSION=$API_VERSION" >> .env.dev
+echo "APP_NAME=$APP_NAME" >> .env.dev
 
-# 2. Cài đặt Flutter nếu chưa có
-if [ ! -d "$HOME/flutter" ]; then
-    git clone https://github.com/flutter/flutter.git -b stable $HOME/flutter
-fi
+# Kiểm tra file tồn tại
+ls -a .env.dev
 
-# 3. Tạo file env trong assets
-mkdir -p assets
-echo "API_BASE_URL=$API_BASE_URL" > assets/.env.dev
-echo "API_VERSION=$API_VERSION" >> assets/.env.dev
-echo "APP_NAME=$APP_NAME" >> assets/.env.dev
-
-# 4. Build
+# Build (nhớ dùng --no-wasm-dry-run để tránh lỗi warning)
 flutter config --enable-web
 flutter pub get
-# Viết tất cả trên cùng 1 dòng để tránh lỗi ngắt dòng của Linux
 flutter build web --release -t lib/main_admin.dart --dart-define=FLAVOR=admin --no-wasm-dry-run

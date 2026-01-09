@@ -10,7 +10,7 @@ void main() async {
 
   // Load từ thư mục assets
   try {
-    await dotenv.load(fileName: "assets/.env.dev");
+    await dotenv.load(fileName: ".env.dev");
   } catch (e) {
     debugPrint("Env load error: $e");
   }
