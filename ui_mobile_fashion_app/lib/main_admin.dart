@@ -8,22 +8,20 @@ import 'admin/routes/admin_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Load file cấu hình từ thư mục assets
+  // Load từ thư mục assets
   try {
     await dotenv.load(fileName: "assets/.env.dev");
   } catch (e) {
-    debugPrint("Lỗi không thể load env: $e");
+    debugPrint("Env load error: $e");
   }
 
-  // 2. Khởi tạo cấu hình API sau khi đã load xong env
+  // Khởi tạo Dio sau khi đã có baseUrl từ env
   await ApiConfig.init();
 
-  // 3. Setup Dependency Injection (GetIt)
+  // Đăng ký các service vào GetIt
   await setupDependencies();
 
-  // 4. Cấu hình giao diện
   SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-
   runApp(const AdminApp());
 }
 

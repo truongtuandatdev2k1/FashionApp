@@ -1,4 +1,4 @@
-ui_mobile_fashion_app/
+.
 ├── android
 │   ├── app
 │   │   ├── src
@@ -64,6 +64,7 @@ ui_mobile_fashion_app/
 │   │   └── images
 │   │       ├── friendship.png
 │   │       └── happy_shopping.png
+│   ├── .env.dev
 │   └── logo_fas.png
 ├── dat_note
 │   ├── flutter_structure.txt
@@ -345,11 +346,11 @@ ui_mobile_fashion_app/
 │   ├── index.html
 │   └── manifest.json
 ├── analysis_options.yaml
-├── .env.dev
 ├── .flutter-plugins-dependencies
 ├── .gitignore
+├── install-flutter.sh
 ├── .metadata
 ├── pubspec.yaml
 └── README.md
 
-139 directories, 214 files
+139 directories, 215 files
