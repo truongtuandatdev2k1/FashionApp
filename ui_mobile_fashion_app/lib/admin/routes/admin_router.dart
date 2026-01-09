@@ -8,7 +8,7 @@ import 'package:ui_mobile_fashion_app/admin/features/product/presentation/screen
 
 class AdminRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/dashboard', // Mặc định vào dashboard
+    initialLocation: '/order', // Mặc định vào dashboard
     routes: [
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       ShellRoute(
