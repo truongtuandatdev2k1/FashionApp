@@ -4,13 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
 
-// ***************************************************************
-// IMPORTS CHO LOGIC XỬ LÝ ĐƠN HÀNG VÀ DỮ LIỆU
-import 'package:ui_mobile_fashion_app/customer/logic/cart/cart_api.dart'; // CartResponse, CartItem
-import 'package:ui_mobile_fashion_app/customer/logic/address/address_default_api.dart'; // Lấy địa chỉ mặc định
-import 'package:ui_mobile_fashion_app/customer/logic/order/create_order_api.dart'; // API tạo đơn hàng
+import 'package:ui_mobile_fashion_app/customer/logic/cart/cart_api.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/address/address_default_api.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/order/create_order_api.dart';
 import 'package:ui_mobile_fashion_app/customer/models/order/order_request.dart';
-// ***************************************************************
 
 import 'widgets/order_address_section.dart';
 import 'widgets/order_product_item.dart';
@@ -24,9 +21,12 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  String _paymentMethod = 'cod'; // Đặt mặc định là COD để dễ test
+  String _paymentMethod = 'cod';
 
-  // Format tiền tệ
+  // === BIẾN HARDCODE DEMO KẾT QUẢ VNPAY ===
+  // true: demo thành công, false: demo thất bại
+  final bool _isVnpaySuccessDemo = true;
+
   final NumberFormat _currency = NumberFormat.currency(
     locale: 'vi_VN',
     symbol: '₫',
@@ -34,51 +34,38 @@ class _OrderScreenState extends State<OrderScreen> {
 
   // ====================== LOGIC XỬ LÝ CHUYỂN MÀN HÌNH ======================
 
-  // Hàm xử lý logic chuyển màn hình thành công
-  void _onOrderSuccess(BuildContext context) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
+  // === LOGIC MỚI CHO VNPAY ===
+  void _onVNPayResult(
+      BuildContext context, {
+        required bool isSuccess,
+        required String orderId,
+        required double amount,
+        String? error,
+      }) {
     if (!mounted) return;
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    // Ẩn SnackBar loading và chuyển hướng
-    scaffoldMessenger.hideCurrentSnackBar();
-
-    // CHUYỂN HƯỚNG ĐẾN MÀN HÌNH THÀNH CÔNG
-    context.pushReplacement('/order-success');
-  }
-
-  // Hàm xử lý logic chuyển màn hình thất bại
-  void _onOrderFailure(BuildContext context, String error) {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    if (!mounted) return;
-
-    // Ẩn SnackBar loading và chuyển hướng
-    scaffoldMessenger.hideCurrentSnackBar();
-
-    // CHUYỂN HƯỚNG ĐẾN MÀN HÌNH THẤT BẠI, TRUYỀN LỖI QUA 'extra'
-    context.pushReplacement('/order-failure', extra: error);
+    if (isSuccess) {
+      // Truyền Map chứa thông tin sang router
+      context.pushReplacement('/order-success', extra: {
+        'orderId': orderId,
+        'totalAmount': amount,
+      });
+    } else {
+      context.pushReplacement('/order-failure', extra: {
+        'orderId': orderId,
+        'totalAmount': amount,
+        'error': error ?? 'Giao dịch bị hủy hoặc lỗi mạng.',
+      });
+    }
   }
 
   // ====================== LOGIC ĐẶT HÀNG ======================
 
   Future<void> _handlePlaceOrder() async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final totalAmount = widget.cart.totalAmount + 50000; // + tiền ship
 
-    // 1. Kiểm tra phương thức thanh toán không hỗ trợ
-    if (_paymentMethod != 'cod') {
-      // In lỗi ra terminal theo yêu cầu
-      print('-----------------------------------------');
-      print(
-        'LỖI ĐẶT HÀNG: Dịch vụ thanh toán qua ngân hàng hiện chưa được hỗ trợ.',
-      );
-      print('-----------------------------------------');
-      _onOrderFailure(
-        context,
-        'Dịch vụ thanh toán qua ngân hàng hiện chưa được hỗ trợ.',
-      );
-      return;
-    }
-
-    // 2. Hiển thị loading
     scaffoldMessenger.hideCurrentSnackBar();
     scaffoldMessenger.showSnackBar(
       const SnackBar(
@@ -94,49 +81,83 @@ class _OrderScreenState extends State<OrderScreen> {
     );
 
     try {
-      // 3. Lấy ID địa chỉ mặc định
+      // 1. Lấy địa chỉ mặc định
       final defaultAddress = await AddressDefaultApi.getDefaultAddress();
       if (defaultAddress == null) {
         throw Exception('Vui lòng chọn hoặc thêm địa chỉ giao hàng mặc định.');
       }
       final addressId = defaultAddress.id;
 
-      // 4. Lấy danh sách ID sản phẩm trong giỏ hàng
+      // 2. Lấy danh sách ID sản phẩm
       final cartItemIds = widget.cart.items.map((item) => item.id).toList();
-
       if (cartItemIds.isEmpty) {
-        // Kiểm tra client-side để tránh gọi API với giỏ hàng rỗng
         throw Exception('Giỏ hàng hiện tại không có sản phẩm nào.');
       }
 
-      // 5. Tạo Request Object
+      // 3. Tạo Request Object
       final orderRequest = CreateOrderRequest(
         addressId: addressId,
         cartItemIds: cartItemIds,
         paymentMethod: _paymentMethod,
-        note: null, // Tạm thời không có note
+        note: null,
       );
 
-      // 6. Gọi API tạo đơn hàng
-      await CreateOrderApi.createOrder(orderRequest);
+      // 4. XỬ LÝ THEO PHƯƠNG THỨC THANH TOÁN
+      if (_paymentMethod == 'cod') {
+        // --- LOGIC CŨ CHO COD ---
+        await CreateOrderApi.createOrder(orderRequest);
+        if (!mounted) return;
 
-      // 7. Xử lý thành công
-      _onOrderSuccess(context);
+        // Chuyển hướng thành công kiểu cũ (không truyền params)
+        scaffoldMessenger.hideCurrentSnackBar();
+        context.pushReplacement('/order-success');
+      } else {
+        // --- VNPAY DEMO (BỎ QUA MỞ WEB - KHÔNG GỌI API) ---
+
+        print('--- ĐANG CHẠY CHẾ ĐỘ DEMO VNPAY (KHÔNG MỞ WEB) ---');
+
+        // A. Tạo mã đơn hàng giả
+        final String demoOrderId =
+            "DH-DEMO-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}";
+
+        // B. BỎ QUA BƯỚC MỞ WEB (launchUrl)
+        // Chỉ hiển thị thông báo giả lập đang chờ
+        scaffoldMessenger.hideCurrentSnackBar();
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Text('Đang mô phỏng thanh toán VNPay... (Vui lòng chờ)'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+
+        // C. Giả lập độ trễ 2 giây (như đang xử lý thanh toán)
+        await Future.delayed(const Duration(seconds: 2));
+
+        if (!mounted) return;
+
+        // D. Chuyển hướng ngay dựa trên biến _isVnpaySuccessDemo
+        _onVNPayResult(
+          context,
+          isSuccess: _isVnpaySuccessDemo,
+          orderId: demoOrderId,
+          amount: totalAmount,
+          error: _isVnpaySuccessDemo ? null : 'Giao dịch thất bại (Demo)',
+        );
+      }
     } catch (e) {
       if (!mounted) return;
-
-      // Lấy chuỗi lỗi và loại bỏ "Exception: "
       final errorString = e.toString().replaceFirst('Exception: ', '');
 
-      // BẮT LỖI IDEMPOTENT (Giỏ hàng đã rỗng do đơn hàng đã tạo trước đó)
-      if (errorString.contains('cart is empty')) {
-        // Xử lý như thành công
-        _onOrderSuccess(context);
+      // Handle riêng trường hợp Cart Empty (Idempotent) - CHỈ CHO COD
+      if (errorString.contains('cart is empty') && _paymentMethod == 'cod') {
+        scaffoldMessenger.hideCurrentSnackBar();
+        context.pushReplacement('/order-success');
         return;
       }
 
-      // Xử lý lỗi thất bại khác
-      _onOrderFailure(context, errorString);
+      // Lỗi chung
+      scaffoldMessenger.hideCurrentSnackBar();
+      context.pushReplacement('/order-failure', extra: errorString);
     }
   }
 
@@ -182,16 +203,12 @@ class _OrderScreenState extends State<OrderScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            // --- Phần 1: Địa chỉ giao hàng ---
             const OrderAddressSection(),
             _buildDivider(thickness: 8),
-
-            // --- Phần 2: Danh sách sản phẩm ---
             ...cartItems.map((item) {
               return Column(
                 children: [
                   OrderProductItem(item: item),
-                  // Thêm Divider nếu không phải là item cuối cùng
                   if (item != cartItems.last)
                     const Divider(
                       height: 1,
@@ -203,22 +220,15 @@ class _OrderScreenState extends State<OrderScreen> {
               );
             }).toList(),
             _buildDivider(thickness: 8),
-
-            // --- Phần 3: Đảm bảo giao hàng ---
             _buildDeliveryGuaranteeSection(context),
             _buildDivider(thickness: 8),
-
-            // --- Phần 4: Tóm tắt đơn hàng ---
             _buildOrderSummarySection(context, totalAmount, totalItems),
             _buildDivider(thickness: 8),
-
-            // --- Phần 5: Phương thức thanh toán ---
             _buildPaymentMethodSection(context),
             const SizedBox(height: 16),
           ],
         ),
       ),
-      // --- Phần 6: Bottom Bar (Tổng tiền và Đặt hàng) ---
       bottomNavigationBar: _buildBottomBar(context, totalAmount, totalItems),
     );
   }
@@ -264,11 +274,11 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Widget _buildOrderSummarySection(
-    BuildContext context,
-    double subtotal,
-    int totalItems,
-  ) {
-    const double shippingFee = 50000; // Phí vận chuyển cố định
+      BuildContext context,
+      double subtotal,
+      int totalItems,
+      ) {
+    const double shippingFee = 50000;
     final double total = subtotal + shippingFee;
 
     return Padding(
@@ -336,13 +346,11 @@ class _OrderScreenState extends State<OrderScreen> {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 10),
-          // Thanh toán khi nhận hàng (COD)
           _buildPaymentOption(
             icon: Icons.wallet_outlined,
             label: 'Thanh toán khi nhận hàng',
             value: 'cod',
           ),
-          // Thanh toán qua ngân hàng
           _buildPaymentOption(
             leading: Assets.customer.images.vnpay.image(
               width: 26,
@@ -352,7 +360,6 @@ class _OrderScreenState extends State<OrderScreen> {
             label: 'Thanh toán qua VNPAY',
             value: 'bank',
           ),
-
         ],
       ),
     );
@@ -366,8 +373,7 @@ class _OrderScreenState extends State<OrderScreen> {
   }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: leading ??
-          Icon(icon, color: Colors.black87),
+      leading: leading ?? Icon(icon, color: Colors.black87),
       title: Text(label, style: const TextStyle(fontSize: 14)),
       trailing: Radio<String>(
         value: value,
@@ -385,12 +391,11 @@ class _OrderScreenState extends State<OrderScreen> {
     );
   }
 
-
   Widget _buildBottomBar(
-    BuildContext context,
-    double subtotal,
-    int totalItems,
-  ) {
+      BuildContext context,
+      double subtotal,
+      int totalItems,
+      ) {
     const double shippingFee = 50000;
     final double total = subtotal + shippingFee;
 
@@ -420,7 +425,7 @@ class _OrderScreenState extends State<OrderScreen> {
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
               Text(
-                _currency.format(total), // Dùng tổng cuối cùng
+                _currency.format(total),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -430,7 +435,6 @@ class _OrderScreenState extends State<OrderScreen> {
             ],
           ),
           ElevatedButton(
-            // GỌI HÀM XỬ LÝ ĐẶT HÀNG
             onPressed: _handlePlaceOrder,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,

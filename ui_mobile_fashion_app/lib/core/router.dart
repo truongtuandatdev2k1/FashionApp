@@ -1,5 +1,4 @@
 // lib/core/router.dart
-// import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/cart/cart_api.dart';
 import 'package:ui_mobile_fashion_app/customer/models/address.dart';
@@ -46,7 +45,6 @@ class AppRouter {
         path: '/order',
         redirect: (context, state) {
           // Kiểm tra nếu extra không phải CartResponse thì quay về Home
-          // Điều này ngăn lỗi khi người dùng reload trang hoặc truy cập trực tiếp
           if (state.extra is! CartResponse) {
             return '/home';
           }
@@ -57,13 +55,34 @@ class AppRouter {
           return OrderScreen(cart: cart);
         },
       ),
+
+      // === CẬP NHẬT ROUTE SUCCESS ===
       GoRoute(
         path: '/order-success',
-        builder: (context, state) => const OrderSuccessScreen(),
+        builder: (context, state) {
+          // Lấy dữ liệu truyền qua extra (Map hoặc null)
+          final data = state.extra as Map<String, dynamic>?;
+          return OrderSuccessScreen(
+            orderId: data?['orderId'],
+            totalAmount: data?['totalAmount'],
+          );
+        },
       ),
+
+      // === CẬP NHẬT ROUTE FAILURE ===
       GoRoute(
         path: '/order-failure',
         builder: (context, state) {
+          // Kiểm tra nếu extra là Map (VNPay) hoặc String (COD cũ)
+          if (state.extra is Map<String, dynamic>) {
+            final data = state.extra as Map<String, dynamic>;
+            return OrderFailureScreen(
+              errorMessage: data['error'] ?? 'Lỗi thanh toán',
+              orderId: data['orderId'],
+              totalAmount: data['totalAmount'],
+            );
+          }
+          // Fallback cho trường hợp COD cũ (chỉ truyền chuỗi lỗi)
           final error = state.extra as String? ?? 'Lỗi không xác định';
           return OrderFailureScreen(errorMessage: error);
         },
@@ -72,7 +91,6 @@ class AppRouter {
       // ========== SHELL ROUTE CHÍNH - 4 TABS ==========
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
-          // Truyền đúng navigationShell vào để hiển thị Bottom Bar
           return CustomerNavigationShell(navigationShell: navigationShell);
         },
         branches: [
