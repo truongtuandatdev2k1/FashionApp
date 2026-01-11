@@ -1,7 +1,7 @@
 // lib/main_customer.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'core/config/flavor_config.dart';
 import 'core/di/locator.dart';
 import 'core/network/api_config.dart';
 import 'core/router.dart';
@@ -10,16 +10,15 @@ import 'customer/logic/profile/profile_controller.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await dotenv.load(fileName: ".env.dev");
+  // Khởi tạo trực tiếp thay vì load từ file
+  await FlavorConfig.init(flavor: Flavor.dev);
 
   await setupDependencies();
   await ApiConfig.init();
 
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => ProfileController()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => ProfileController())],
       child: MaterialApp.router(
         title: 'Dat Fashion App',
         theme: ThemeData(fontFamily: 'Roboto'),

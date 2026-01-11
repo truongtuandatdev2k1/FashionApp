@@ -63,7 +63,8 @@
 │   ├── customer
 │   │   └── images
 │   │       ├── friendship.png
-│   │       └── happy_shopping.png
+│   │       ├── happy_shopping.png
+│   │       └── vnpay.png
 │   └── logo_fas.png
 ├── dat_note
 │   ├── flutter_structure.txt
@@ -154,8 +155,15 @@
 │   │   │   │   └── presentation
 │   │   │   │       ├── mock_data
 │   │   │   │       │   └── order_mock_data.dart
-│   │   │   │       └── screens
-│   │   │   │           └── order_list_screen.dart
+│   │   │   │       ├── screens
+│   │   │   │       │   └── order_list_screen.dart
+│   │   │   │       └── widgets
+│   │   │   │           ├── order_empty_view.dart
+│   │   │   │           ├── order_filter_tabs.dart
+│   │   │   │           ├── order_table_body.dart
+│   │   │   │           ├── order_table_header.dart
+│   │   │   │           ├── status_chip.dart
+│   │   │   │           └── status_tab.dart
 │   │   │   └── product
 │   │   │       ├── domain
 │   │   │       │   └── entities
@@ -360,4 +368,4 @@
 ├── pubspec.yaml
 └── README.md
 
-144 directories, 217 files
+145 directories, 224 files

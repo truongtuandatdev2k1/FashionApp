@@ -29,8 +29,12 @@ class $AssetsCustomerImagesGen {
   AssetGenImage get happyShopping =>
       const AssetGenImage('assets/customer/images/happy_shopping.png');
 
+  /// File path: assets/customer/images/vnpay.png
+  AssetGenImage get vnpay =>
+      const AssetGenImage('assets/customer/images/vnpay.png');
+
   /// List of all assets
-  List<AssetGenImage> get values => [friendship, happyShopping];
+  List<AssetGenImage> get values => [friendship, happyShopping, vnpay];
 }
 
 class Assets {

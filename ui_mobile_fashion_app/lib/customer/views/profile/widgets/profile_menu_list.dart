@@ -14,7 +14,7 @@ class ProfileMenuList extends StatelessWidget {
     return Column(
       children: [
         ProfileMenuItem(
-          text: "Tài Khoản Của Tôi",
+          text: "Thông tin Của Tôi",
           iconData: LucideIcons.user,
           onTap: () {},
         ),
@@ -29,21 +29,21 @@ class ProfileMenuList extends StatelessWidget {
           iconData: LucideIcons.shoppingBag,
           onTap: () => context.go('/profile/my-orders'),
         ),
-        ProfileMenuItem(
-          text: "Thông Báo",
-          iconData: LucideIcons.bell,
-          onTap: () {},
-        ),
-        ProfileMenuItem(
-          text: "Cài Đặt",
-          iconData: LucideIcons.settings,
-          onTap: () {},
-        ),
-        ProfileMenuItem(
-          text: "Trung Tâm Trợ Giúp",
-          iconData: LucideIcons.handHelping,
-          onTap: () {},
-        ),
+        // ProfileMenuItem(
+        //   text: "Thông Báo",
+        //   iconData: LucideIcons.bell,
+        //   onTap: () {},
+        // ),
+        // ProfileMenuItem(
+        //   text: "Cài Đặt",
+        //   iconData: LucideIcons.settings,
+        //   onTap: () {},
+        // ),
+        // ProfileMenuItem(
+        //   text: "Trung Tâm Trợ Giúp",
+        //   iconData: LucideIcons.handHelping,
+        //   onTap: () {},
+        // ),
         ProfileMenuItem(
           text: "Đăng Xuất",
           iconData: LucideIcons.logOut,

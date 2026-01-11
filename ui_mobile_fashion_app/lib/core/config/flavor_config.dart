@@ -1,26 +1,20 @@
 // lib/core/config/flavor_config.dart
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum Flavor { dev, staging, prod }
 
 class FlavorConfig {
   final Flavor flavor;
   final String name;
-  final Map<String, String> envVars;
 
-  FlavorConfig._(this.flavor, this.name, this.envVars);
+  FlavorConfig._(this.flavor, this.name);
 
   static FlavorConfig? _instance;
 
-  static Future<void> init({
-    required Flavor flavor,
-    required String envFile,
-  }) async {
-    await dotenv.load(fileName: envFile);
+  // Loại bỏ tham số envFile và logic dotenv.load
+  static Future<void> init({required Flavor flavor}) async {
     _instance = FlavorConfig._(
       flavor,
       flavor.toString().split('.').last.toUpperCase(),
-      Map.from(dotenv.env),
     );
   }
 

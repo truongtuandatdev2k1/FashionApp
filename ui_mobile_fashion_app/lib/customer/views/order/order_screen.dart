@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
 
 // ***************************************************************
 // IMPORTS CHO LOGIC XỬ LÝ ĐƠN HÀNG VÀ DỮ LIỆU
@@ -343,43 +344,47 @@ class _OrderScreenState extends State<OrderScreen> {
           ),
           // Thanh toán qua ngân hàng
           _buildPaymentOption(
-            icon: Icons.account_balance_wallet_outlined,
-            label: 'Thanh toán qua ngân hàng',
+            leading: Assets.customer.images.vnpay.image(
+              width: 26,
+              height: 26,
+              fit: BoxFit.contain,
+            ),
+            label: 'Thanh toán qua VNPAY',
             value: 'bank',
           ),
+
         ],
       ),
     );
   }
 
   Widget _buildPaymentOption({
-    required IconData icon,
+    Widget? leading,
+    IconData? icon,
     required String label,
     required String value,
   }) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
-      leading: Icon(icon, color: Colors.black87),
+      leading: leading ??
+          Icon(icon, color: Colors.black87),
       title: Text(label, style: const TextStyle(fontSize: 14)),
       trailing: Radio<String>(
         value: value,
         groupValue: _paymentMethod,
         onChanged: (val) {
           if (val != null) {
-            setState(() {
-              _paymentMethod = val;
-            });
+            setState(() => _paymentMethod = val);
           }
         },
         activeColor: Colors.black,
       ),
       onTap: () {
-        setState(() {
-          _paymentMethod = value;
-        });
+        setState(() => _paymentMethod = value);
       },
     );
   }
+
 
   Widget _buildBottomBar(
     BuildContext context,
