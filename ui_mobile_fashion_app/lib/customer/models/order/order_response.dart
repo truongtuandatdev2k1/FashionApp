@@ -10,7 +10,7 @@ class OrderItem {
   final double subtotal;
 
   // BASE URL được cung cấp từ Cart API
-  static const String baseUrl = 'http://160.191.244.37:4003';
+  static const String baseUrl = 'https://api.caibang.online';
 
   // Getter để tạo URL đầy đủ
   String get fullProductImageUrl => '$baseUrl$productImage';

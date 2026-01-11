@@ -2,11 +2,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
 
 import 'package:ui_mobile_fashion_app/customer/logic/cart/cart_api.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/address/address_default_api.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/order/create_order_api.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/payment/payos_api.dart';
 import 'package:ui_mobile_fashion_app/customer/models/order/order_request.dart';
 
 import 'widgets/order_address_section.dart';
@@ -20,43 +22,170 @@ class OrderScreen extends StatefulWidget {
   State<OrderScreen> createState() => _OrderScreenState();
 }
 
-class _OrderScreenState extends State<OrderScreen> {
+class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
   String _paymentMethod = 'cod';
-
-  // === BIẾN HARDCODE DEMO KẾT QUẢ VNPAY ===
-  // true: demo thành công, false: demo thất bại
-  final bool _isVnpaySuccessDemo = true;
+  String? _pendingOrderId; // Lưu order ID đang chờ thanh toán PayOS
+  bool _isCheckingPayment = false;
 
   final NumberFormat _currency = NumberFormat.currency(
     locale: 'vi_VN',
     symbol: '₫',
   );
 
-  // ====================== LOGIC XỬ LÝ CHUYỂN MÀN HÌNH ======================
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
 
-  // === LOGIC MỚI CHO VNPAY ===
-  void _onVNPayResult(
-      BuildContext context, {
-        required bool isSuccess,
-        required String orderId,
-        required double amount,
-        String? error,
-      }) {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
 
-    if (isSuccess) {
-      // Truyền Map chứa thông tin sang router
-      context.pushReplacement('/order-success', extra: {
-        'orderId': orderId,
-        'totalAmount': amount,
-      });
-    } else {
-      context.pushReplacement('/order-failure', extra: {
-        'orderId': orderId,
-        'totalAmount': amount,
-        'error': error ?? 'Giao dịch bị hủy hoặc lỗi mạng.',
-      });
+  /// Được gọi khi app quay lại từ background (sau khi mở PayOS web)
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+
+    // Khi app resumed và đang có order đang chờ thanh toán
+    if (state == AppLifecycleState.resumed &&
+        _pendingOrderId != null &&
+        !_isCheckingPayment) {
+      _checkPaymentStatus();
+    }
+  }
+
+  // ====================== LOGIC KIỂM TRA TRẠNG THÁI THANH TOÁN ======================
+
+  Future<void> _checkPaymentStatus() async {
+    if (_pendingOrderId == null || _isCheckingPayment) return;
+
+    setState(() => _isCheckingPayment = true);
+
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    scaffoldMessenger.hideCurrentSnackBar();
+    scaffoldMessenger.showSnackBar(
+      const SnackBar(
+        content: Row(
+          children: [
+            CircularProgressIndicator(color: Colors.white),
+            SizedBox(width: 16),
+            Text('Đang kiểm tra trạng thái thanh toán...'),
+          ],
+        ),
+        duration: Duration(seconds: 5),
+      ),
+    );
+
+    try {
+      final status = await PayOSApi.getPaymentStatus(_pendingOrderId!);
+      final totalAmount = widget.cart.totalAmount + 30000;
+
+      if (!mounted) return;
+      scaffoldMessenger.hideCurrentSnackBar();
+
+      if (status.isPaid) {
+        // Thanh toán thành công
+        context.pushReplacement('/order-success', extra: {
+          'orderId': _pendingOrderId,
+          'totalAmount': totalAmount,
+        });
+      } else if (status.isFailed) {
+        // Thanh toán thất bại
+        context.pushReplacement('/order-failure', extra: {
+          'orderId': _pendingOrderId,
+          'totalAmount': totalAmount,
+          'error': 'Giao dịch bị hủy hoặc thất bại.',
+        });
+      } else {
+        // Vẫn đang pending - hiển thị dialog hỏi
+        _showPaymentPendingDialog(totalAmount);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      scaffoldMessenger.hideCurrentSnackBar();
+      scaffoldMessenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            'Lỗi kiểm tra trạng thái: ${e.toString().replaceFirst('Exception: ', '')}',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isCheckingPayment = false);
+      }
+    }
+  }
+
+  void _showPaymentPendingDialog(double totalAmount) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('Thanh toán đang chờ xử lý'),
+        content: const Text(
+          'Hệ thống chưa nhận được xác nhận thanh toán.\n\n'
+              'Bạn muốn:\n'
+              '• Kiểm tra lại trạng thái\n'
+              '• Quay lại màn hình đặt hàng\n'
+              '• Xem đơn hàng đã tạo',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              context.go('/profile/my-orders');
+            },
+            child: const Text('Xem đơn hàng'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              setState(() => _pendingOrderId = null);
+            },
+            child: const Text('Quay lại'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _checkPaymentStatus();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.black,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Kiểm tra lại'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ====================== LOGIC MỞ PAYMENT LINK ======================
+
+  Future<void> _openPaymentLink(String url) async {
+    try {
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(
+          uri,
+          mode: LaunchMode.externalApplication, // Mở trong browser
+        );
+      } else {
+        throw Exception('Không thể mở link thanh toán');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Lỗi mở link: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -64,7 +193,7 @@ class _OrderScreenState extends State<OrderScreen> {
 
   Future<void> _handlePlaceOrder() async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final totalAmount = widget.cart.totalAmount + 50000; // + tiền ship
+    final totalAmount = widget.cart.totalAmount + 1000; // + tiền ship
 
     scaffoldMessenger.hideCurrentSnackBar();
     scaffoldMessenger.showSnackBar(
@@ -76,7 +205,7 @@ class _OrderScreenState extends State<OrderScreen> {
             Text('Đang xử lý đơn hàng...'),
           ],
         ),
-        duration: Duration(seconds: 10),
+        duration: Duration(seconds: 30),
       ),
     );
 
@@ -94,59 +223,106 @@ class _OrderScreenState extends State<OrderScreen> {
         throw Exception('Giỏ hàng hiện tại không có sản phẩm nào.');
       }
 
-      // 3. Tạo Request Object
+      // 3. Tạo Request Object - SỬA: bank_transfer thay vì bank
       final orderRequest = CreateOrderRequest(
         addressId: addressId,
         cartItemIds: cartItemIds,
-        paymentMethod: _paymentMethod,
+        paymentMethod: _paymentMethod == 'bank_transfer' ? 'bank_transfer' : 'cod',
         note: null,
       );
 
       // 4. XỬ LÝ THEO PHƯƠNG THỨC THANH TOÁN
       if (_paymentMethod == 'cod') {
-        // --- LOGIC CŨ CHO COD ---
+        // === THANH TOÁN KHI NHẬN HÀNG (COD) ===
         await CreateOrderApi.createOrder(orderRequest);
         if (!mounted) return;
 
-        // Chuyển hướng thành công kiểu cũ (không truyền params)
         scaffoldMessenger.hideCurrentSnackBar();
         context.pushReplacement('/order-success');
       } else {
-        // --- VNPAY DEMO (BỎ QUA MỞ WEB - KHÔNG GỌI API) ---
+        // === THANH TOÁN QUA PAYOS ===
 
-        print('--- ĐANG CHẠY CHẾ ĐỘ DEMO VNPAY (KHÔNG MỞ WEB) ---');
-
-        // A. Tạo mã đơn hàng giả
-        final String demoOrderId =
-            "DH-DEMO-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}";
-
-        // B. BỎ QUA BƯỚC MỞ WEB (launchUrl)
-        // Chỉ hiển thị thông báo giả lập đang chờ
-        scaffoldMessenger.hideCurrentSnackBar();
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(
-            content: Text('Đang mô phỏng thanh toán VNPay... (Vui lòng chờ)'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-
-        // C. Giả lập độ trễ 2 giây (như đang xử lý thanh toán)
-        await Future.delayed(const Duration(seconds: 2));
+        // Bước 1: Tạo đơn hàng
+        print('📦 Đang tạo đơn hàng với payment_method: bank_transfer');
+        final orderId = await CreateOrderApi.createOrder(orderRequest);
+        print('✅ Đơn hàng đã tạo thành công. Order ID: $orderId');
 
         if (!mounted) return;
 
-        // D. Chuyển hướng ngay dựa trên biến _isVnpaySuccessDemo
-        _onVNPayResult(
-          context,
-          isSuccess: _isVnpaySuccessDemo,
-          orderId: demoOrderId,
-          amount: totalAmount,
-          error: _isVnpaySuccessDemo ? null : 'Giao dịch thất bại (Demo)',
+        // Lưu order ID để kiểm tra sau
+        setState(() => _pendingOrderId = orderId);
+
+        // Bước 2: Tạo payment link từ PayOS
+        scaffoldMessenger.hideCurrentSnackBar();
+        scaffoldMessenger.showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                CircularProgressIndicator(color: Colors.white),
+                SizedBox(width: 16),
+                Text('Đang tạo link thanh toán PayOS...'),
+              ],
+            ),
+            duration: Duration(seconds: 10),
+          ),
         );
+
+        print('🔗 Đang tạo payment link cho order: $orderId');
+        final paymentLink = await PayOSApi.createPaymentLink(orderId);
+        print('✅ Payment link đã tạo: ${paymentLink.checkoutUrl}');
+
+        if (!mounted) return;
+        scaffoldMessenger.hideCurrentSnackBar();
+
+        // Bước 3: Hiển thị hướng dẫn và mở link
+        final shouldOpen = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (context) => AlertDialog(
+            title: const Text('Chuyển đến thanh toán'),
+            content: const Text(
+              'Bạn sẽ được chuyển đến trang PayOS để hoàn tất thanh toán.\n\n'
+                  'Sau khi thanh toán xong, vui lòng quay lại ứng dụng để kiểm tra trạng thái.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false),
+                child: const Text('Hủy'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('Tiếp tục'),
+              ),
+            ],
+          ),
+        );
+
+        if (shouldOpen == true && mounted) {
+          // Mở payment link
+          print('🌐 Mở payment link trong browser...');
+          await _openPaymentLink(paymentLink.checkoutUrl);
+
+          // Hiển thị snackbar nhắc nhở
+          scaffoldMessenger.showSnackBar(
+            const SnackBar(
+              content: Text('Vui lòng hoàn tất thanh toán trên trình duyệt'),
+              duration: Duration(seconds: 5),
+              backgroundColor: Colors.blue,
+            ),
+          );
+        } else {
+          // User hủy - reset pending order
+          setState(() => _pendingOrderId = null);
+        }
       }
     } catch (e) {
       if (!mounted) return;
       final errorString = e.toString().replaceFirst('Exception: ', '');
+      print('❌ Lỗi đặt hàng: $errorString');
 
       // Handle riêng trường hợp Cart Empty (Idempotent) - CHỈ CHO COD
       if (errorString.contains('cart is empty') && _paymentMethod == 'cod') {
@@ -278,7 +454,7 @@ class _OrderScreenState extends State<OrderScreen> {
       double subtotal,
       int totalItems,
       ) {
-    const double shippingFee = 50000;
+    const double shippingFee = 1000;
     final double total = subtotal + shippingFee;
 
     return Padding(
@@ -357,8 +533,8 @@ class _OrderScreenState extends State<OrderScreen> {
               height: 26,
               fit: BoxFit.contain,
             ),
-            label: 'Thanh toán qua VNPAY',
-            value: 'bank',
+            label: 'Thanh toán online qua PayOS',
+            value: 'bank_transfer',
           ),
         ],
       ),
@@ -396,7 +572,7 @@ class _OrderScreenState extends State<OrderScreen> {
       double subtotal,
       int totalItems,
       ) {
-    const double shippingFee = 50000;
+    const double shippingFee = 1000;
     final double total = subtotal + shippingFee;
 
     return Container(
