@@ -41,7 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
 
       if (error == null) {
-        context.go('/dashboard');
+        context.go('/orders');
       }
     }
   }

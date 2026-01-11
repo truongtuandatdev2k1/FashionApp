@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
+import 'package:ui_mobile_fashion_app/admin/features/auth/presentation/logic/admin_logout_controller.dart';
 import 'sidebar_config.dart';
 
 class AdminSidebar extends StatelessWidget {
@@ -20,12 +21,10 @@ class AdminSidebar extends StatelessWidget {
           // --- PHẦN HEADER CHỈ HIỂN THỊ LOGO CĂN GIỮA ---
           Container(
             padding: const EdgeInsets.symmetric(vertical: 30),
-            width:
-                double
-                    .infinity, // Đảm bảo container chiếm hết chiều rộng sidebar
-            alignment: Alignment.center, // Căn giữa logo theo cả hai chiều
+            width: double.infinity,
+            alignment: Alignment.center,
             child: Assets.logoFas.image(
-              height: 30, // Bạn có thể điều chỉnh kích thước lớn hơn nếu muốn
+              height: 30,
               fit: BoxFit.contain,
             ),
           ),
@@ -42,27 +41,20 @@ class AdminSidebar extends StatelessWidget {
                 return Container(
                   margin: const EdgeInsets.only(bottom: 4),
                   decoration: BoxDecoration(
-                    // Item được chọn có nền xám nhẹ, bo góc, không viền
-                    color:
-                        isSelected
-                            ? const Color(0xFFF2F3F4)
-                            : Colors.transparent,
+                    color: isSelected ? const Color(0xFFF2F3F4) : Colors.transparent,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: ListTile(
                     leading: Icon(
                       item.icon,
-                      // Selected: Đen, Unselected: Xám
                       color: isSelected ? Colors.black : Colors.grey,
                       size: 22,
                     ),
                     title: Text(
                       item.title,
                       style: TextStyle(
-                        // Selected: Đậm + Đen, Unselected: Xám
                         color: isSelected ? Colors.black : Colors.grey[600],
-                        fontWeight:
-                            isSelected ? FontWeight.w600 : FontWeight.normal,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                         fontSize: 14,
                       ),
                     ),
@@ -70,7 +62,6 @@ class AdminSidebar extends StatelessWidget {
                       context.go(item.route);
                       if (isMobile) Navigator.pop(context);
                     },
-                    // Bỏ hiệu ứng ripple mặc định để "phẳng" hơn
                     hoverColor: Colors.transparent,
                   ),
                 );
@@ -78,7 +69,7 @@ class AdminSidebar extends StatelessWidget {
             ),
           ),
 
-          // Logout
+          // Logout Button
           Padding(
             padding: const EdgeInsets.all(20),
             child: ListTile(
@@ -91,7 +82,7 @@ class AdminSidebar extends StatelessWidget {
                 'Đăng xuất',
                 style: TextStyle(color: Colors.redAccent, fontSize: 14),
               ),
-              onTap: () => context.go('/login'),
+              onTap: () => AdminLogoutController.showLogoutDialog(context),
               contentPadding: const EdgeInsets.symmetric(horizontal: 10),
             ),
           ),

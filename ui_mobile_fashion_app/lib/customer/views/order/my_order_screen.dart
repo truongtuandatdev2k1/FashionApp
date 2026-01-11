@@ -158,7 +158,7 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
                   'Đơn hàng #${order.orderNumber}',
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 15,
+                    fontSize: 12,
                   ),
                 ),
                 Container(
