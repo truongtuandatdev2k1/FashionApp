@@ -132,7 +132,9 @@ class _BrandCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         hoverColor: Colors.grey[50], // Hiệu ứng đổi màu nhẹ khi di chuột qua
         onTap: () {
-          context.push('/brands/products/${brand.id}?name=${brand.name}');
+          // Đảm bảo logoUrl được truyền vào query string
+          final logoPath = brand.logoUrl;
+          context.push('/brands/products/${brand.id}?name=${brand.name}&logo=$logoPath');
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),

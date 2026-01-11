@@ -100,12 +100,24 @@ class AdminRouter {
           ),
           // Cập nhật trong AdminRouter.router
           GoRoute(
-            path: '/brands/products/:id',
-            builder: (context, state) {
-              final id = int.tryParse(state.pathParameters['id'] ?? '0') ?? 0;
-              final name = state.uri.queryParameters['name'] ?? 'Nhãn hàng';
-              return BrandProductListScreen(brandId: id, brandName: name);
-            },
+            path: '/brands',
+            builder: (context, state) => const BrandListScreen(),
+            routes: [
+              GoRoute(
+                path: 'products/:id', // Kết hợp lại thành /brands/products/:id
+                builder: (context, state) {
+                  final id = int.parse(state.pathParameters['id']!);
+                  final name = state.uri.queryParameters['name'] ?? '';
+                  final logo = state.uri.queryParameters['logo'] ?? ''; // Lấy logo từ query
+
+                  return BrandProductListScreen(
+                    brandId: id,
+                    brandName: name,
+                    logoUrl: logo,
+                  );
+                },
+              ),
+            ],
           ),
         ],
       ),

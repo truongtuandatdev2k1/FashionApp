@@ -28,7 +28,7 @@ class SidebarConfig {
     // Kiểm tra kỹ chuỗi '/brands'
     SidebarItemModel(
       title: 'Nhãn Hàng',
-      icon: Icons.branding_watermark_outlined,
+      icon: Icons.auto_awesome_outlined,
       route: '/brands', // Đảm bảo không có dấu cách: ' /brands' hoặc '/brands '
     ),
     SidebarItemModel(
