@@ -1,35 +1,12 @@
 // lib/admin/features/order/presentation/widgets/order_table_body.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../mock_data/order_mock_data.dart';
+import 'package:ui_mobile_fashion_app/admin/features/notification/widgets/custom_toast.dart';
+import '../../data/models/admin_order_model.dart';
 import 'status_chip.dart';
-import 'order_empty_view.dart';
-
-// Widget chip cho trạng thái thanh toán (tách riêng cho dễ quản lý)
-Widget _buildPaymentChip(String paymentStatus) {
-  final isPaid = paymentStatus == 'Đã thanh toán';
-  final color = isPaid ? Colors.green : Colors.orange;
-  final icon = isPaid ? Icons.check_circle_outline : Icons.hourglass_empty;
-
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-    decoration: BoxDecoration(
-      color: color.withOpacity(0.12),
-      borderRadius: BorderRadius.circular(6),
-    ),
-    child: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 6),
-        Text(paymentStatus, style: TextStyle(color: color, fontSize: 13)),
-      ],
-    ),
-  );
-}
 
 class OrderTableBody extends StatelessWidget {
-  final List<OrderMock> orders;
+  final List<AdminOrder> orders;
   final double availableWidth;
 
   const OrderTableBody({
@@ -40,10 +17,7 @@ class OrderTableBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (orders.isEmpty) {
-      return const OrderEmptyView();
-    }
-
+    // Định dạng tiền tệ Việt Nam (1.000.000 ₫)
     final currencyFormat = NumberFormat.currency(
       locale: 'vi_VN',
       symbol: '₫',
@@ -61,10 +35,12 @@ class OrderTableBody extends StatelessWidget {
             final isEven = index % 2 == 0;
 
             return Container(
+              // Đổ màu xen kẽ giữa các dòng cho dễ nhìn
               color: isEven ? const Color(0xFFF9FAFB) : Colors.white,
               height: 64,
               child: Row(
                 children: [
+                  // 1. STT
                   SizedBox(
                     width: 60,
                     child: Center(
@@ -77,68 +53,92 @@ class OrderTableBody extends StatelessWidget {
                       ),
                     ),
                   ),
+
+                  // 2. Mã đơn
                   SizedBox(
-                    width: 140,
+                    width: 200,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Text(
-                        order.id,
+                        order.orderNumber,
                         style: const TextStyle(
                           color: Colors.black87,
+                          fontWeight: FontWeight.w600,
                           decoration: TextDecoration.underline,
-                          decorationColor: Colors.black45,
-                          decorationThickness: 1.2,
+                          decorationColor: Colors.black26,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        order.customer,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ),
+
+                  // 3. Số điện thoại
                   SizedBox(
                     width: 160,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(order.phone),
+                      child: Text(
+                        order.shippingPhone,
+                        style: const TextStyle(color: Colors.black87),
+                      ),
                     ),
                   ),
+
+                  // 4. Giờ đặt
                   SizedBox(
                     width: 120,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(order.time),
+                      child: Text(order.displayTime),
                     ),
                   ),
+
+                  // 5. Ngày đặt
                   SizedBox(
                     width: 140,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(order.date),
+                      child: Text(order.displayDate),
                     ),
                   ),
-                  SizedBox(
-                    width: 80,
-                    child: Center(
-                      child: Text(
-                        order.quantity.toString(),
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                    ),
-                  ),
+
+                  // 6. Cột Trạng thái (Dropdown)
+                  // Cột Trạng thái (Dropdown)
                   SizedBox(
                     width: 200,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: StatusChip(status: order.status),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: PopupMenuButton<String>(
+                          tooltip: 'Thay đổi trạng thái',
+                          offset: const Offset(0, 40),
+                          child: StatusChip(
+                            status: order.status,
+                            isDropdown: true,
+                          ),
+                          onSelected: (String value) {
+                            // GỌI THÔNG BÁO TÙY CHỈNH TẠI ĐÂY
+                            CustomToast.show(
+                              context,
+                              message: 'Tính năng chưa được phát triển',
+                              icon: Icons.info_outline,
+                              backgroundColor: Colors.blueGrey.shade800,
+                            );
+                          },
+                          itemBuilder: (BuildContext context) => [
+                            _buildMenuItem('pending', 'Chờ xác nhận', Colors.orange),
+                            _buildMenuItem('confirmed', 'Đã xác nhận', Colors.green),
+                            _buildMenuItem('shipping', 'Đang giao', Colors.blue),
+                            _buildMenuItem('delivered', 'Hoàn thành', Colors.green),
+                            _buildMenuItem('cancelled', 'Đã hủy', Colors.red),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
+
+                  // 7. Tổng tiền
                   SizedBox(
                     width: 180,
                     child: Padding(
@@ -146,27 +146,23 @@ class OrderTableBody extends StatelessWidget {
                       child: Text(
                         currencyFormat.format(order.totalAmount),
                         style: const TextStyle(
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                           color: Colors.blueAccent,
                         ),
                         textAlign: TextAlign.right,
                       ),
                     ),
                   ),
-                  // Cột Trạng thái thanh toán mới
-                  SizedBox(
-                    width: 180,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: _buildPaymentChip(order.paymentStatus),
-                    ),
-                  ),
+
+                  // 8. Thao tác (Nút ba chấm)
                   SizedBox(
                     width: 100,
                     child: Center(
                       child: IconButton(
-                        icon: const Icon(Icons.more_horiz, size: 20),
-                        onPressed: () {},
+                        icon: const Icon(Icons.more_horiz, size: 20, color: Colors.grey),
+                        onPressed: () {
+                          // Log hoặc xử lý mở chi tiết đơn hàng
+                        },
                       ),
                     ),
                   ),
@@ -175,6 +171,30 @@ class OrderTableBody extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+
+  /// Hàm helper tạo item cho menu lựa chọn
+  PopupMenuItem<String> _buildMenuItem(String value, String text, Color color) {
+    return PopupMenuItem<String>(
+      value: value,
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            text,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ],
       ),
     );
   }

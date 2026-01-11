@@ -16,24 +16,15 @@ class OrderTableHeader extends StatelessWidget {
         borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
       ),
       child: Row(
-        children: [
-          const SizedBox(width: 60, child: _HeaderText('STT')),
-          const SizedBox(width: 140, child: _HeaderText('Mã đơn')),
-          const Expanded(child: _HeaderText('Khách hàng')),
-          const SizedBox(width: 160, child: _HeaderText('SĐT')),
-          const SizedBox(width: 120, child: _HeaderText('Giờ đặt')),
-          const SizedBox(width: 140, child: _HeaderText('Ngày đặt')),
-          const SizedBox(width: 80, child: Center(child: _HeaderText('SL'))),
-          const SizedBox(width: 200, child: _HeaderText('Trạng thái')),
-          const SizedBox(width: 180, child: _HeaderText('Tổng tiền')),
-          const SizedBox(
-            width: 180,
-            child: _HeaderText('Thanh toán'),
-          ), // ← Cột mới
-          const SizedBox(
-            width: 100,
-            child: Center(child: _HeaderText('Thao tác')),
-          ),
+        children: const [
+          SizedBox(width: 60, child: _HeaderText('STT')),
+          SizedBox(width: 200, child: _HeaderText('Mã đơn')),
+          SizedBox(width: 160, child: _HeaderText('SĐT')),
+          SizedBox(width: 120, child: _HeaderText('Giờ đặt')),
+          SizedBox(width: 140, child: _HeaderText('Ngày đặt')),
+          SizedBox(width: 200, child: _HeaderText('Trạng thái')),
+          SizedBox(width: 180, child: _HeaderText('Tổng tiền')),
+          SizedBox(width: 100, child: Center(child: _HeaderText('Thao tác'))),
         ],
       ),
     );

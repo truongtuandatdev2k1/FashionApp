@@ -142,19 +142,36 @@
 │   │   │   │   ├── data
 │   │   │   │   │   └── auth_repository.dart
 │   │   │   │   └── presentation
-│   │   │   │       ├── folder
 │   │   │   │       ├── logic
-│   │   │   │       │   └── admin_login_controller.dart
+│   │   │   │       │   ├── admin_login_controller.dart
+│   │   │   │       │   └── admin_logout_controller.dart
 │   │   │   │       └── screens
 │   │   │   │           └── login_screen.dart
+│   │   │   ├── brands
+│   │   │   │   ├── data
+│   │   │   │   │   ├── models
+│   │   │   │   │   │   └── brand_model.dart
+│   │   │   │   │   ├── add_brand_api.dart
+│   │   │   │   │   └── brand_api.dart
+│   │   │   │   └── presentation
+│   │   │   │       ├── screens
+│   │   │   │       │   └── brand_list_screen.dart
+│   │   │   │       └── widgets
+│   │   │   │           └── add_brand_dialog.dart
 │   │   │   ├── dashboard
 │   │   │   │   ├── folder
 │   │   │   │   └── presentation
 │   │   │   │       ├── folder
 │   │   │   │       └── screens
 │   │   │   │           └── stats_screen.dart
+│   │   │   ├── notification
+│   │   │   │   └── widgets
+│   │   │   │       └── custom_toast.dart
 │   │   │   ├── order
-│   │   │   │   ├── folder
+│   │   │   │   ├── data
+│   │   │   │   │   ├── models
+│   │   │   │   │   │   └── admin_order_model.dart
+│   │   │   │   │   └── admin_order_api.dart
 │   │   │   │   └── presentation
 │   │   │   │       ├── mock_data
 │   │   │   │       │   └── order_mock_data.dart
@@ -165,8 +182,7 @@
 │   │   │   │           ├── order_filter_tabs.dart
 │   │   │   │           ├── order_table_body.dart
 │   │   │   │           ├── order_table_header.dart
-│   │   │   │           ├── status_chip.dart
-│   │   │   │           └── status_tab.dart
+│   │   │   │           └── status_chip.dart
 │   │   │   └── product
 │   │   │       ├── domain
 │   │   │       │   └── entities
@@ -373,4 +389,4 @@
 ├── pubspec.yaml
 └── README.md
 
-148 directories, 226 files
+156 directories, 234 files

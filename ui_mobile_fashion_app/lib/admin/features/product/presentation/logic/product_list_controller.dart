@@ -15,16 +15,19 @@ class ProductListController {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
 
-  Future<void> fetchProducts() async {
+  Future<void> fetchProducts({int? brandId}) async {
     _isLoading = true;
     _errorMessage = null;
 
     try {
-      developer.log('Fetching products from API...', name: 'ProductList');
-
       final response = await _apiClient.post<Map<String, dynamic>>(
         '/products/list',
-        data: {"filter": "all", "limit": 50, "page": 1},
+        data: {
+          "filter": "all",
+          "limit": 50,
+          "page": 1,
+          if (brandId != null) "brand_id": brandId, // Thêm filter theo brand
+        },
       );
 
       if (response.data?['code'] != 'OK') {
@@ -32,18 +35,10 @@ class ProductListController {
       }
 
       final List<dynamic> items = response.data?['data']?['data'] ?? [];
-
       _products = items.map((json) => ProductEntity.fromJson(json)).toList();
 
-      developer.log('Loaded ${_products.length} products', name: 'ProductList');
-    } catch (e, stackTrace) {
-      developer.log(
-        'Error loading products: $e',
-        name: 'ProductList',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      _errorMessage = 'Không thể tải danh sách sản phẩm. Vui lòng thử lại.';
+    } catch (e) {
+      _errorMessage = e.toString();
     } finally {
       _isLoading = false;
     }

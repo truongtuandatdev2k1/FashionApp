@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_mobile_fashion_app/admin/features/auth/presentation/screens/login_screen.dart';
+import 'package:ui_mobile_fashion_app/admin/features/brands/presentation/screens/brand_list_screen.dart';
+import 'package:ui_mobile_fashion_app/admin/features/brands/presentation/screens/brand_product_list_screen.dart';
 import 'package:ui_mobile_fashion_app/admin/features/order/presentation/screens/order_list_screen.dart';
 import 'package:ui_mobile_fashion_app/admin/presentation/navigation/widgets/admin_main_layout.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/screens/product_list_screen.dart';
@@ -67,10 +69,10 @@ class AdminRouter {
             builder: (context, state) => const OrderListScreen(),
           ),
 
-          // 4. Kho Hàng
+          // 4. SỬA TẠI ĐÂY: Thay /inventory bằng /brands
           GoRoute(
-            path: '/inventory',
-            builder: (context, state) => const _SimplePage(title: 'Quản Lý Kho Hàng'),
+            path: '/brands', // Phải khớp hoàn toàn với route trong sidebar_config.dart
+            builder: (context, state) => const BrandListScreen(),
           ),
 
           // 5. Khách Hàng
@@ -95,6 +97,15 @@ class AdminRouter {
           GoRoute(
             path: '/settings',
             builder: (context, state) => const _SimplePage(title: 'Cấu Hình Hệ Thống'),
+          ),
+          // Cập nhật trong AdminRouter.router
+          GoRoute(
+            path: '/brands/products/:id',
+            builder: (context, state) {
+              final id = int.tryParse(state.pathParameters['id'] ?? '0') ?? 0;
+              final name = state.uri.queryParameters['name'] ?? 'Nhãn hàng';
+              return BrandProductListScreen(brandId: id, brandName: name);
+            },
           ),
         ],
       ),

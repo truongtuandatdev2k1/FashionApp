@@ -1,4 +1,4 @@
-// file: lib/admin/presentation/navigation/sidebar_config.dart
+// lib/admin/presentation/navigation/sidebar_config.dart
 import 'package:flutter/material.dart';
 
 class SidebarItemModel {
@@ -15,25 +15,21 @@ class SidebarItemModel {
 
 class SidebarConfig {
   static const List<SidebarItemModel> items = [
-    // SidebarItemModel(
-    //   title: 'Tổng Quan',
-    //   icon: Icons.dashboard_outlined,
-    //   route: '/dashboard',
-    // ),
     SidebarItemModel(
       title: 'Đơn Hàng',
       icon: Icons.shopping_cart_outlined,
       route: '/orders',
     ),
-    SidebarItemModel(
+    SidebarItemModel( // bỏ cái này đi
       title: 'Sản Phẩm',
-      icon: Icons.checkroom_outlined, // Icon quần áo
+      icon: Icons.checkroom_outlined,
       route: '/products',
     ),
+    // Kiểm tra kỹ chuỗi '/brands'
     SidebarItemModel(
-      title: 'Kho Hàng',
-      icon: Icons.warehouse_outlined,
-      route: '/inventory',
+      title: 'Nhãn Hàng',
+      icon: Icons.branding_watermark_outlined,
+      route: '/brands', // Đảm bảo không có dấu cách: ' /brands' hoặc '/brands '
     ),
     SidebarItemModel(
       title: 'Khách Hàng',
