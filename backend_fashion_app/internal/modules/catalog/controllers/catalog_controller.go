@@ -942,6 +942,13 @@ func (c *CatalogController) GetProduct(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	res := api.ToProductDetailResponse(product)
+	res.IsFavorited = false
+	if claims := authn.GetClaims(r.Context()); claims != nil {
+		wishRepo := repositories.NewWishlistRepository(c.db)
+		if ok, err := wishRepo.Exists(r.Context(), claims.UID, id); err == nil {
+			res.IsFavorited = ok
+		}
+	}
 	// attach stats if available
 	var stats repositories.ProductStatsModel
 	if err := c.db.WithContext(r.Context()).Where("product_id = ?", id).First(&stats).Error; err == nil {
@@ -949,6 +956,13 @@ func (c *CatalogController) GetProduct(w http.ResponseWriter, r *http.Request) {
 		res.SoldCount = stats.SoldCount
 		res.RatingAvg = stats.RatingAvg
 	}
+
+	// record product view (only if request is authenticated)
+	if claims := authn.GetClaims(r.Context()); claims != nil {
+		viewRepo := repositories.NewProductViewRepository(c.db)
+		_ = viewRepo.RecordView(r.Context(), claims.UID, id)
+	}
+
 	resp.OK(w, res)
 }
 
@@ -969,7 +983,7 @@ func (c *CatalogController) ListProducts(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	}
-	products, total, err := c.productSvc.ListProductsPaginated(r.Context(), req.Filter, req.Page, req.Limit)
+	products, total, err := c.productSvc.ListProductsPaginated(r.Context(), req.Filter, req.Page, req.Limit, req.BrandID)
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return

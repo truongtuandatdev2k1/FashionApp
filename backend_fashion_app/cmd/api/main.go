@@ -20,12 +20,16 @@ import (
 	"myfashion/internal/common/httpx"
 
 	addressm "myfashion/internal/modules/address"
+	adminm "myfashion/internal/modules/admin"
+	adminRepos "myfashion/internal/modules/admin/repositories"
 	authm "myfashion/internal/modules/auth"
 	"myfashion/internal/modules/auth/repositories"
 	"myfashion/internal/modules/auth/services"
 	cartm "myfashion/internal/modules/cart"
 	catalogm "myfashion/internal/modules/catalog"
+	notificationm "myfashion/internal/modules/notification"
 	orderm "myfashion/internal/modules/order"
+	paymentm "myfashion/internal/modules/payment"
 	profilem "myfashion/internal/modules/profile"
 	promotionm "myfashion/internal/modules/promotion"
 	promoRepos "myfashion/internal/modules/promotion/repositories"
@@ -35,7 +39,7 @@ import (
 // @version 1.0
 // @description Auth (local, Google) + Profile (customer/shop) + Catalog
 // @BasePath /api/v1
-// @schemes http
+// @schemes https http
 // @securityDefinitions.apikey Bearer
 // @in header
 // @name Authorization
@@ -57,6 +61,9 @@ func main() {
 	blacklistRepo := repositories.NewBlacklistedTokenRepository(gdb)
 	cleanupService := services.NewCleanupService(blacklistRepo)
 
+	// User status checker (for immediate account disable)
+	userStatusChecker := adminRepos.NewUserStatusRepository(gdb)
+
 	// Chạy cleanup scheduler trong background (cleanup mỗi 1 giờ)
 	ctx := context.Background()
 	go cleanupService.StartCleanupScheduler(ctx, time.Hour)
@@ -72,19 +79,36 @@ func main() {
 	FileServer(r, "/uploads", filesDir)
 
 	r.Get("/healthz", func(w http.ResponseWriter, _ *http.Request) { w.Write([]byte("ok")) })
-	r.Get("/swagger/*", httpSwagger.WrapHandler)
+
+	// PayOS return/cancel static pages
+	r.Get("/payos/return", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "payos_return.html")
+	})
+	r.Get("/payos/cancel", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "payos_cancel.html")
+	})
+
+	// Force swagger spec URL to be relative (prevents Swagger UI from generating http:// requests behind proxies)
+	r.Get("/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/doc.json"),
+	))
 
 	api := chi.NewRouter()
-	authm.RegisterRoutes(api, cfg, gdb)
-	profilem.RegisterRoutes(api, cfg, gdb, blacklistRepo)
-	catalogm.RegisterRoutes(api, cfg, gdb, blacklistRepo) // Register catalog routes
-	cartm.RegisterRoutes(api, cfg, gdb, blacklistRepo)    // Register cart routes
-	addressm.RegisterRoutes(api, cfg, gdb, blacklistRepo) // Register address routes
+	authm.RegisterRoutes(api, cfg, gdb, blacklistRepo, userStatusChecker)
+	profilem.RegisterRoutes(api, cfg, gdb, blacklistRepo, userStatusChecker)
+	catalogm.RegisterRoutes(api, cfg, gdb, blacklistRepo, userStatusChecker) // Register catalog routes
+	cartm.RegisterRoutes(api, cfg, gdb, blacklistRepo, userStatusChecker)    // Register cart routes
+	addressm.RegisterRoutes(api, cfg, gdb, blacklistRepo, userStatusChecker) // Register address routes
 
-	// Promotion module needs to be initialized first to be injected into the order module
-	promoService := promotionm.RegisterRoutes(api, cfg, gdb, blacklistRepo) // Register promotion routes
+	// Notification module
+	notificationSvc := notificationm.RegisterRoutes(api, gdb, cfg.JWT_Secret, blacklistRepo, userStatusChecker)
+
+	// Promotion module
+	promoService := promotionm.RegisterRoutes(api, cfg, gdb, blacklistRepo, notificationSvc, userStatusChecker) // Register promotion routes
 	promoAdapter := promoRepos.NewPromotionServiceAdapter(promoService)
-	orderm.RegisterRoutes(api, gdb, cfg.JWT_Secret, blacklistRepo, promoAdapter) // Register order routes
+	orderm.RegisterRoutes(api, gdb, cfg.JWT_Secret, blacklistRepo, promoAdapter, notificationSvc, userStatusChecker) // Register order routes
+	adminm.RegisterRoutes(api, gdb, cfg.JWT_Secret, blacklistRepo, userStatusChecker)
+	paymentm.RegisterRoutes(api, cfg, gdb, blacklistRepo, userStatusChecker)
 	r.Mount("/api/v1", api)
 
 	log.Printf("listening on :%s", cfg.Port)
@@ -108,6 +132,12 @@ func runMigrations(db *gorm.DB) {
 		log.Fatal(err)
 	}
 	if err := orderm.Migrate(db); err != nil {
+		log.Fatal(err)
+	}
+	if err := notificationm.Migrate(db); err != nil {
+		log.Fatal(err)
+	}
+	if err := paymentm.Migrate(db); err != nil {
 		log.Fatal(err)
 	}
 	if err := promotionm.Migrate(db); err != nil {

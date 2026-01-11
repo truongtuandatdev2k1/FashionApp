@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"errors"
+	"time"
 
 	"myfashion/internal/modules/promotion/entities"
 
@@ -87,4 +88,24 @@ func (r *PromotionRepository) IncrementUsageCount(ctx context.Context, promotion
 	return r.db.WithContext(ctx).Model(&PromotionModel{}).
 		Where("id = ?", promotionID).
 		UpdateColumn("usage_count", gorm.Expr("usage_count + ?", count)).Error
+}
+
+// FindExpiringActive tìm các promotion đang active và sắp hết hạn trước `before`.
+func (r *PromotionRepository) FindExpiringActive(ctx context.Context, before time.Time) ([]*entities.Promotion, error) {
+	var models []PromotionModel
+	if err := r.db.WithContext(ctx).
+		Where("is_active = ?", true).
+		Where("end_date > ?", time.Now()).
+		Where("end_date <= ?", before).
+		Order("end_date ASC").
+		Find(&models).Error; err != nil {
+		return nil, err
+	}
+
+	out := make([]*entities.Promotion, 0, len(models))
+	for i := range models {
+		m := models[i]
+		out = append(out, ToPromotionEntity(&m, nil, nil))
+	}
+	return out, nil
 }

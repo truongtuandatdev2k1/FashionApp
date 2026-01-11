@@ -1,0 +1,7 @@
+tunnel: fashionapp
+credentials-file: C:\cloudflared\<TUNNEL_ID>.json
+
+ingress:
+  - hostname: api.caibang.online
+    service: http://localhost:4003
+  - service: http_status:404

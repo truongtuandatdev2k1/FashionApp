@@ -10,17 +10,19 @@ import (
 
 // PromotionService chứa logic nghiệp vụ cho module Promotion
 type PromotionService struct {
-	promoRepo PromotionRepository
-	userRepo  UserRepository
-	orderRepo OrderRepository
+	promoRepo        PromotionRepository
+	userRepo         UserRepository
+	orderRepo        OrderRepository
+	notificationSvc  NotificationService
 }
 
 // NewPromotionService tạo một service mới
-func NewPromotionService(promoRepo PromotionRepository, userRepo UserRepository, orderRepo OrderRepository) *PromotionService {
+func NewPromotionService(promoRepo PromotionRepository, userRepo UserRepository, orderRepo OrderRepository, notificationSvc NotificationService) *PromotionService {
 	return &PromotionService{
-		promoRepo: promoRepo,
-		userRepo:  userRepo,
-		orderRepo: orderRepo,
+		promoRepo:        promoRepo,
+		userRepo:         userRepo,
+		orderRepo:        orderRepo,
+		notificationSvc:  notificationSvc,
 	}
 }
 
@@ -36,6 +38,10 @@ func (s *PromotionService) CreatePromotion(ctx context.Context, req *api.CreateP
 
 	if err := s.promoRepo.Create(ctx, promotion); err != nil {
 		return nil, err
+	}
+
+	if s.notificationSvc != nil {
+		_ = s.notificationSvc.NotifyNewPromotion(ctx, promotion.Code, promotion.Description)
 	}
 
 	return promotion, nil

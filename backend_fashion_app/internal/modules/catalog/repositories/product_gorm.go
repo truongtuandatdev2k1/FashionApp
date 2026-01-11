@@ -72,8 +72,12 @@ func (r *productGormRepo) GetAll(ctx context.Context) ([]*entities.Product, erro
 	return productEntities, nil
 }
 
-func (r *productGormRepo) GetAllPaginated(ctx context.Context, filter string, page, limit int) ([]*entities.Product, int64, error) {
+func (r *productGormRepo) GetAllPaginated(ctx context.Context, filter string, page, limit int, brandID uint) ([]*entities.Product, int64, error) {
 	db := r.db.WithContext(ctx).Model(&ProductModel{})
+
+	if brandID != 0 {
+		db = db.Where("brand_id = ?", brandID)
+	}
 
 	// Áp dụng bộ lọc
 	switch filter {

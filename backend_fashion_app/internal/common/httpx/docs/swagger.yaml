@@ -225,6 +225,98 @@ definitions:
       ward:
         type: string
     type: object
+  api.AdminOrderListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/api.AdminOrderSummary'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  api.AdminOrderSummary:
+    properties:
+      created_at:
+        type: string
+      customer_name:
+        type: string
+      id:
+        type: string
+      order_number:
+        type: string
+      payment_status:
+        type: string
+      shipping_phone:
+        type: string
+      status:
+        $ref: '#/definitions/entities.OrderStatus'
+      total_amount:
+        type: number
+    type: object
+  api.AdminUpdateProductBasicRequest:
+    properties:
+      age_range:
+        type: string
+      brand_id:
+        type: integer
+      category_ids:
+        items:
+          type: integer
+        type: array
+      description:
+        type: string
+      discount_pct:
+        maximum: 100
+        minimum: 0
+        type: integer
+      is_hot_trend:
+        type: boolean
+      name:
+        type: string
+      price:
+        minimum: 0
+        type: number
+      style_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - name
+    type: object
+  api.AdminVariantListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/api.AdminVariantResponse'
+        type: array
+    type: object
+  api.AdminVariantResponse:
+    properties:
+      color_hex:
+        type: string
+      color_name:
+        type: string
+      created_at:
+        type: string
+      product_color_id:
+        type: integer
+      product_id:
+        type: integer
+      size_code:
+        type: string
+      sku:
+        type: string
+      stock:
+        type: integer
+      updated_at:
+        type: string
+      variant_id:
+        type: integer
+    type: object
   api.AppliedPromotion:
     properties:
       code:
@@ -263,6 +355,8 @@ definitions:
     type: object
   api.BrandResponse:
     properties:
+      counts:
+        type: integer
       created_at:
         type: string
       id:
@@ -396,12 +490,57 @@ definitions:
     - recipient_name
     - ward
     type: object
+  api.CreateAdminNotificationRequest:
+    properties:
+      body:
+        type: string
+      target:
+        enum:
+        - all
+        - user_ids
+        type: string
+      title:
+        type: string
+      user_ids:
+        items:
+          type: integer
+        type: array
+    required:
+    - body
+    - target
+    - title
+    type: object
+  api.CreateAdminNotificationResponse:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      sent_to:
+        type: integer
+    type: object
   api.CreateCategoryRequest:
     properties:
       name:
         type: string
     required:
     - name
+    type: object
+  api.CreatePayOSPaymentRequest:
+    properties:
+      order_id:
+        type: string
+    required:
+    - order_id
+    type: object
+  api.CreatePayOSPaymentResponse:
+    properties:
+      checkout_url:
+        type: string
+      payos_order_code:
+        type: integer
+      payos_payment_link_id:
+        type: string
     type: object
   api.CreatePromotionRequest:
     properties:
@@ -490,6 +629,49 @@ definitions:
     required:
     - name
     type: object
+  api.CustomerDetailResponse:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      phone_number:
+        type: string
+      role:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  api.CustomerListItem:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      phone_number:
+        type: string
+    type: object
+  api.CustomerListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/api.CustomerListItem'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
   api.InvalidPromotion:
     properties:
       code:
@@ -500,7 +682,7 @@ definitions:
   api.LoginRequest:
     properties:
       credential:
-        example: test@example.com/0912345678
+        example: test@example.com
         type: string
       password:
         example: Cong123@
@@ -508,6 +690,39 @@ definitions:
     required:
     - credential
     - password
+    type: object
+  api.MarkReadResponse:
+    properties:
+      read_at:
+        type: string
+    type: object
+  api.NotificationListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/api.NotificationResponse'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  api.NotificationResponse:
+    properties:
+      body:
+        type: string
+      created_at:
+        type: string
+      id:
+        type: string
+      read_at:
+        type: string
+      title:
+        type: string
+      type:
+        $ref: '#/definitions/entities.NotificationType'
     type: object
   api.PaginatedProductResponse:
     properties:
@@ -528,6 +743,19 @@ definitions:
         type: integer
       total_pages:
         type: integer
+    type: object
+  api.PaymentStatusResponse:
+    properties:
+      checkout_url:
+        type: string
+      order_id:
+        type: string
+      payos_order_code:
+        type: integer
+      payos_payment_link_id:
+        type: string
+      status:
+        type: string
     type: object
   api.ProductColorItem:
     properties:
@@ -554,6 +782,8 @@ definitions:
         type: integer
       image_url:
         type: string
+      is_favorited:
+        type: boolean
       name:
         type: string
       price:
@@ -612,6 +842,8 @@ definitions:
     type: object
   api.ProductListRequest:
     properties:
+      brand_id:
+        type: integer
       filter:
         description: all, bestseller, new, hottrend
         type: string
@@ -737,12 +969,25 @@ definitions:
     - password
     - phone_number
     type: object
+  api.ResetCustomerPasswordRequest:
+    properties:
+      new_password:
+        minLength: 6
+        type: string
+    required:
+    - new_password
+    type: object
   api.StyleResponse:
     properties:
       id:
         type: integer
       name:
         type: string
+    type: object
+  api.UnreadCountResponse:
+    properties:
+      unread_count:
+        type: integer
     type: object
   api.UpdateAddressRequest:
     properties:
@@ -783,12 +1028,30 @@ definitions:
     required:
     - name
     type: object
+  api.UpdateCustomerStatusRequest:
+    properties:
+      is_active:
+        type: boolean
+    required:
+    - is_active
+    type: object
   api.UpdateStyleRequest:
     properties:
       name:
         type: string
     required:
     - name
+    type: object
+  api.UpdateVariantRequest:
+    properties:
+      sku:
+        type: string
+    type: object
+  api.UpdateVariantStockRequest:
+    properties:
+      stock:
+        minimum: 0
+        type: integer
     type: object
   api.UserInfo:
     properties:
@@ -831,6 +1094,18 @@ definitions:
       summary:
         $ref: '#/definitions/api.PromotionSummary'
     type: object
+  api.WishlistItemRequest:
+    properties:
+      product_id:
+        type: integer
+    type: object
+  api.WishlistListResponse:
+    properties:
+      items:
+        items:
+          $ref: '#/definitions/api.ProductSummaryResponse'
+        type: array
+    type: object
   entities.AddressType:
     enum:
     - home
@@ -841,6 +1116,54 @@ definitions:
     - AddressTypeHome
     - AddressTypeOffice
     - AddressTypeOther
+  entities.NotificationType:
+    enum:
+    - order.created
+    - order.status_changed
+    - promotion.new
+    - promotion.expiring
+    - admin.manual
+    type: string
+    x-enum-varnames:
+    - TypeOrderCreated
+    - TypeOrderStatusChanged
+    - TypePromotionNew
+    - TypePromotionExpiring
+    - TypeAdminManual
+  entities.OrderStatus:
+    enum:
+    - pending
+    - confirmed
+    - processing
+    - shipping
+    - delivered
+    - cancelled
+    - returned
+    type: string
+    x-enum-comments:
+      OrderStatusCancelled: Đã hủy
+      OrderStatusConfirmed: Shop đã xác nhận
+      OrderStatusDelivered: Đã giao hàng
+      OrderStatusPending: Đơn hàng mới tạo
+      OrderStatusProcessing: Đang chuẩn bị hàng
+      OrderStatusReturned: Đã trả hàng
+      OrderStatusShipping: Đang giao hàng
+    x-enum-descriptions:
+    - Đơn hàng mới tạo
+    - Shop đã xác nhận
+    - Đang chuẩn bị hàng
+    - Đang giao hàng
+    - Đã giao hàng
+    - Đã hủy
+    - Đã trả hàng
+    x-enum-varnames:
+    - OrderStatusPending
+    - OrderStatusConfirmed
+    - OrderStatusProcessing
+    - OrderStatusShipping
+    - OrderStatusDelivered
+    - OrderStatusCancelled
+    - OrderStatusReturned
   resp.Envelope:
     properties:
       code:
@@ -1213,7 +1536,551 @@ paths:
       summary: Update brand
       tags:
       - Brands
+  /admin/customers:
+    get:
+      description: (Shop/Admin) Danh sách customer, hỗ trợ search theo email/phone.
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Search email/phone
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CustomerListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) List customers
+      tags:
+      - Admin Customer
+  /admin/customers/{id}:
+    get:
+      description: (Shop/Admin) Xem chi tiết customer.
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CustomerDetailResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Customer detail
+      tags:
+      - Admin Customer
+  /admin/customers/{id}/password:
+    put:
+      consumes:
+      - application/json
+      description: (Shop/Admin) Reset password cho customer (admin set password mới).
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Password
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.ResetCustomerPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Reset customer password
+      tags:
+      - Admin Customer
+  /admin/customers/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: (Shop/Admin) Khóa/Mở khóa tài khoản customer.
+      parameters:
+      - description: Customer ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Status
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateCustomerStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Update customer status
+      tags:
+      - Admin Customer
+  /admin/notifications:
+    post:
+      consumes:
+      - application/json
+      description: (Shop/Admin) Tạo thông báo thủ công. Target chỉ hỗ trợ `all` hoặc
+        `user_ids`.
+      parameters:
+      - description: Notification
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreateAdminNotificationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CreateAdminNotificationResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Create manual notification
+      tags:
+      - Notification
+  /admin/orders:
+    get:
+      description: (Shop/Admin) Danh sách tất cả đơn hàng, filter theo status/date/customer.
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Order status
+        enum:
+        - pending
+        - confirmed
+        - processing
+        - shipping
+        - delivered
+        - cancelled
+        - returned
+        in: query
+        name: status
+        type: string
+      - description: Customer ID
+        in: query
+        name: customer_id
+        type: integer
+      - description: From date (RFC3339)
+        in: query
+        name: from
+        type: string
+      - description: To date (RFC3339)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AdminOrderListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) List orders
+      tags:
+      - Order
+  /admin/orders/{id}:
+    get:
+      description: (Shop/Admin) Xem chi tiết đơn hàng theo ID.
+      parameters:
+      - description: Order ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/OrderResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Get order by ID
+      tags:
+      - Order
+  /admin/product-variants/{variant_id}:
+    put:
+      consumes:
+      - application/json
+      description: (Shop/Admin) Cập nhật thông tin biến thể (hiện hỗ trợ SKU).
+      parameters:
+      - description: Variant ID
+        in: path
+        name: variant_id
+        required: true
+        type: integer
+      - description: Variant
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateVariantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Update variant
+      tags:
+      - Products
+  /admin/product-variants/{variant_id}/stock:
+    put:
+      consumes:
+      - application/json
+      description: (Shop/Admin) Set tồn kho tuyệt đối cho 1 biến thể. Đồng thời cập
+        nhật total_stock và ACTIVE/INACTIVE theo tổng tồn.
+      parameters:
+      - description: Variant ID
+        in: path
+        name: variant_id
+        required: true
+        type: integer
+      - description: Stock
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.UpdateVariantStockRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Update variant stock
+      tags:
+      - Products
+  /admin/products/{id}/basic:
+    put:
+      consumes:
+      - application/json
+      description: (Shop/Admin) Cập nhật thông tin cơ bản của sản phẩm (name/price/discount/brand/categories/styles...).
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Product basic
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.AdminUpdateProductBasicRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.ProductDetailResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Update product basic
+      tags:
+      - Products
   /admin/products/{id}/variants:
+    get:
+      description: (Shop/Admin) Lấy danh sách biến thể theo product.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.AdminVariantListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) List product variants
+      tags:
+      - Products
     post:
       consumes:
       - multipart/form-data
@@ -2001,6 +2868,139 @@ paths:
       summary: Update Category
       tags:
       - Categories
+  /notifications:
+    get:
+      description: Lấy danh sách thông báo của tôi (in-app). Có thể lọc chưa đọc.
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      - description: Unread only
+        in: query
+        name: unread
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.NotificationListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: List my notifications
+      tags:
+      - Notification
+  /notifications/{id}/read:
+    put:
+      description: Đánh dấu 1 thông báo là đã đọc (app mobile gọi khi user bấm vào
+        thông báo).
+      parameters:
+      - description: Notification ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.MarkReadResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Mark a notification as read
+      tags:
+      - Notification
+  /notifications/read-all:
+    put:
+      description: Đánh dấu tất cả thông báo của tôi là đã đọc.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Mark all notifications as read
+      tags:
+      - Notification
+  /notifications/unread-count:
+    get:
+      description: Lấy số lượng thông báo chưa đọc của tôi.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.UnreadCountResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Unread notifications count
+      tags:
+      - Notification
   /orders:
     get:
       description: Lấy danh sách đơn hàng của tôi (customer hoặc shop)
@@ -2293,6 +3293,116 @@ paths:
       summary: Update Order Status
       tags:
       - Order
+  /payments/{order_id}:
+    get:
+      description: (Customer) Lấy trạng thái payment theo order_id.
+      parameters:
+      - description: Order ID (UUID)
+        in: path
+        name: order_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.PaymentStatusResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get payment status by order
+      tags:
+      - Payment
+  /payments/payos/create:
+    post:
+      consumes:
+      - application/json
+      description: (Customer) Tạo link thanh toán PayOS cho đơn hàng.
+      parameters:
+      - description: Order
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.CreatePayOSPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.CreatePayOSPaymentResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Create PayOS payment link
+      tags:
+      - Payment
+  /payments/payos/webhook:
+    post:
+      consumes:
+      - application/json
+      description: PayOS gọi webhook để thông báo trạng thái thanh toán.
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "400":
+          description: Invalid webhook
+          schema:
+            type: string
+      summary: PayOS webhook
+      tags:
+      - Payment
   /products/{id}:
     delete:
       description: Delete a product (Shop only)
@@ -2487,6 +3597,43 @@ paths:
       summary: Validate Promotions
       tags:
       - Promotion
+  /recommendations/for-you:
+    get:
+      description: Gợi ý cá nhân hoá dựa trên giỏ hàng > đơn hàng > lịch sử xem, kết
+        hợp brand/giá (và các tín hiệu khác theo repo).
+      parameters:
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/api.ProductSummaryResponse'
+                  type: array
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get personalized recommendations for user
+      tags:
+      - Recommendations
   /styles:
     get:
       description: Get all styles
@@ -2644,7 +3791,120 @@ paths:
       summary: Update Style
       tags:
       - Styles
+  /wishlist:
+    get:
+      description: Lấy danh sách sản phẩm yêu thích của user hiện tại.
+      parameters:
+      - default: 50
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.WishlistListResponse'
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: List wishlist products
+      tags:
+      - Wishlist
+  /wishlist/items:
+    post:
+      consumes:
+      - application/json
+      description: Thêm sản phẩm vào danh sách yêu thích của user hiện tại.
+      parameters:
+      - description: Payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/api.WishlistItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Add product to wishlist
+      tags:
+      - Wishlist
+  /wishlist/items/{product_id}:
+    delete:
+      description: Bỏ sản phẩm khỏi danh sách yêu thích của user hiện tại.
+      parameters:
+      - description: Product ID
+        in: path
+        name: product_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Remove product from wishlist
+      tags:
+      - Wishlist
 schemes:
+- https
 - http
 securityDefinitions:
   Bearer:

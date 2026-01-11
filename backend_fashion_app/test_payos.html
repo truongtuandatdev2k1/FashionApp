@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Test PayOS Payment API</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 24px; max-width: 900px; }
+    h1 { margin: 0 0 16px; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; margin: 10px 0; }
+    label { display:block; font-weight: 600; margin-bottom: 6px; }
+    input, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; }
+    textarea { min-height: 140px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    .col { flex: 1; min-width: 280px; }
+    button { padding: 10px 14px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 700; }
+    button.primary { background: #111827; color: #fff; }
+    button.secondary { background: #e5e7eb; color: #111827; }
+    .hint { color: #6b7280; font-size: 13px; margin-top: 6px; }
+    .ok { color: #065f46; }
+    .err { color: #991b1b; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Test PayOS Payment API</h1>
+
+  <div class="row">
+    <div class="col">
+      <label>Base URL</label>
+      <input id="baseUrl" value="http://160.191.244.37:4003/api/v1" />
+      <div class="hint">VD: <code>http://160.191.244.37:4003/api/v1</code></div>
+    </div>
+    <div class="col">
+      <label>Bearer Token (customer)</label>
+      <input id="token" placeholder="Bearer ..." />
+      <div class="hint">Dán access token customer (không gồm chữ 'Bearer ' cũng được).</div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <label>Order ID (UUID)</label>
+      <input id="orderId" placeholder="e.g. 550e8400-e29b-41d4-a716-446655440000" />
+      <div class="hint">Dùng order ID trả về từ <code>POST /orders</code>.</div>
+    </div>
+    <div class="col" style="align-self:flex-end;">
+      <button class="primary" id="btnCreate">1) Create PayOS Payment Link</button>
+      <button class="secondary" id="btnStatus">2) Get Payment Status</button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col">
+      <label>Response</label>
+      <textarea id="output" readonly></textarea>
+      <div id="statusLine" class="hint"></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    function normToken(t) {
+      t = (t || "").trim();
+      if (!t) return "";
+      return t.toLowerCase().startsWith("bearer ") ? t : ("Bearer " + t);
+    }
+
+    function setOut(obj) {
+      $("output").value = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+    }
+
+    function setStatus(msg, ok=true) {
+      const el = $("statusLine");
+      el.textContent = msg;
+      el.className = "hint " + (ok ? "ok" : "err");
+    }
+
+    async function callApi(method, path, body) {
+      const baseUrl = $("baseUrl").value.trim().replace(/\/+$/, "");
+      const token = normToken($("token").value);
+      const url = baseUrl + path;
+
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = token;
+
+      const res = await fetch(url, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined,
+      });
+
+      const text = await res.text();
+      let json;
+      try { json = JSON.parse(text); } catch { json = text; }
+      return { status: res.status, ok: res.ok, data: json };
+    }
+
+    $("btnCreate").addEventListener("click", async () => {
+      try {
+        setStatus("Calling /payments/payos/create ...");
+        const orderId = $("orderId").value.trim();
+        if (!orderId) return setStatus("Order ID is required", false);
+
+        const r = await callApi("POST", "/payments/payos/create", { order_id: orderId });
+        setOut(r);
+        setStatus(`HTTP ${r.status}`, r.ok);
+
+        // auto open checkout_url if exists
+        const checkout = r?.data?.data?.checkout_url;
+        if (checkout) {
+          window.open(checkout, "_blank");
+        }
+      } catch (e) {
+        setOut(String(e));
+        setStatus("Request failed", false);
+      }
+    });
+
+    $("btnStatus").addEventListener("click", async () => {
+      try {
+        setStatus("Calling /payments/{order_id} ...");
+        const orderId = $("orderId").value.trim();
+        if (!orderId) return setStatus("Order ID is required", false);
+
+        const r = await callApi("GET", `/payments/${encodeURIComponent(orderId)}`, null);
+        setOut(r);
+        setStatus(`HTTP ${r.status}`, r.ok);
+      } catch (e) {
+        setOut(String(e));
+        setStatus("Request failed", false);
+      }
+    });
+  </script>
+</body>
+</html>
+

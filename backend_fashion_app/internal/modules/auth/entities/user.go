@@ -15,6 +15,7 @@ type User struct {
 	Password    string    `gorm:"type:varchar(255);not null"`
 	PhoneNumber string    `json:"phone_number" gorm:"column:phone_number;type:varchar(20);not null;unique"`
 	Role        Role      `gorm:"type:enum('shop','customer');not null"`
+	IsActive    bool      `gorm:"default:true"`
 	CreatedAt   time.Time `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 }

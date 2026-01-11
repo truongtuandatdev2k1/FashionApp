@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"myfashion/internal/modules/order/entities"
 
@@ -16,8 +17,16 @@ type OrderRepository interface {
 	FindByCustomerID(ctx context.Context, customerID uint, limit, offset int) ([]*entities.Order, int64, error)
 	FindByShopID(ctx context.Context, shopID uint, limit, offset int) ([]*entities.Order, int64, error)
 	FindByCustomerIDAndStatus(ctx context.Context, customerID uint, status entities.OrderStatus, limit, offset int) ([]*entities.Order, int64, error)
+	FindAdmin(ctx context.Context, filter AdminOrderFilter, limit, offset int) ([]*entities.Order, int64, error)
 	Update(ctx context.Context, order *entities.Order) error
 	Delete(ctx context.Context, id uuid.UUID) error
+}
+
+type AdminOrderFilter struct {
+	Status     *entities.OrderStatus
+	CustomerID *uint
+	FromDate   *time.Time
+	ToDate     *time.Time
 }
 
 // CartRepository defines the interface for cart data access
@@ -98,4 +107,10 @@ type AppliedPromotion struct {
 type PromotionService interface {
 	ValidatePromotions(ctx context.Context, userID uint, input PromotionValidationInput) (*PromotionValidationOutput, error)
 	RecordUsage(ctx context.Context, codes []string) error
+}
+
+// NotificationService defines the interface for notification-related operations needed by the order module.
+type NotificationService interface {
+	NotifyOrderCreated(ctx context.Context, customerID uint, orderNumber string) error
+	NotifyOrderStatusChanged(ctx context.Context, customerID uint, orderNumber string, newStatus string) error
 }

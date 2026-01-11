@@ -10,9 +10,9 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *repositories.BlacklistedTokenRepository) {
+func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *repositories.BlacklistedTokenRepository, userStatusChecker authn.UserStatusChecker) {
 	h := controllers.NewProfileController(db)
-	r.With(authn.AuthRequiredWithBlacklist(cfg.JWT_Secret, blacklistRepo)).Route("/profiles", func(r chi.Router) {
+	r.With(authn.AuthRequiredWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker)).Route("/profiles", func(r chi.Router) {
 		r.Get("/me", h.GetMine)
 		r.Put("/me", h.UpsertMine)
 	})

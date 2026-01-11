@@ -104,14 +104,14 @@ func (s *ProductService) ListProducts(ctx context.Context) ([]*entities.Product,
 	return s.prodRepo.GetAll(ctx)
 }
 
-func (s *ProductService) ListProductsPaginated(ctx context.Context, filter string, page, limit int) ([]*entities.Product, int64, error) {
+func (s *ProductService) ListProductsPaginated(ctx context.Context, filter string, page, limit int, brandID uint) ([]*entities.Product, int64, error) {
 	if page < 1 {
 		page = 1
 	}
 	if limit < 1 || limit > 100 {
 		limit = 20
 	}
-	return s.prodRepo.GetAllPaginated(ctx, filter, page, limit)
+	return s.prodRepo.GetAllPaginated(ctx, filter, page, limit, brandID)
 }
 
 func (s *ProductService) DeleteProduct(ctx context.Context, id uint) error {

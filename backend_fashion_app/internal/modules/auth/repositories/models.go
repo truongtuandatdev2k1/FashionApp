@@ -8,6 +8,7 @@ type UserModel struct {
 	Password    string    `gorm:"size:255;not null"`
 	PhoneNumber string    `gorm:"size:20;uniqueIndex;not null"`
 	Role        string    `gorm:"type:enum('shop','customer');index;not null"`
+	IsActive    bool      `gorm:"default:true;not null"`
 	CreatedAt   time.Time `gorm:"autoCreateTime"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 }

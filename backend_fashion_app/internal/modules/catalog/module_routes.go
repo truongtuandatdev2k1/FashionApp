@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *repositories.BlacklistedTokenRepository) {
+func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *repositories.BlacklistedTokenRepository, userStatusChecker authn.UserStatusChecker) {
 	h := controllers.NewCatalogController(db)
 
 	// Public routes
@@ -21,11 +21,21 @@ func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo 
 	r.Get("/styles", h.ListStyles)
 	r.Get("/styles/{id}", h.GetStyle)
 	r.Post("/products/list", h.ListProducts)
-	r.Get("/products/{id}", h.GetProduct)
+	// Optional auth for view tracking (public endpoint, but will parse JWT if provided)
+	r.With(authn.AuthOptionalWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker)).Get("/products/{id}", h.GetProduct)
+
+	// Authenticated routes (customer + shop)
+	r.Group(func(r chi.Router) {
+		r.Use(authn.AuthRequiredWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker))
+		r.Get("/recommendations/for-you", h.GetForYouRecommendations)
+		r.Post("/wishlist/items", h.AddWishlistItem)
+		r.Delete("/wishlist/items/{product_id}", h.RemoveWishlistItem)
+		r.Get("/wishlist", h.GetWishlist)
+	})
 
 	// Shop-only routes
 	r.Group(func(r chi.Router) {
-		r.Use(authn.AuthRequiredWithBlacklist(cfg.JWT_Secret, blacklistRepo))
+		r.Use(authn.AuthRequiredWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker))
 		r.Use(authn.RequireRole("shop"))
 
 		// Brand routes
@@ -49,6 +59,12 @@ func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo 
 		// Product creation flow (basic + variants)
 		r.Post("/admin/products/basic", h.CreateProductBasic)
 		r.Post("/admin/products/{id}/variants", h.UpsertVariantsAndFinalize)
+
+		// Admin product management
+		r.Put("/admin/products/{id}/basic", h.AdminUpdateProductBasic)
+		r.Get("/admin/products/{id}/variants", h.AdminListVariants)
+		r.Put("/admin/product-variants/{variant_id}", h.AdminUpdateVariant)
+		r.Put("/admin/product-variants/{variant_id}/stock", h.AdminUpdateVariantStock)
 
 	})
 }

@@ -121,8 +121,9 @@ func NewOrder(customerID, shopID uint) *Order {
 
 // generateOrderCodeNumeric generates a unique numeric code for payment providers (e.g., PayOS)
 func generateOrderCodeNumeric() uint64 {
-	// Simple implementation: timestamp in nanoseconds
-	return uint64(time.Now().UnixNano())
+	// PayOS orderCode is int64 and typically expects a reasonable (not too large) numeric range.
+	// Use milliseconds timestamp to stay within int64 and remain unique enough for this app.
+	return uint64(time.Now().UnixMilli())
 }
 
 // generateOrderNumber generates a unique order number

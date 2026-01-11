@@ -10,16 +10,15 @@ import (
 	"gorm.io/gorm"
 )
 
-func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB) {
+func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *repositories.BlacklistedTokenRepository, userStatusChecker authn.UserStatusChecker) {
 	h := controllers.NewAuthController(cfg, db)
-	blacklistRepo := repositories.NewBlacklistedTokenRepository(db)
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Post("/register", h.Register)
 		r.Post("/login", h.Login)
 		// Google login removed
-		r.With(authn.AuthRequiredWithBlacklist(cfg.JWT_Secret, blacklistRepo)).Get("/me", h.Me)
+		r.With(authn.AuthRequiredWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker)).Get("/me", h.Me)
 		r.Post("/refresh", h.Refresh)
-		r.With(authn.AuthRequiredWithBlacklist(cfg.JWT_Secret, blacklistRepo)).Post("/logout", h.Logout)
+		r.With(authn.AuthRequiredWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker)).Post("/logout", h.Logout)
 	})
 }

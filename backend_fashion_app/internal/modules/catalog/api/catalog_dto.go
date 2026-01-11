@@ -16,6 +16,7 @@ type BrandResponse struct {
 	ID        uint      `json:"id"`
 	Name      string    `json:"name"`
 	LogoURL   string    `json:"logo_url"`
+	Counts    int64     `json:"counts"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
@@ -28,6 +29,7 @@ func ToBrandResponse(brand *entities.Brand) BrandResponse {
 		ID:        brand.ID,
 		Name:      brand.Name,
 		LogoURL:   brand.LogoURL,
+		Counts:    brand.Counts,
 		CreatedAt: brand.CreatedAt,
 		UpdatedAt: brand.UpdatedAt,
 	}
@@ -41,9 +43,10 @@ type BrandListResponse struct {
 // --- Pagination DTOs ---
 
 type ProductListRequest struct {
-	Page   int    `json:"page,omitempty"`
-	Limit  int    `json:"limit,omitempty"`
-	Filter string `json:"filter,omitempty"` // all, bestseller, new, hottrend
+	Page    int    `json:"page,omitempty"`
+	Limit   int    `json:"limit,omitempty"`
+	Filter  string `json:"filter,omitempty"` // all, bestseller, new, hottrend
+	BrandID uint   `json:"brand_id,omitempty"`
 }
 
 type PaginationMeta struct {
@@ -159,6 +162,7 @@ type ProductDetailResponse struct {
 	TotalStock  int                      `json:"total_stock"`
 	SoldCount   int                      `json:"sold_count"`
 	RatingAvg   float64                  `json:"rating_avg"`
+	IsFavorited bool                     `json:"is_favorited"`
 	CreatedAt   time.Time                `json:"created_at"`
 	UpdatedAt   time.Time                `json:"updated_at"`
 }

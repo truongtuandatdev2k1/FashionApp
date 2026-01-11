@@ -34,6 +34,11 @@ func (r *BrandRepository) GetByID(ctx context.Context, id uint) (*entities.Brand
 	return model.ToEntity(), nil
 }
 
+type brandWithCountModel struct {
+	BrandModel
+	Counts int64 `gorm:"column:counts"`
+}
+
 func (r *BrandRepository) List(ctx context.Context, q string, limit, offset int) ([]*entities.Brand, int64, error) {
 	if limit <= 0 || limit > 100 {
 		limit = 20
@@ -42,23 +47,43 @@ func (r *BrandRepository) List(ctx context.Context, q string, limit, offset int)
 		offset = 0
 	}
 
+	// base query (for filtering + counting)
 	dbq := r.db.WithContext(ctx).Model(&BrandModel{})
 	if q != "" {
 		like := "%" + strings.TrimSpace(q) + "%"
 		dbq = dbq.Where("name LIKE ?", like)
 	}
+
 	var total int64
 	if err := dbq.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
-	var items []BrandModel
-	if err := dbq.Order("created_at DESC").Limit(limit).Offset(offset).Find(&items).Error; err != nil {
+
+	// list with counts
+	listQ := r.db.WithContext(ctx).
+		Table("brands").
+		Select("brands.*, COUNT(products.id) AS counts").
+		Joins("LEFT JOIN products ON products.brand_id = brands.id")
+	if q != "" {
+		like := "%" + strings.TrimSpace(q) + "%"
+		listQ = listQ.Where("brands.name LIKE ?", like)
+	}
+
+	var items []brandWithCountModel
+	if err := listQ.
+		Group("brands.id").
+		Order("brands.created_at DESC").
+		Limit(limit).
+		Offset(offset).
+		Scan(&items).Error; err != nil {
 		return nil, 0, err
 	}
 
 	var entityList []*entities.Brand
 	for _, item := range items {
-		entityList = append(entityList, item.ToEntity())
+		b := item.BrandModel.ToEntity()
+		b.Counts = item.Counts
+		entityList = append(entityList, b)
 	}
 
 	return entityList, total, nil

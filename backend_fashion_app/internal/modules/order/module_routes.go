@@ -11,19 +11,19 @@ import (
 	"myfashion/internal/modules/order/services"
 )
 
-func RegisterRoutes(r chi.Router, db *gorm.DB, jwtSecret string, blacklistRepo *authRepos.BlacklistedTokenRepository, promoService services.PromotionService) {
+func RegisterRoutes(r chi.Router, db *gorm.DB, jwtSecret string, blacklistRepo *authRepos.BlacklistedTokenRepository, promoService services.PromotionService, notificationSvc services.NotificationService, userStatusChecker authn.UserStatusChecker) {
 	// Initialize dependencies
 	orderRepo := repositories.NewOrderRepository(db)
 	cartRepo := repositories.NewCartRepositoryAdapter(db)
 	addressRepo := repositories.NewAddressRepositoryAdapter(db)
 	productRepo := repositories.NewProductRepositoryAdapter(db)
 
-	orderSvc := services.NewOrderService(orderRepo, cartRepo, addressRepo, productRepo, promoService)
+	orderSvc := services.NewOrderService(orderRepo, cartRepo, addressRepo, productRepo, promoService, notificationSvc)
 	orderCtrl := controllers.NewOrderController(orderSvc)
 
 	// Protected routes (require authentication)
 	r.Group(func(r chi.Router) {
-		r.Use(authn.AuthRequiredWithBlacklist(jwtSecret, blacklistRepo))
+		r.Use(authn.AuthRequiredWithBlacklistAndUserStatus(jwtSecret, blacklistRepo, userStatusChecker))
 
 		// Customer & Shop routes
 		r.Get("/orders", orderCtrl.GetMyOrders)
@@ -34,6 +34,10 @@ func RegisterRoutes(r chi.Router, db *gorm.DB, jwtSecret string, blacklistRepo *
 		// Shop only routes
 		r.Group(func(r chi.Router) {
 			r.Use(authn.RequireRole("shop"))
+
+			r.Get("/admin/orders", orderCtrl.AdminListOrders)
+			r.Get("/admin/orders/{id}", orderCtrl.AdminGetOrderByID)
+
 			r.Post("/orders/{id}/confirm", orderCtrl.ConfirmOrder)
 			r.Put("/orders/{id}/status", orderCtrl.UpdateOrderStatus)
 		})

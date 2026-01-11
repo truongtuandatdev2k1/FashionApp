@@ -9,7 +9,7 @@ type RegisterRequest struct {
 }
 
 type LoginRequest struct {
-	Credential string `json:"credential" example:"test@example.com/0912345678" validate:"required,email,gmail"`
+	Credential string `json:"credential" example:"test@example.com" validate:"required,email,gmail"`
 	Password   string `json:"password" example:"Cong123@" validate:"required,password"`
 }
 

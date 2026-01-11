@@ -13,7 +13,7 @@ import (
 
 // RegisterRoutes đăng ký các routes cho module Cart
 // RegisterRoutes đăng ký các routes cho module Cart
-func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *authRepos.BlacklistedTokenRepository) {
+func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *authRepos.BlacklistedTokenRepository, userStatusChecker authn.UserStatusChecker) {
 	// Khởi tạo repositories
 	cartRepo := repositories.NewCartGormRepo(db)
 	productRepo := repositories.NewProductRepositoryAdapter(db)
@@ -23,7 +23,7 @@ func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo 
 
 	// Tất cả routes của Cart đều yêu cầu authentication
 	r.Group(func(r chi.Router) {
-		r.Use(authn.AuthRequiredWithBlacklist(cfg.JWT_Secret, blacklistRepo))
+		r.Use(authn.AuthRequiredWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker))
 
 		// Cart routes
 		r.Get("/cart", h.GetCart)                // Lấy giỏ hàng

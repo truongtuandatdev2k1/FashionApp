@@ -16,6 +16,8 @@ func Migrate(db *gorm.DB) error {
 		&repositories.ProductColorModel{},
 		&repositories.ProductColorImageModel{},
 		&repositories.ProductStatsModel{},
+		&repositories.ProductViewModel{},
+		&repositories.WishlistItemModel{},
 	); err != nil {
 		return err
 	}

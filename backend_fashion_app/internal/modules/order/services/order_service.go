@@ -10,11 +10,12 @@ import (
 )
 
 type OrderService struct {
-	orderRepo    OrderRepository
-	cartRepo     CartRepository
-	addressRepo  AddressRepository
-	productRepo  ProductRepository
-	promoService PromotionService
+	orderRepo       OrderRepository
+	cartRepo        CartRepository
+	addressRepo     AddressRepository
+	productRepo     ProductRepository
+	promoService    PromotionService
+	notificationSvc NotificationService
 }
 
 func NewOrderService(
@@ -23,13 +24,15 @@ func NewOrderService(
 	addressRepo AddressRepository,
 	productRepo ProductRepository,
 	promoService PromotionService,
+	notificationSvc NotificationService,
 ) *OrderService {
 	return &OrderService{
-		orderRepo:    orderRepo,
-		cartRepo:     cartRepo,
-		addressRepo:  addressRepo,
-		productRepo:  productRepo,
-		promoService: promoService,
+		orderRepo:       orderRepo,
+		cartRepo:        cartRepo,
+		addressRepo:     addressRepo,
+		productRepo:     productRepo,
+		promoService:    promoService,
+		notificationSvc: notificationSvc,
 	}
 }
 
@@ -123,7 +126,7 @@ func (s *OrderService) CreateOrderFromCart(
 	}
 
 	// 4. Validate promotions and calculate discount
-	shippingFee := 30000.0 // TODO: Calculate shipping fee
+	shippingFee := 1000.0 // TODO: Calculate shipping fee
 	var totalDiscount float64
 	var promoResult *PromotionValidationOutput
 
@@ -191,6 +194,11 @@ func (s *OrderService) CreateOrderFromCart(
 		if err := s.promoService.RecordUsage(ctx, appliedCodes); err != nil {
 			// Log error but don't fail the order creation
 		}
+	}
+
+	// 10. Notify customer (in-app)
+	if s.notificationSvc != nil {
+		_ = s.notificationSvc.NotifyOrderCreated(ctx, customerID, order.OrderNumber)
 	}
 
 	return order, nil
@@ -328,6 +336,10 @@ func (s *OrderService) ConfirmOrder(ctx context.Context, orderID uuid.UUID, shop
 	// Update in database
 	if err := s.orderRepo.Update(ctx, order); err != nil {
 		return nil, err
+	}
+
+	if s.notificationSvc != nil {
+		_ = s.notificationSvc.NotifyOrderStatusChanged(ctx, order.CustomerID, order.OrderNumber, string(order.Status))
 	}
 
 	return order, nil

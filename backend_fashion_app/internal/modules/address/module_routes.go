@@ -13,7 +13,7 @@ import (
 
 // RegisterRoutes registers all routes for the Address module
 // RegisterRoutes registers all routes for the Address module
-func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *authRepos.BlacklistedTokenRepository) {
+func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo *authRepos.BlacklistedTokenRepository, userStatusChecker authn.UserStatusChecker) {
 	// Initialize repositories
 	addressRepo := repositories.NewAddressGormRepository(db)
 
@@ -22,7 +22,7 @@ func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo 
 
 	// All Address routes require authentication
 	r.Group(func(r chi.Router) {
-		r.Use(authn.AuthRequiredWithBlacklist(cfg.JWT_Secret, blacklistRepo))
+		r.Use(authn.AuthRequiredWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker))
 
 		// Address routes
 		r.Get("/addresses", h.GetAllAddresses)                      // Get all addresses

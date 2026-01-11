@@ -52,11 +52,19 @@ type BlacklistChecker interface {
 	IsBlacklisted(token string) (bool, error)
 }
 
+type UserStatusChecker interface {
+	IsActive(ctx context.Context, userID uint) (bool, error)
+}
+
 func AuthRequired(secret string) func(http.Handler) http.Handler {
 	return AuthRequiredWithBlacklist(secret, nil)
 }
 
 func AuthRequiredWithBlacklist(secret string, blacklistChecker BlacklistChecker) func(http.Handler) http.Handler {
+	return AuthRequiredWithBlacklistAndUserStatus(secret, blacklistChecker, nil)
+}
+
+func AuthRequiredWithBlacklistAndUserStatus(secret string, blacklistChecker BlacklistChecker, userStatusChecker UserStatusChecker) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			auth := r.Header.Get("Authorization")
@@ -90,6 +98,19 @@ func AuthRequiredWithBlacklist(secret string, blacklistChecker BlacklistChecker)
 				return
 			}
 			claims := parsed.Claims.(*Claims)
+
+			if userStatusChecker != nil {
+				active, err := userStatusChecker.IsActive(r.Context(), claims.UID)
+				if err != nil {
+					http.Error(w, "internal server error", http.StatusInternalServerError)
+					return
+				}
+				if !active {
+					http.Error(w, "account is disabled", http.StatusForbidden)
+					return
+				}
+			}
+
 			ctx := context.WithValue(r.Context(), claimsKey, claims)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
