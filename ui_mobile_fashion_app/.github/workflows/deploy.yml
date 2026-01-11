@@ -1,0 +1,45 @@
+name: Deploy Admin Web to GitHub Pages
+
+on:
+  push:
+    branches:
+      - ui_mobile  # Đã cập nhật theo nhánh của bạn
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          # Bạn có thể chỉ định phiên bản cụ thể như '3.19.0' nếu cần
+
+      - name: Enable Flutter Web
+        run: flutter config --enable-web
+
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Build Web Admin
+        # Lưu ý: Thay <TEN_REPO_CUA_BAN> bằng tên repo thật của bạn trên Github
+        # Nếu repo là "admin_dashboard" thì để --base-href "/admin_dashboard/"
+        run: |
+          flutter build web -t lib/main_admin.dart \
+          --release \
+          --base-href "/<TEN_REPO_CUA_BAN>/" \
+          --dart-define=FLAVOR=admin \
+          --no-tree-shake-icons
+
+      - name: Fix 404 for GitHub Pages
+        # Tạo file 404.html từ index.html để khi F5 không bị lỗi 404
+        run: cp build/web/index.html build/web/404.html
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: build/web
+          branch: gh-pages

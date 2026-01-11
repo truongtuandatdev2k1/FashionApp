@@ -1,3 +1,4 @@
+# file: ui_mobile_fashion_app/install-flutter.sh dùng cho build bên netlify trước đó, nếu bạn cần
 #!/bin/bash
 
 # 1. Cài đặt Flutter

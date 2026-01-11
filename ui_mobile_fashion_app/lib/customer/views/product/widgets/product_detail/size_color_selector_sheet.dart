@@ -303,7 +303,7 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                   // Kích thước
                   const Text(
                     'Kích thước',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -319,8 +319,8 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                                     ? null
                                     : () => setState(() => selectedSize = size),
                             child: Container(
-                              width: 56,
-                              height: 56,
+                              width: 30,
+                              height: 30,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
                                 color:
@@ -336,7 +336,7 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                                           : Colors.grey.shade400,
                                   width: isSelected ? 2 : 1.5,
                                 ),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(10),
                               ),
                               child: Text(
                                 size,
@@ -347,19 +347,20 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                                           : (isOutOfStock
                                               ? Colors.grey
                                               : Colors.black),
-                                  fontWeight: FontWeight.w600,
+                                  // fontWeight: FontWeight.w600,
+                                  fontSize: 12
                                 ),
                               ),
                             ),
                           );
                         }).toList(),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 10),
 
                   // Màu sắc
                   const Text(
                     'Màu sắc',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 12),
                   Wrap(
@@ -396,11 +397,11 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                                 child: Column(
                                   children: [
                                     Container(
-                                      width: 68,
-                                      height: 68,
+                                      width: 30,
+                                      height: 30,
                                       decoration: BoxDecoration(
                                         color: color,
-                                        borderRadius: BorderRadius.circular(14),
+                                        borderRadius: BorderRadius.circular(10),
                                         border: Border.all(
                                           color:
                                               isSelected
@@ -410,37 +411,27 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                                                       : Colors.grey.shade300),
                                           width:
                                               isSelected
-                                                  ? 3.8
-                                                  : (isLight ? 2.2 : 1.3),
+                                                  ? 2.0
+                                                  : (isLight ? 0.0 : 0.0),
                                         ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withOpacity(
-                                              isSelected ? 0.4 : 0.2,
-                                            ),
-                                            blurRadius: isSelected ? 16 : 10,
-                                            offset: const Offset(0, 5),
-                                          ),
-                                        ],
+                                        // boxShadow: [
+                                        //   BoxShadow(
+                                        //     color: Colors.black.withOpacity(
+                                        //       isSelected ? 0.4 : 0.2,
+                                        //     ),
+                                        //     blurRadius: isSelected ? 16 : 10,
+                                        //     offset: const Offset(0, 5),
+                                        //   ),
+                                        // ],
                                       ),
                                       child:
                                           isSelected
                                               ? const Icon(
                                                 Icons.check,
                                                 color: Colors.white,
-                                                size: 36,
+                                                size: 14,
                                               )
                                               : null,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      colorInfo.name,
-                                      style: const TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.black87,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
                                     ),
                                   ],
                                 ),
@@ -448,7 +439,7 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                             })
                             .toList(),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 10),
 
                   // === SỐ LƯỢNG - CÙNG MỘT HÀNG ===
                   Row(
@@ -456,9 +447,9 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                     children: [
                       // Cột trái: Text "Số lượng"
                       const Text(
-                        'Số lượng',
+                        'Số lượng:',
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 14,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -469,7 +460,7 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                           IconButton(
                             icon: const Icon(
                               Icons.remove_circle_outline,
-                              size: 32,
+                              size: 20,
                             ),
                             color: _quantity > 1 ? Colors.black : Colors.grey,
                             onPressed:
@@ -478,12 +469,12 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                                     : null,
                           ),
                           Container(
-                            width: 60,
+                            width: 18,
                             alignment: Alignment.center,
                             child: Text(
                               '$_quantity',
                               style: const TextStyle(
-                                fontSize: 20,
+                                fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -491,7 +482,7 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                           IconButton(
                             icon: const Icon(
                               Icons.add_circle_outline,
-                              size: 32,
+                              size: 20,
                             ),
                             color:
                                 _quantity < _currentStock
@@ -507,14 +498,14 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                     ],
                   ),
                   const SizedBox(
-                    height: 32,
+                    height: 20,
                   ), // Khoảng cách xuống nút "Thêm vào giỏ hàng"
                   const Spacer(),
 
                   // Nút thêm vào giỏ
                   SizedBox(
                     width: double.infinity,
-                    height: 56,
+                    height: 45,
                     child: ElevatedButton(
                       onPressed:
                           _isAdding ||
@@ -528,7 +519,7 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                         backgroundColor: const Color(0xFF0079C2),
                         disabledBackgroundColor: Colors.grey[300],
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(10),
                         ),
                       ),
                       child:
@@ -546,8 +537,8 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                                     ? 'Mua ngay'
                                     : 'Thêm vào giỏ hàng',
                                 style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                  // fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                 ),
                               ),
