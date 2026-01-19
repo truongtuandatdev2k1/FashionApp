@@ -20,11 +20,11 @@ class SidebarConfig {
       icon: Icons.shopping_cart_outlined,
       route: '/orders',
     ),
-    SidebarItemModel( // bỏ cái này đi
-      title: 'Sản Phẩm',
-      icon: Icons.checkroom_outlined,
-      route: '/products',
-    ),
+    // SidebarItemModel( // bỏ cái này đi
+    //   title: 'Sản Phẩm',
+    //   icon: Icons.checkroom_outlined,
+    //   route: '/products',
+    // ),
     // Kiểm tra kỹ chuỗi '/brands'
     SidebarItemModel(
       title: 'Nhãn Hàng',
