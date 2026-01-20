@@ -28,6 +28,7 @@ func RegisterRoutes(r chi.Router, cfg config.Config, db *gorm.DB, blacklistRepo 
 	r.Group(func(r chi.Router) {
 		r.Use(authn.AuthRequiredWithBlacklistAndUserStatus(cfg.JWT_Secret, blacklistRepo, userStatusChecker))
 		r.Get("/recommendations/for-you", h.GetForYouRecommendations)
+		r.Get("/products/{id}/recommendations/related", h.GetRelatedRecommendations)
 		r.Post("/wishlist/items", h.AddWishlistItem)
 		r.Delete("/wishlist/items/{product_id}", h.RemoveWishlistItem)
 		r.Get("/wishlist", h.GetWishlist)

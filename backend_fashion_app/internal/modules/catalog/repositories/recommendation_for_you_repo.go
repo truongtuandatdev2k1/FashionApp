@@ -245,6 +245,30 @@ func (r *ForYouRecommendationRepository) buildPrefsAndExcluded(ctx context.Conte
 		addProductTaxonomy(row.ProductID, 0.8)
 	}
 
+	// Wishlist signals (medium-high weight)
+	var wishlistRows []struct {
+		ProductID uint
+		BrandID   *uint
+	}
+	if err := r.db.WithContext(ctx).
+		Table("wishlist_items").
+		Select("wishlist_items.product_id as product_id, products.brand_id as brand_id").
+		Joins("JOIN products ON products.id = wishlist_items.product_id").
+		Where("wishlist_items.user_id = ?", userID).
+		Where("UPPER(products.status) = ?", "ACTIVE").
+		Order("wishlist_items.created_at DESC").
+		Limit(500).
+		Scan(&wishlistRows).Error; err != nil {
+		return nil, nil, err
+	}
+	for _, row := range wishlistRows {
+		addProductTaxonomy(row.ProductID, 2.2)
+		if row.BrandID != nil {
+			prefs.BrandWeights[*row.BrandID] += 2.0
+		}
+		// (Không có màu/size trong wishlist_items hiện tại)
+	}
+
 	// Exclude purchased products (strong exclude)
 	var purchasedIDs []uint
 	_ = r.db.WithContext(ctx).Table("orders").
@@ -401,7 +425,10 @@ func (r *ForYouRecommendationRepository) queryByTaxonomy(ctx context.Context, ca
 		excludedIDs = append(excludedIDs, id)
 	}
 
-	q := r.db.WithContext(ctx).Model(&ProductModel{}).Where("UPPER(status) = ?", "ACTIVE")
+	q := r.db.WithContext(ctx).Model(&ProductModel{}).
+		Joins("LEFT JOIN product_stats ON product_stats.product_id = products.id").
+		Where("UPPER(status) = ?", "ACTIVE").
+		Where("COALESCE(product_stats.total_stock, 0) > 0")
 	if len(excludedIDs) > 0 {
 		q = q.Where("products.id NOT IN ?", excludedIDs)
 	}
@@ -414,14 +441,17 @@ func (r *ForYouRecommendationRepository) queryByTaxonomy(ctx context.Context, ca
 	}
 
 	var models []ProductModel
-	if err := q.Preload("Brand").Preload("Categories").Preload("Styles").Order("products.created_at DESC").Limit(limit).Find(&models).Error; err != nil {
+	if err := q.Preload("Brand").Preload("Categories").Preload("Styles").Preload("Variants").Preload("Variants.ProductColor").Order("products.created_at DESC").Limit(limit).Find(&models).Error; err != nil {
 		return nil, err
 	}
 	return modelsToEntities(models), nil
 }
 
 func (r *ForYouRecommendationRepository) queryProducts(ctx context.Context, brandIDs []uint, priceMean float64, excluded map[uint]struct{}, limit int, orderBy string) ([]*entities.Product, error) {
-	q := r.db.WithContext(ctx).Model(&ProductModel{}).Where("UPPER(status) = ?", "ACTIVE")
+	q := r.db.WithContext(ctx).Model(&ProductModel{}).
+		Joins("LEFT JOIN product_stats ON product_stats.product_id = products.id").
+		Where("UPPER(status) = ?", "ACTIVE").
+		Where("COALESCE(product_stats.total_stock, 0) > 0")
 	if len(excluded) > 0 {
 		excludedIDs := make([]uint, 0, len(excluded))
 		for id := range excluded {
@@ -443,14 +473,18 @@ func (r *ForYouRecommendationRepository) queryProducts(ctx context.Context, bran
 	}
 
 	var models []ProductModel
-	if err := q.Preload("Brand").Preload("Categories").Preload("Styles").Limit(limit).Find(&models).Error; err != nil {
+	if err := q.Preload("Brand").Preload("Categories").Preload("Styles").Preload("Variants").Preload("Variants.ProductColor").Limit(limit).Find(&models).Error; err != nil {
 		return nil, err
 	}
 	return modelsToEntities(models), nil
 }
 
 func (r *ForYouRecommendationRepository) queryHotTrend(ctx context.Context, excluded map[uint]struct{}, limit int) ([]*entities.Product, error) {
-	q := r.db.WithContext(ctx).Model(&ProductModel{}).Where("UPPER(status) = ?", "ACTIVE").Where("is_hot_trend = ?", true)
+	q := r.db.WithContext(ctx).Model(&ProductModel{}).
+		Joins("LEFT JOIN product_stats ON product_stats.product_id = products.id").
+		Where("UPPER(status) = ?", "ACTIVE").
+		Where("COALESCE(product_stats.total_stock, 0) > 0").
+		Where("is_hot_trend = ?", true)
 	if len(excluded) > 0 {
 		excludedIDs := make([]uint, 0, len(excluded))
 		for id := range excluded {
@@ -459,14 +493,17 @@ func (r *ForYouRecommendationRepository) queryHotTrend(ctx context.Context, excl
 		q = q.Where("id NOT IN ?", excludedIDs)
 	}
 	var models []ProductModel
-	if err := q.Preload("Brand").Preload("Categories").Preload("Styles").Order("updated_at DESC").Limit(limit).Find(&models).Error; err != nil {
+	if err := q.Preload("Brand").Preload("Categories").Preload("Styles").Preload("Variants").Preload("Variants.ProductColor").Order("updated_at DESC").Limit(limit).Find(&models).Error; err != nil {
 		return nil, err
 	}
 	return modelsToEntities(models), nil
 }
 
 func (r *ForYouRecommendationRepository) queryNewest(ctx context.Context, excluded map[uint]struct{}, limit int) ([]*entities.Product, error) {
-	q := r.db.WithContext(ctx).Model(&ProductModel{}).Where("UPPER(status) = ?", "ACTIVE")
+	q := r.db.WithContext(ctx).Model(&ProductModel{}).
+		Joins("LEFT JOIN product_stats ON product_stats.product_id = products.id").
+		Where("UPPER(status) = ?", "ACTIVE").
+		Where("COALESCE(product_stats.total_stock, 0) > 0")
 	if len(excluded) > 0 {
 		excludedIDs := make([]uint, 0, len(excluded))
 		for id := range excluded {
@@ -475,7 +512,7 @@ func (r *ForYouRecommendationRepository) queryNewest(ctx context.Context, exclud
 		q = q.Where("id NOT IN ?", excludedIDs)
 	}
 	var models []ProductModel
-	if err := q.Preload("Brand").Preload("Categories").Preload("Styles").Order("created_at DESC").Limit(limit).Find(&models).Error; err != nil {
+	if err := q.Preload("Brand").Preload("Categories").Preload("Styles").Preload("Variants").Preload("Variants.ProductColor").Order("created_at DESC").Limit(limit).Find(&models).Error; err != nil {
 		return nil, err
 	}
 	return modelsToEntities(models), nil
@@ -514,7 +551,7 @@ func (r *ForYouRecommendationRepository) queryBestseller(ctx context.Context, ex
 	var models []ProductModel
 	if err := r.db.WithContext(ctx).Model(&ProductModel{}).
 		Where("id IN ?", ids).
-		Preload("Brand").Preload("Categories").Preload("Styles").
+		Preload("Brand").Preload("Categories").Preload("Styles").Preload("Variants").Preload("Variants.ProductColor").
 		Find(&models).Error; err != nil {
 		return nil, err
 	}
@@ -560,6 +597,32 @@ func scoreProduct(p *entities.Product, prefs *ForYouPreferences) float64 {
 
 	if p.BrandID != nil {
 		score += prefs.BrandWeights[*p.BrandID] * 0.3
+	}
+
+	// Score by preferred color/size (collected from cart/orders)
+	// Note: Product entity already contains variants, each has ProductColor + SizeCode.
+	bestColor := 0.0
+	bestSize := 0.0
+	for _, v := range p.Variants {
+		hex := strings.ToUpper(strings.TrimSpace(v.ProductColor.ColorHex))
+		if hex != "" {
+			if w := prefs.ColorWeights[hex]; w > bestColor {
+				bestColor = w
+			}
+		}
+		sz := strings.ToUpper(strings.TrimSpace(v.SizeCode))
+		if sz != "" {
+			if w := prefs.SizeWeights[sz]; w > bestSize {
+				bestSize = w
+			}
+		}
+	}
+	// Normalize lightly with log to avoid overpowering category/brand
+	if bestColor > 0 {
+		score += math.Log1p(bestColor) * 0.08
+	}
+	if bestSize > 0 {
+		score += math.Log1p(bestSize) * 0.06
 	}
 
 	if prefs.PriceMean > 0 && p.PriceAfter > 0 {

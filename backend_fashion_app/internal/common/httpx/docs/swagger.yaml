@@ -3459,6 +3459,52 @@ paths:
       summary: Get Product
       tags:
       - Products
+  /products/{id}/recommendations/related:
+    get:
+      description: Gợi ý sản phẩm liên quan theo sản phẩm đang xem (category/brand/style).
+        Loại trừ sản phẩm hiện tại + sản phẩm đã mua + sản phẩm hết hàng.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 10
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/api.ProductSummaryResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: Get related recommendations
+      tags:
+      - Recommendations
   /products/list:
     post:
       consumes:

@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-chi/chi/v5"
+
 	"myfashion/internal/common/authn"
 	"myfashion/internal/common/resp"
 	"myfashion/internal/modules/catalog/api"
@@ -36,6 +38,57 @@ func (c *CatalogController) GetForYouRecommendations(w http.ResponseWriter, r *h
 	products, err := repo.GetForYou(r.Context(), repositories.ForYouRequest{UserID: claims.UID, Limit: limit})
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, "failed to get recommendations")
+		return
+	}
+
+	if len(products) == 0 {
+		resp.OK(w, []api.ProductSummaryResponse{})
+		return
+	}
+
+	res := make([]api.ProductSummaryResponse, len(products))
+	for i, p := range products {
+		res[i] = toProductSummaryResponse(p)
+	}
+
+	resp.OK(w, res)
+}
+
+// @Summary Get related recommendations
+// @Description Gợi ý sản phẩm liên quan theo sản phẩm đang xem (category/brand/style). Loại trừ sản phẩm hiện tại + sản phẩm đã mua + sản phẩm hết hàng.
+// @Security Bearer
+// @Tags Recommendations
+// @Produce json
+// @Param id path int true "Product ID"
+// @Param limit query int false "Limit" default(10)
+// @Success 200 {object} resp.Envelope{data=[]api.ProductSummaryResponse}
+// @Failure 400 {object} resp.Envelope
+// @Failure 401 {object} resp.Envelope
+// @Failure 500 {object} resp.Envelope
+// @Router /products/{id}/recommendations/related [get]
+func (c *CatalogController) GetRelatedRecommendations(w http.ResponseWriter, r *http.Request) {
+	claims := authn.GetClaims(r.Context())
+	if claims == nil {
+		resp.Error(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+
+	idStr := chi.URLParam(r, "id")
+	pid64, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil || pid64 == 0 {
+		resp.Error(w, http.StatusBadRequest, "invalid product id")
+		return
+	}
+
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	if limit <= 0 || limit > 50 {
+		limit = 10
+	}
+
+	repo := repositories.NewRelatedRecommendationRepository(c.db)
+	products, err := repo.GetRelated(r.Context(), repositories.RelatedRequest{UserID: claims.UID, ProductID: uint(pid64), Limit: limit})
+	if err != nil {
+		resp.Error(w, http.StatusInternalServerError, "failed to get related recommendations")
 		return
 	}
 
