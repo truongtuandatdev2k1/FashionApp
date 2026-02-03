@@ -1,8 +1,14 @@
 // lib/admin/features/product/presentation/screens/create_product_page_2.dart
 
+import 'dart:io'; // Để dùng File (Mobile)
+import 'package:flutter/foundation.dart' show kIsWeb; // Để check Web
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:image_picker/image_picker.dart'; // Thư viện chọn ảnh
+
+// Import Controller
+import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/create_product_variants_controller.dart';
 
 class CreateProductPage2 extends StatefulWidget {
   final int brandId;
@@ -21,27 +27,71 @@ class CreateProductPage2 extends StatefulWidget {
 }
 
 class _CreateProductPage2State extends State<CreateProductPage2> {
+  // [LOGIC MỚI] Controller & Picker
+  final CreateProductVariantsController _controller = CreateProductVariantsController();
+  final ImagePicker _picker = ImagePicker();
+
   final List<String> _availableSizes = ['S', 'M', 'L', 'XL', '2XL'];
 
-  // Danh sách màu
+  // [LOGIC MỚI] Sửa String -> XFile để chứa ảnh thật
   final List<Map<String, dynamic>> _colors = [];
+
   int? _selectedColorIndex;
   Color _tempColor = Colors.black;
 
-  // --- LOGIC GIỮ NGUYÊN ---
-  void _simulateComplete() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Sản phẩm đã được tạo thành công!'),
-        backgroundColor: Colors.black87,
-        behavior: SnackBarBehavior.floating,
-      ),
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  // --- LOGIC GỌI API (THAY CHO _simulateComplete) ---
+  Future<void> _handleSubmit() async {
+    if (_colors.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng thêm màu sắc')));
+      return;
+    }
+
+    final success = await _controller.createProductVariants(
+      productId: widget.productId,
+      uiColors: _colors,
     );
-    // Điều hướng về trang danh sách hoặc chi tiết (tuỳ route của bạn)
-    // context.go('/brands/products/${widget.brandId}...');
-    // Demo pop về
-    context.pop();
-    context.pop();
+
+    if (success) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sản phẩm đã được tạo thành công!'),
+            backgroundColor: Colors.black87,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        // Back 2 lần
+        context.pop();
+        context.pop();
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(_controller.errorMessage ?? 'Lỗi'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  // --- LOGIC CHỌN ẢNH THẬT (THAY CHO _addDemoImage) ---
+  Future<void> _pickImages() async {
+    if (_selectedColorIndex == null) return;
+    try {
+      final List<XFile> pickedFiles = await _picker.pickMultiImage();
+      if (pickedFiles.isNotEmpty) {
+        setState(() {
+          (_colors[_selectedColorIndex!]['images'] as List<XFile>).addAll(pickedFiles);
+        });
+      }
+    } catch (e) {
+      debugPrint('Lỗi chọn ảnh: $e');
+    }
   }
 
   void _showColorPickerDialog() {
@@ -82,7 +132,7 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
                   final hex = '#${pickerColor.value.toRadixString(16).substring(2).toUpperCase()}';
                   _colors.add({
                     'hex': hex,
-                    'images': <String>[],
+                    'images': <XFile>[], // [SỬA] List rỗng kiểu XFile
                     'selectedSizes': <String>{},
                     'stocks': <String, int>{},
                   });
@@ -103,7 +153,7 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
       if (_selectedColorIndex == index) _selectedColorIndex = null;
       _colors.removeAt(index);
       if (_colors.isNotEmpty && _selectedColorIndex == null) {
-        _selectedColorIndex = 0; // Tự động chọn màu đầu tiên nếu lỡ xoá màu đang chọn
+        _selectedColorIndex = 0;
       } else if (_colors.isEmpty) {
         _selectedColorIndex = null;
       }
@@ -112,18 +162,7 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
 
   void _removeImage(int colorIndex, int imgIndex) {
     setState(() {
-      (_colors[colorIndex]['images'] as List<String>).removeAt(imgIndex);
-    });
-  }
-
-  void _addDemoImage() {
-    if (_selectedColorIndex == null) return;
-    setState(() {
-      // Demo thêm ảnh placeholder
-      (_colors[_selectedColorIndex!]['images'] as List<String>).insert(
-        0,
-        'https://via.placeholder.com/200/F5F5F5/AAAAAA?text=IMG+${DateTime.now().second}',
-      );
+      (_colors[colorIndex]['images'] as List<XFile>).removeAt(imgIndex);
     });
   }
 
@@ -168,89 +207,104 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
 
   @override
   Widget build(BuildContext context) {
-    final currentColor = _selectedColorIndex != null ? _colors[_selectedColorIndex!] : null;
+    // [LOGIC MỚI] Wrap ListenableBuilder để rebuild khi loading
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (context, child) {
+        final currentColor = _selectedColorIndex != null ? _colors[_selectedColorIndex!] : null;
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Nền xám nhạt
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        // border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => context.pop(),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        return Stack(
           children: [
-            const Text(
-              'Biến thể sản phẩm',
-              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            Text(
-              'Bước 2/3: Màu sắc & Kích cỡ',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
-          ],
-        ),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Info
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20)),
-                  child: Text('ID: ${widget.productId}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            Scaffold(
+              backgroundColor: const Color(0xFFF8F9FA),
+              appBar: AppBar(
+                backgroundColor: Colors.white,
+                elevation: 0,
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.black),
+                  onPressed: () => context.pop(),
                 ),
-                const SizedBox(width: 8),
-                Text(widget.brandName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // PHẦN 1: QUẢN LÝ MÀU SẮC (Master)
-            _buildCardContainer(
-              title: 'Danh sách màu sắc',
-              action: TextButton.icon(
-                onPressed: _showColorPickerDialog,
-                icon: const Icon(Icons.add, size: 18),
-                label: const Text('Thêm màu'),
-                style: TextButton.styleFrom(foregroundColor: Colors.blue[700]),
-              ),
-              child: _colors.isEmpty
-                  ? _buildEmptyColorState()
-                  : SizedBox(
-                height: 80,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _colors.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 16),
-                  itemBuilder: (context, index) => _buildColorItem(index),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Biến thể sản phẩm',
+                      style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    Text(
+                      'Bước 2/3: Màu sắc & Kích cỡ',
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                    ),
+                  ],
                 ),
               ),
+              body: SingleChildScrollView(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(20)),
+                          child: Text('ID: ${widget.productId}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(widget.brandName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey)),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // PHẦN 1: QUẢN LÝ MÀU SẮC
+                    _buildCardContainer(
+                      title: 'Danh sách màu sắc',
+                      action: TextButton.icon(
+                        onPressed: _showColorPickerDialog,
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Thêm màu'),
+                        style: TextButton.styleFrom(foregroundColor: Colors.blue[700]),
+                      ),
+                      child: _colors.isEmpty
+                          ? _buildEmptyColorState()
+                          : SizedBox(
+                        height: 80,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _colors.length,
+                          separatorBuilder: (_, __) => const SizedBox(width: 16),
+                          itemBuilder: (context, index) => _buildColorItem(index),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // PHẦN 2: CHI TIẾT
+                    if (currentColor != null)
+                      _buildDetailSection(currentColor)
+                    else if (_colors.isNotEmpty)
+                      Center(
+                        child: Text('Chọn một màu phía trên để cấu hình chi tiết',
+                            style: TextStyle(color: Colors.grey.shade500)),
+                      ),
+
+                    const SizedBox(height: 60),
+                  ],
+                ),
+              ),
+              bottomNavigationBar: _buildBottomBar(),
             ),
 
-            const SizedBox(height: 24),
-
-            // PHẦN 2: CHI TIẾT (Detail - Chỉ hiện khi có màu được chọn)
-            if (currentColor != null)
-              _buildDetailSection(currentColor)
-            else if (_colors.isNotEmpty)
-              Center(
-                child: Text('Chọn một màu phía trên để cấu hình chi tiết',
-                    style: TextStyle(color: Colors.grey.shade500)),
+            // [LOGIC MỚI] Loading Overlay
+            if (_controller.isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.3),
+                child: const Center(child: CircularProgressIndicator()),
               ),
-
-            const SizedBox(height: 60),
           ],
-        ),
-      ),
-      bottomNavigationBar: _buildBottomBar(),
+        );
+      },
     );
   }
 
@@ -271,9 +325,9 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
                 scrollDirection: Axis.horizontal,
                 child: Row(
                   children: [
-                    // Nút thêm ảnh
+                    // Nút thêm ảnh (GỌI HÀM PICKER)
                     InkWell(
-                      onTap: _addDemoImage,
+                      onTap: _pickImages,
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         width: 90,
@@ -295,7 +349,7 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
                     ),
                     const SizedBox(width: 12),
                     // List ảnh
-                    ...((currentColorData['images'] as List<String>).asMap().entries.map((entry) {
+                    ...((currentColorData['images'] as List<XFile>).asMap().entries.map((entry) {
                       return _buildImageItem(entry.key, entry.value);
                     })),
                   ],
@@ -353,7 +407,7 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
                       children: (currentColorData['selectedSizes'] as Set<String>).map((size) {
                         final stocks = currentColorData['stocks'] as Map<String, int>;
                         return SizedBox(
-                          width: 140, // Độ rộng cố định cho mỗi ô nhập liệu
+                          width: 140,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -439,7 +493,6 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Vòng tròn bao ngoài (Border khi selected)
           Container(
             padding: const EdgeInsets.all(3),
             decoration: BoxDecoration(
@@ -463,7 +516,6 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
               ),
             ),
           ),
-          // Nút xoá
           if (isSelected)
             Positioned(
               top: -4,
@@ -487,7 +539,8 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
     );
   }
 
-  Widget _buildImageItem(int imgIndex, String url) {
+  // [LOGIC MỚI] Sửa String -> XFile và check kIsWeb để hiển thị ảnh
+  Widget _buildImageItem(int imgIndex, XFile file) {
     return Padding(
       padding: const EdgeInsets.only(right: 12),
       child: Stack(
@@ -501,8 +554,11 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
               border: Border.all(color: Colors.grey.shade200),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(11), // 12 - 1 border
-              child: Image.network(url, fit: BoxFit.cover),
+              borderRadius: BorderRadius.circular(11),
+              // [QUAN TRỌNG] Hiển thị ảnh khác nhau giữa Web và Mobile
+              child: kIsWeb
+                  ? Image.network(file.path, fit: BoxFit.cover)
+                  : Image.file(File(file.path), fit: BoxFit.cover),
             ),
           ),
           Positioned(
@@ -546,7 +602,7 @@ class _CreateProductPage2State extends State<CreateProductPage2> {
             child: const Text('Quay lại', style: TextStyle(color: Colors.black)),
           ),
           ElevatedButton.icon(
-            onPressed: _simulateComplete,
+            onPressed: _handleSubmit, // [GỌI HÀM SUBMIT MỚI]
             icon: const Icon(Icons.check, size: 18),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.black,

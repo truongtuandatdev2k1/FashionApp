@@ -1,8 +1,7 @@
 // lib/admin/features/product/presentation/screens/create_product_page_1.dart
 
 import 'dart:typed_data';
-import 'package:dio/dio.dart' as dio; // Dùng Dio cho multipart
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +10,6 @@ import 'package:image_picker/image_picker.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/category_controller.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/style_controller.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/create_basic_product_controller.dart';
-import 'package:ui_mobile_fashion_app/core/network/api_client.dart'; // ← ApiClient dùng Dio
 
 class CreateProductPage1 extends StatefulWidget {
   final int brandId;
@@ -45,7 +43,10 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
   final _ageRangeController = TextEditingController();
 
   String? _selectedCategoryId;
-  String? _selectedStyleId; // Chỉ chọn 1 phong cách (nếu muốn multi → đổi thành List<String>)
+
+  // [THAY ĐỔI 1] Đổi từ String? sang List<String> để lưu nhiều ID
+  List<String> _selectedStyleIds = [];
+
   bool _isHotTrend = false;
 
   @override
@@ -94,7 +95,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
           SnackBar(
             content: Text(_createController.errorMessage!),
             backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -127,6 +127,87 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
     }
   }
 
+  // Helper để hiển thị tên các style đã chọn ra màn hình
+  String _getSelectedStyleNames() {
+    if (_selectedStyleIds.isEmpty) return '';
+
+    // Lọc ra các object Style có id nằm trong danh sách đã chọn
+    final selectedStyles = _styleController.styles
+        .where((element) => _selectedStyleIds.contains(element.id.toString()))
+        .map((e) => e.displayName)
+        .toList();
+
+    return selectedStyles.join(', '); // Nối lại thành chuỗi: "Hàn Quốc, Vintage"
+  }
+
+  // [THAY ĐỔI 2] Hàm hiển thị Dialog chọn nhiều phong cách
+  void _showMultiSelectStyleDialog() {
+    // Tạo bản sao tạm thời để user thao tác, chỉ khi bấm OK mới lưu vào state chính
+    List<String> tempSelectedIds = List.from(_selectedStyleIds);
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder( // Cần StatefulBuilder để cập nhật UI bên trong Dialog
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Chọn phong cách'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: _styleController.styles.isEmpty
+                    ? const Center(child: Text("Đang tải hoặc không có dữ liệu..."))
+                    : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: _styleController.styles.length,
+                  itemBuilder: (context, index) {
+                    final style = _styleController.styles[index];
+                    final styleIdStr = style.id.toString();
+                    final isSelected = tempSelectedIds.contains(styleIdStr);
+
+                    return CheckboxListTile(
+                      title: Text(style.displayName),
+                      value: isSelected,
+                      activeColor: Colors.black,
+                      onChanged: (bool? value) {
+                        setDialogState(() {
+                          if (value == true) {
+                            tempSelectedIds.add(styleIdStr);
+                          } else {
+                            tempSelectedIds.remove(styleIdStr);
+                          }
+                        });
+                      },
+                    );
+                  },
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                  ),
+                  onPressed: () {
+                    // Lưu thay đổi vào State chính của màn hình
+                    setState(() {
+                      _selectedStyleIds = tempSelectedIds;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Xác nhận'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   InputDecoration _inputDecoration(String label, {IconData? icon, String? suffix}) {
     return InputDecoration(
       labelText: label,
@@ -151,42 +232,38 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
 
   Future<void> _submit() async {
     if (_imageBytes == null || _imageFileName == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ảnh đại diện'), backgroundColor: Colors.red, duration: Duration(seconds: 3)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn ảnh đại diện')));
       return;
     }
     if (_selectedCategoryId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn danh mục'), backgroundColor: Colors.red, duration: Duration(seconds: 3)),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn danh mục')));
       return;
     }
-    if (_selectedStyleId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn phong cách'), backgroundColor: Colors.red, duration: Duration(seconds: 3)),
-      );
+    // [THAY ĐỔI 3] Kiểm tra list rỗng thay vì null
+    if (_selectedStyleIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Vui lòng chọn ít nhất 1 phong cách')));
       return;
     }
 
     final price = int.tryParse(_priceController.text.trim()) ?? 0;
     final discount = int.tryParse(_discountController.text.trim()) ?? 0;
 
-    final success = await _createController.createBasicProduct(
+    // [THAY ĐỔI 4] Chuyển List<String> thành List<int>
+    final styleIdsInt = _selectedStyleIds.map((e) => int.parse(e)).toList();
+
+    await _createController.createBasicProduct(
       name: _nameController.text.trim(),
       price: price,
       discountPct: discount,
       brandId: widget.brandId,
       categoryId: int.parse(_selectedCategoryId!),
-      styleIds: _selectedStyleId != null ? [int.parse(_selectedStyleId!)] : [],
+      styleIds: styleIdsInt, // Truyền list int vào đây
       isHotTrend: _isHotTrend,
       ageRange: _ageRangeController.text.trim(),
       description: _descriptionController.text.trim(),
       imageBytes: _imageBytes!,
       imageFileName: _imageFileName!,
     );
-
-    // Không cần push ở đây nữa, controller sẽ xử lý
   }
 
   @override
@@ -195,7 +272,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
@@ -208,16 +284,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
             Text('Bước 1/3: Thông tin cơ bản - ${widget.brandName}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
           ],
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: TextButton.icon(
-              onPressed: () {},
-              icon: const Icon(Icons.save_outlined, color: Colors.grey, size: 20),
-              label: const Text('Lưu nháp', style: TextStyle(color: Colors.grey)),
-            ),
-          )
-        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
@@ -257,7 +323,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                side: BorderSide(color: Colors.grey.shade400),
               ),
               child: const Text('Hủy bỏ', style: TextStyle(color: Colors.black)),
             ),
@@ -273,7 +338,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                elevation: 0,
               ),
             ),
           ],
@@ -308,8 +372,7 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
                     children: [
                       Image.memory(_imageBytes!, fit: BoxFit.cover),
                       Positioned(
-                        top: 8,
-                        right: 8,
+                        top: 8, right: 8,
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), shape: BoxShape.circle),
@@ -359,7 +422,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
                 value: _isHotTrend,
                 onChanged: (val) => setState(() => _isHotTrend = val),
                 activeColor: Colors.black,
-                inactiveTrackColor: Colors.grey.shade200,
               ),
             ],
           ),
@@ -393,13 +455,14 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
         _buildCardContainer(
           title: 'Phân loại & Phong cách',
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // DANH MỤC (Dropdown đơn - Giữ nguyên)
               Expanded(
                 child: AnimatedBuilder(
                   animation: _categoryController,
                   builder: (context, _) {
                     if (_categoryController.isLoading) return const Center(child: CircularProgressIndicator());
-                    if (_categoryController.error != null) return Text(_categoryController.error!, style: const TextStyle(color: Colors.red));
                     return DropdownButtonFormField<String>(
                       value: _selectedCategoryId,
                       decoration: _inputDecoration('Danh mục'),
@@ -411,18 +474,38 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
                 ),
               ),
               const SizedBox(width: 16),
+
+              // PHONG CÁCH (Multi-select - Đã thay đổi)
               Expanded(
                 child: AnimatedBuilder(
                   animation: _styleController,
                   builder: (context, _) {
                     if (_styleController.isLoading) return const Center(child: CircularProgressIndicator());
-                    if (_styleController.error != null) return Text(_styleController.error!, style: const TextStyle(color: Colors.red));
-                    return DropdownButtonFormField<String>(
-                      value: _selectedStyleId,
-                      decoration: _inputDecoration('Phong cách'),
-                      hint: const Text('Chọn phong cách'),
-                      items: _styleController.styles.map((s) => DropdownMenuItem(value: s.id.toString(), child: Text(s.displayName))).toList(),
-                      onChanged: (v) => setState(() => _selectedStyleId = v),
+
+                    // Widget giả lập Dropdown bằng InputDecorator + InkWell
+                    return InkWell(
+                      onTap: _showMultiSelectStyleDialog, // Bấm vào để hiện dialog chọn
+                      child: InputDecorator(
+                        decoration: _inputDecoration('Phong cách', suffix: null),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _selectedStyleIds.isEmpty
+                                    ? 'Chọn phong cách'
+                                    : _getSelectedStyleNames(), // Hiển thị tên các style đã chọn
+                                style: TextStyle(
+                                  color: _selectedStyleIds.isEmpty ? Colors.grey.shade600 : Colors.black,
+                                  fontSize: 16,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Icon(Icons.arrow_drop_down, color: Colors.grey.shade600),
+                          ],
+                        ),
+                      ),
                     );
                   },
                 ),
