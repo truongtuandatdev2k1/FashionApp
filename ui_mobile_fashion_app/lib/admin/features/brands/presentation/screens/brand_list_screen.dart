@@ -1,7 +1,8 @@
 // lib/admin/features/brands/presentation/screens/brand_list_screen.dart
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart'; // Đảm bảo đã có import này
+import 'package:go_router/go_router.dart';
 import 'package:ui_mobile_fashion_app/admin/features/brands/presentation/widgets/add_brand_dialog.dart';
+import 'package:ui_mobile_fashion_app/core/config/app_config.dart'; // 1. Import AppConfig
 import '../../data/brand_api.dart';
 import '../../data/models/brand_model.dart';
 
@@ -118,7 +119,7 @@ class _BrandCard extends StatelessWidget {
     return Container(
       // Đổ bóng nhẹ để Card nổi bật trên nền xám của Admin
       decoration: BoxDecoration(
-        color: Colors.white, // Nền màu trắng theo yêu cầu
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -130,9 +131,8 @@ class _BrandCard extends StatelessWidget {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        hoverColor: Colors.grey[50], // Hiệu ứng đổi màu nhẹ khi di chuột qua
+        hoverColor: Colors.grey[50],
         onTap: () {
-          // Đảm bảo logoUrl được truyền vào query string
           final logoPath = brand.logoUrl;
           context.push('/brands/products/${brand.id}?name=${brand.name}&logo=$logoPath');
         },
@@ -148,10 +148,10 @@ class _BrandCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.network(
-                    'https://api.caibang.online${brand.logoUrl}',
+                    '${AppConfig.imageBaseUrl}${brand.logoUrl}', // 2. Đã thay thế URL cứng
                     width: 56,
                     height: 56,
-                    fit: BoxFit.contain, // Dùng contain để logo không bị mất hình
+                    fit: BoxFit.contain,
                     errorBuilder: (_, __, ___) => Container(
                       width: 56,
                       height: 56,

@@ -1,4 +1,4 @@
-.
+ui_mobile_fashion_app
 ├── android
 │   ├── app
 │   │   ├── src
@@ -155,7 +155,8 @@
 │   │   │   │   │   └── brand_api.dart
 │   │   │   │   └── presentation
 │   │   │   │       ├── screens
-│   │   │   │       │   └── brand_list_screen.dart
+│   │   │   │       │   ├── brand_list_screen.dart
+│   │   │   │       │   └── brand_product_list_screen.dart
 │   │   │   │       └── widgets
 │   │   │   │           └── add_brand_dialog.dart
 │   │   │   ├── dashboard
@@ -389,4 +390,4 @@
 ├── pubspec.yaml
 └── README.md
 
-156 directories, 234 files
+156 directories, 235 files

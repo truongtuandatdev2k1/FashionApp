@@ -1,9 +1,9 @@
-// lib/admin/features/product/presentation/screens/brand_product_list_screen.dart
-
+// lib/admin/features/brands/presentation/screens/brand_product_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/product_list_controller.dart';
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/widgets/product_card.dart';
+import '../../../../../core/config/app_config.dart';
 
 class BrandProductListScreen extends StatefulWidget {
   final int brandId;
@@ -31,7 +31,6 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
   }
 
   void _loadData() async {
-    // Truyền brandId để API chỉ trả về sản phẩm của thương hiệu này
     await _controller.fetchProducts(brandId: widget.brandId);
     if (mounted) setState(() {});
   }
@@ -41,7 +40,7 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
     final int productCount = _controller.products.length;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -57,7 +56,6 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
         titleSpacing: 0,
         title: Row(
           children: [
-            // Logo thương hiệu
             Container(
               width: 40,
               height: 40,
@@ -70,7 +68,7 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
                 borderRadius: BorderRadius.circular(8),
                 child: widget.logoUrl != null && widget.logoUrl!.isNotEmpty
                     ? Image.network(
-                  'https://api.caibang.online${widget.logoUrl}',
+                  '${AppConfig.imageBaseUrl}${widget.logoUrl}',
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const Icon(
                     Icons.business,
@@ -86,7 +84,6 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
               ),
             ),
             const SizedBox(width: 12),
-            // Tên thương hiệu + số lượng sản phẩm
             Expanded(
               child: Text(
                 "${widget.brandName} ($productCount)",
@@ -101,6 +98,29 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
             ),
           ],
         ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: ElevatedButton.icon(
+              onPressed: () {
+                context.push(
+                  '/brands/products/create/step1?brandId=${widget.brandId}&brandName=${widget.brandName}',
+                );
+              },
+              icon: const Icon(Icons.add, size: 20),
+              label: const Text("Thêm sản phẩm"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: _controller.isLoading
           ? const Center(child: CircularProgressIndicator(color: Colors.black))
@@ -108,11 +128,12 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
         padding: const EdgeInsets.all(20.0),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            int crossAxisCount = constraints.maxWidth > 1200
+            final int crossAxisCount = constraints.maxWidth > 1200
                 ? 5
-                : (constraints.maxWidth > 800 ? 3 : 2);
+                : constraints.maxWidth > 800
+                ? 3
+                : 2;
 
-            // Trường hợp chưa có sản phẩm nào
             if (productCount == 0) {
               return _buildEmptyState();
             }
@@ -124,17 +145,23 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
                 crossAxisSpacing: 20,
                 mainAxisSpacing: 20,
               ),
-              // +1 vì có thêm card "Thêm sản phẩm"
-              itemCount: productCount + 1,
+              itemCount: productCount,
               itemBuilder: (context, index) {
-                if (index == 0) {
-                  return _buildAddProductCard();
-                }
-
-                return ProductCard(
-                  product: _controller.products[index - 1],
-                  onEdit: () {},
-                  onDelete: () {},
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300, width: 1),
+                  ),
+                  child: ProductCard(
+                    product: _controller.products[index],
+                    onEdit: () {
+                      // TODO: Xử lý edit sản phẩm
+                    },
+                    onDelete: () {
+                      // TODO: Xử lý xóa sản phẩm (nên có confirm dialog)
+                    },
+                  ),
                 );
               },
             );
@@ -144,70 +171,32 @@ class _BrandProductListScreenState extends State<BrandProductListScreen> {
     );
   }
 
-  // Card "Thêm sản phẩm mới"
-  Widget _buildAddProductCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: InkWell(
-        onTap: () {
-          // TODO: Điều hướng đến màn hình thêm sản phẩm mới
-          // Ví dụ: context.push('/admin/products/add?brandId=${widget.brandId}');
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.add_photo_alternate_outlined,
-              size: 50,
-              color: Colors.grey.shade300,
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              "Thêm sản phẩm mới",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Empty state khi chưa có sản phẩm
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          const Text(
-            "Chưa có sản phẩm nào cho nhãn hàng này",
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+          Icon(
+            Icons.inventory_2_outlined,
+            size: 90,
+            color: Colors.grey[300],
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () {
-              // TODO: Điều hướng đến màn hình thêm sản phẩm
-            },
-            icon: const Icon(Icons.add),
-            label: const Text("Thêm sản phẩm mới"),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              elevation: 0,
+          const Text(
+            "Chưa có sản phẩm nào cho nhãn hàng này",
+            style: TextStyle(
+              fontSize: 18,
+              color: Colors.grey,
+              fontWeight: FontWeight.w500,
             ),
           ),
+          const SizedBox(height: 12),
+          const Text(
+            "Hãy thêm sản phẩm mới ngay bây giờ!",
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          const SizedBox(height: 32),
+          // Không đặt nút ở đây nữa vì đã có ở AppBar
         ],
       ),
     );
