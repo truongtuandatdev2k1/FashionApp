@@ -1,11 +1,13 @@
 // lib/admin/features/product/presentation/screens/create_product_page_1.dart
 
-import 'dart:io'; // Cần import để xử lý File ảnh trên mobile
-import 'package:flutter/foundation.dart' show kIsWeb; // Import để check platform
-
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart'; // Import thư viện chọn ảnh
+import 'package:image_picker/image_picker.dart';
+
+// Import controller mới
+import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/category_controller.dart';
 
 class CreateProductPage1 extends StatefulWidget {
   final int brandId;
@@ -22,15 +24,16 @@ class CreateProductPage1 extends StatefulWidget {
 }
 
 class _CreateProductPage1State extends State<CreateProductPage1> {
-  // Thay đổi từ bool sang XFile để lưu ảnh thật
-  XFile? _pickedImage;
+  Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
 
-  String? _selectedCategory;
+  // Controller cho danh mục từ API
+  late final CategoryController _categoryController;
+
+  String? _selectedCategoryId; // Lưu ID danh mục được chọn
   String? _selectedStyle;
   bool _isHotTrend = false;
 
-  final List<String> _categories = ['Áo', 'Quần', 'Bộ', 'Váy', 'Phụ kiện'];
   final List<String> _styles = [
     'Hàn Quốc',
     'Đơn giản',
@@ -40,46 +43,59 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
     'Công sở'
   ];
 
-  // Hàm xử lý chọn ảnh từ thư viện máy
+  @override
+  void initState() {
+    super.initState();
+    _categoryController = CategoryController();
+    // Gọi API ngay khi màn hình load
+    _categoryController.addListener(_onCategoryChanged);
+    _categoryController.fetchCategories();
+  }
+
+  @override
+  void dispose() {
+    _categoryController.removeListener(_onCategoryChanged);
+    _categoryController.dispose();
+    super.dispose();
+  }
+
+  void _onCategoryChanged() {
+    if (mounted) setState(() {}); // Cập nhật UI khi controller thay đổi
+  }
+
   Future<void> _pickImage() async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image != null) {
-        setState(() {
-          _pickedImage = image;
-        });
+        final bytes = await image.readAsBytes();
+        setState(() => _imageBytes = bytes);
       }
     } catch (e) {
-      debugPrint('Lỗi chọn ảnh: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Không thể chọn ảnh: $e')),
       );
     }
   }
 
-  // Input Decoration thống nhất (Flat style)
   InputDecoration _inputDecoration(String label, {IconData? icon, String? suffix}) {
     return InputDecoration(
       labelText: label,
       suffixText: suffix,
       prefixIcon: icon != null ? Icon(icon, size: 20, color: Colors.grey.shade500) : null,
-      // Border khi chưa focus
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: Colors.grey.shade300), // Viền xám nhẹ
+        borderSide: BorderSide(color: Colors.grey.shade300),
       ),
-      // Border khi đang focus
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.black, width: 1.5), // Viền đen khi nhập
+        borderSide: const BorderSide(color: Colors.black, width: 1.5),
       ),
-      // Border khi có lỗi (mặc định)
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: Colors.grey.shade300),
       ),
       filled: true,
-      fillColor: Colors.white, // Nền trắng phẳng
+      fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       labelStyle: TextStyle(color: Colors.grey.shade600),
       floatingLabelStyle: const TextStyle(color: Colors.black),
@@ -87,13 +103,19 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
   }
 
   void _simulateSubmit() {
-    if (_pickedImage == null) {
+    if (_imageBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng chọn ảnh đại diện')),
+        const SnackBar(content: Text('Vui lòng chọn ảnh đại diện'), backgroundColor: Colors.red),
       );
       return;
     }
-    // Demo thành công
+    if (_selectedCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn danh mục'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Bước 1 hoàn tất → Chuyển sang bước 2'),
@@ -109,13 +131,11 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), // Màu nền xám rất nhạt, phẳng
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
-        elevation: 0, // Bỏ đổ bóng AppBar
-        shadowColor: Colors.transparent,
-        // border: Border(bottom: BorderSide(color: Colors.grey.shade200)), // Thêm viền mỏng thay cho bóng
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => context.pop(),
@@ -123,17 +143,8 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Thêm Sản Phẩm Mới',
-              style: TextStyle(
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18),
-            ),
-            Text(
-              'Bước 1/3: Thông tin cơ bản - ${widget.brandName}',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-            ),
+            const Text('Thêm Sản Phẩm Mới', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)),
+            Text('Bước 1/3: Thông tin cơ bản - ${widget.brandName}', style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
           ],
         ),
         actions: [
@@ -175,7 +186,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: Colors.white,
-          // Bỏ boxShadow, thay bằng viền trên
           border: Border(top: BorderSide(color: Colors.grey.shade200)),
         ),
         child: Row(
@@ -199,7 +209,7 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                elevation: 0, // Nút phẳng
+                elevation: 0,
               ),
               label: const Text('Tiếp tục', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
             ),
@@ -209,83 +219,43 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
     );
   }
 
-  // --- WIDGET COMPONENTS ---
-
   Widget _buildLeftColumn() {
     return Column(
       children: [
-        // Card Ảnh - Đã tích hợp sự kiện chọn ảnh
         _buildCardContainer(
           title: 'Hình ảnh đại diện',
           child: GestureDetector(
-            onTap: _pickedImage == null ? _pickImage : null, // Chỉ cho nhấn khi chưa có ảnh
+            onTap: _pickImage,
             child: AspectRatio(
               aspectRatio: 1,
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.grey.shade100,
                   borderRadius: BorderRadius.circular(12),
-                  // Viền nét đứt nếu chưa có ảnh, viền trơn nếu đã có
                   border: Border.all(
-                      color: _pickedImage == null ? Colors.grey.shade400 : Colors.transparent,
-                      style: _pickedImage == null ? BorderStyle.solid : BorderStyle.none,
-                      width: 1.5
+                    color: _imageBytes == null ? Colors.grey.shade400 : Colors.transparent,
+                    width: 1.5,
                   ),
                 ),
-                child: _pickedImage != null
+                child: _imageBytes != null
                     ? ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Hiển thị ảnh - Tương thích với cả Web và Mobile
-                      _buildImageWidget(),
-                      // Nút xóa ảnh ở góc trên
+                      Image.memory(_imageBytes!, fit: BoxFit.cover),
                       Positioned(
                         top: 8,
                         right: 8,
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _pickedImage = null;
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.close, size: 18, color: Colors.white),
-                          ),
-                        ),
-                      ),
-                      // Nút "Đổi ảnh khác" ở dưới cùng
-                      Positioned(
-                        bottom: 16,
-                        left: 0,
-                        right: 0,
-                        child: Center(
-                          child: ElevatedButton.icon(
-                            onPressed: _pickImage,
-                            icon: const Icon(Icons.swap_horiz, size: 18),
-                            label: const Text('Đổi ảnh khác'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: Colors.black,
-                              elevation: 2,
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
+                        child: Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), shape: BoxShape.circle),
+                          child: const Icon(Icons.edit, size: 16, color: Colors.white),
                         ),
                       ),
                     ],
                   ),
                 )
-                // Placeholder khi chưa chọn ảnh
                     : const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -300,8 +270,21 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
             ),
           ),
         ),
+        if (_imageBytes != null) ...[
+          const SizedBox(height: 12),
+          TextButton.icon(
+            onPressed: _pickImage,
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('Đổi ảnh khác'),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.black87,
+              backgroundColor: Colors.grey.shade100,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
-        // Card Trạng thái
         _buildCardContainer(
           title: 'Hiển thị',
           child: Column(
@@ -322,68 +305,14 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
     );
   }
 
-  // Widget hiển thị ảnh tương thích với cả Web và Mobile
-  Widget _buildImageWidget() {
-    if (_pickedImage == null) {
-      return const SizedBox();
-    }
-
-    if (kIsWeb) {
-      // Trên Web: sử dụng Image.network với URL blob
-      return Image.network(
-        _pickedImage!.path,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, color: Colors.red, size: 40),
-                SizedBox(height: 8),
-                Text('Lỗi hiển thị ảnh', style: TextStyle(color: Colors.red)),
-              ],
-            ),
-          );
-        },
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return const Center(
-            child: CircularProgressIndicator(color: Colors.black),
-          );
-        },
-      );
-    } else {
-      // Trên Mobile/Desktop: sử dụng Image.file
-      return Image.file(
-        File(_pickedImage!.path),
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, color: Colors.red, size: 40),
-                SizedBox(height: 8),
-                Text('Lỗi hiển thị ảnh', style: TextStyle(color: Colors.red)),
-              ],
-            ),
-          );
-        },
-      );
-    }
-  }
-
   Widget _buildRightColumn() {
     return Column(
       children: [
-        // Card Thông tin chung
         _buildCardContainer(
           title: 'Thông tin chung',
           child: Column(
             children: [
-              TextFormField(
-                decoration: _inputDecoration('Tên sản phẩm'),
-              ),
+              TextFormField(decoration: _inputDecoration('Tên sản phẩm')),
               const SizedBox(height: 20),
               TextFormField(
                 maxLines: 5,
@@ -394,22 +323,45 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
         ),
         const SizedBox(height: 24),
 
-        // Card Phân loại
+        // Chỉ thay đổi phần Card "Phân loại & Phong cách" trong _buildRightColumn()
+
         _buildCardContainer(
           title: 'Phân loại & Phong cách',
           child: Row(
             children: [
+              // Danh mục từ API (tiếng Việt)
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _selectedCategory,
-                  decoration: _inputDecoration('Danh mục'),
-                  hint: const Text('Chọn danh mục'),
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                  items: _categories.map((c) => DropdownMenuItem(value: c, child: Text(c))).toList(),
-                  onChanged: (v) => setState(() => _selectedCategory = v),
+                child: AnimatedBuilder(
+                  animation: _categoryController,
+                  builder: (context, child) {
+                    if (_categoryController.isLoading) {
+                      return const Center(child: CircularProgressIndicator(color: Colors.black));
+                    }
+                    if (_categoryController.error != null) {
+                      return Text(
+                        _categoryController.error!,
+                        style: const TextStyle(color: Colors.red, fontSize: 13),
+                      );
+                    }
+                    return DropdownButtonFormField<String>(
+                      value: _selectedCategoryId,
+                      decoration: _inputDecoration('Danh mục'),
+                      hint: const Text('Chọn danh mục'),
+                      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                      items: _categoryController.categories.map((cat) {
+                        return DropdownMenuItem<String>(
+                          value: cat.id.toString(),
+                          child: Text(cat.displayName), // ← Hiển thị tiếng Việt đẹp
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => _selectedCategoryId = value),
+                    );
+                  },
                 ),
               ),
               const SizedBox(width: 16),
+
+              // Phong cách (tiếng Việt, nằm ngang)
               Expanded(
                 child: DropdownButtonFormField<String>(
                   value: _selectedStyle,
@@ -426,7 +378,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
 
         const SizedBox(height: 24),
 
-        // Card Giá bán
         _buildCardContainer(
           title: 'Giá bán',
           child: Row(
@@ -451,7 +402,6 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
     );
   }
 
-  // Wrapper Widget cho các khối Card - PHIÊN BẢN FLAT (KHÔNG BÓNG)
   Widget _buildCardContainer({required String title, required Widget child}) {
     return Container(
       width: double.infinity,
@@ -459,16 +409,12 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        // Thay vì boxShadow, ta dùng border mỏng
         border: Border.all(color: Colors.grey.shade300),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           const SizedBox(height: 24),
           child,
         ],
