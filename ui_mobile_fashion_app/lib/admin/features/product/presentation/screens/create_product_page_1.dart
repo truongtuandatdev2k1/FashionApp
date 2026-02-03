@@ -1,6 +1,7 @@
 // lib/admin/features/product/presentation/screens/create_product_page_1.dart
 
-import 'dart:io'; // Cần import để xử lý File ảnh
+import 'dart:io'; // Cần import để xử lý File ảnh trên mobile
+import 'package:flutter/foundation.dart' show kIsWeb; // Import để check platform
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -217,7 +218,7 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
         _buildCardContainer(
           title: 'Hình ảnh đại diện',
           child: GestureDetector(
-            onTap: _pickImage, // Gọi hàm chọn ảnh khi nhấn
+            onTap: _pickedImage == null ? _pickImage : null, // Chỉ cho nhấn khi chưa có ảnh
             child: AspectRatio(
               aspectRatio: 1,
               child: Container(
@@ -237,31 +238,54 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      // Hiển thị file ảnh đã chọn từ máy
-                      Image.file(
-                        File(_pickedImage!.path),
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) {
-                          return const Center(child: Text('Lỗi hiển thị ảnh'));
-                        },
-                      ),
-                      // Nút edit nhỏ
+                      // Hiển thị ảnh - Tương thích với cả Web và Mobile
+                      _buildImageWidget(),
+                      // Nút xóa ảnh ở góc trên
                       Positioned(
                         top: 8,
                         right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.6),
-                            shape: BoxShape.circle,
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _pickedImage = null;
+                            });
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, size: 18, color: Colors.white),
                           ),
-                          child: const Icon(Icons.edit, size: 16, color: Colors.white),
                         ),
-                      )
+                      ),
+                      // Nút "Đổi ảnh khác" ở dưới cùng
+                      Positioned(
+                        bottom: 16,
+                        left: 0,
+                        right: 0,
+                        child: Center(
+                          child: ElevatedButton.icon(
+                            onPressed: _pickImage,
+                            icon: const Icon(Icons.swap_horiz, size: 18),
+                            label: const Text('Đổi ảnh khác'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Colors.black,
+                              elevation: 2,
+                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 )
-                // Placeholder khi chưa chọn ảnh (Dùng tạm widget có sẵn cho đơn giản)
+                // Placeholder khi chưa chọn ảnh
                     : const Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -296,6 +320,57 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
         ),
       ],
     );
+  }
+
+  // Widget hiển thị ảnh tương thích với cả Web và Mobile
+  Widget _buildImageWidget() {
+    if (_pickedImage == null) {
+      return const SizedBox();
+    }
+
+    if (kIsWeb) {
+      // Trên Web: sử dụng Image.network với URL blob
+      return Image.network(
+        _pickedImage!.path,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: Colors.red, size: 40),
+                SizedBox(height: 8),
+                Text('Lỗi hiển thị ảnh', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          );
+        },
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.black),
+          );
+        },
+      );
+    } else {
+      // Trên Mobile/Desktop: sử dụng Image.file
+      return Image.file(
+        File(_pickedImage!.path),
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, color: Colors.red, size: 40),
+                SizedBox(height: 8),
+                Text('Lỗi hiển thị ảnh', style: TextStyle(color: Colors.red)),
+              ],
+            ),
+          );
+        },
+      );
+    }
   }
 
   Widget _buildRightColumn() {
