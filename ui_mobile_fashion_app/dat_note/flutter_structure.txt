@@ -1,4 +1,4 @@
-ui_mobile_fashion_app
+.
 ├── android
 │   ├── app
 │   │   ├── src
@@ -67,7 +67,20 @@ ui_mobile_fashion_app
 │   │       └── vnpay.png
 │   └── logo_fas.png
 ├── dat_note
+│   ├── data_product
+│   │   └── 11134207
+│   │       ├── den_1.jpg
+│   │       ├── den_2.jpg
+│   │       ├── den_3.jpg
+│   │       ├── den_4.jpg
+│   │       ├── nau_1.jpg
+│   │       ├── nau_2.jpg
+│   │       ├── nau_3.jpg
+│   │       ├── nau_4.jpg
+│   │       └── vn-11134207-7ras8-m2uqx2kxcqh274.png
+│   ├── 1 page 1 api create product.txt
 │   ├── flutter_structure.txt
+│   ├── KIẾN TRÚC DỰ ÁN FRONTEND.txt
 │   ├── run_and_build.txt
 │   └── tuan_dat.jpg
 ├── .github
@@ -158,7 +171,8 @@ ui_mobile_fashion_app
 │   │   │   │       │   ├── brand_list_screen.dart
 │   │   │   │       │   └── brand_product_list_screen.dart
 │   │   │   │       └── widgets
-│   │   │   │           └── add_brand_dialog.dart
+│   │   │   │           ├── add_brand_dialog.dart
+│   │   │   │           └── product_grid_view.dart
 │   │   │   ├── dashboard
 │   │   │   │   ├── folder
 │   │   │   │   └── presentation
@@ -190,8 +204,13 @@ ui_mobile_fashion_app
 │   │   │       │       └── product_entity.dart
 │   │   │       └── presentation
 │   │   │           ├── logic
-│   │   │           │   └── product_list_controller.dart
+│   │   │           │   ├── category_controller.dart
+│   │   │           │   ├── create_basic_product_controller.dart
+│   │   │           │   ├── product_list_controller.dart
+│   │   │           │   └── style_controller.dart
 │   │   │           ├── screens
+│   │   │           │   ├── create_product_page_1.dart
+│   │   │           │   ├── create_product_page_2.dart
 │   │   │           │   └── product_list_screen.dart
 │   │   │           └── widgets
 │   │   │               └── product_card.dart
@@ -382,7 +401,6 @@ ui_mobile_fashion_app
 │   ├── index.html
 │   └── manifest.json
 ├── analysis_options.yaml
-├── .env.dev
 ├── .flutter-plugins-dependencies
 ├── .gitignore
 ├── install-flutter.sh
@@ -390,4 +408,4 @@ ui_mobile_fashion_app
 ├── pubspec.yaml
 └── README.md
 
-156 directories, 235 files
+158 directories, 251 files
