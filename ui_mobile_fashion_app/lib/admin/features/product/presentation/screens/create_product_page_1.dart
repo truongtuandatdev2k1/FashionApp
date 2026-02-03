@@ -6,8 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 
-// Import controller mới
+// Import 2 controller
 import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/category_controller.dart';
+import 'package:ui_mobile_fashion_app/admin/features/product/presentation/logic/style_controller.dart';
 
 class CreateProductPage1 extends StatefulWidget {
   final int brandId;
@@ -27,40 +28,39 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
   Uint8List? _imageBytes;
   final ImagePicker _picker = ImagePicker();
 
-  // Controller cho danh mục từ API
+  // Controller cho danh mục và phong cách
   late final CategoryController _categoryController;
+  late final StyleController _styleController;
 
-  String? _selectedCategoryId; // Lưu ID danh mục được chọn
-  String? _selectedStyle;
+  String? _selectedCategoryId;
+  String? _selectedStyleId; // Bây giờ lưu ID thay vì tên
   bool _isHotTrend = false;
-
-  final List<String> _styles = [
-    'Hàn Quốc',
-    'Đơn giản',
-    'Đường phố',
-    'Thể thao',
-    'Cổ điển',
-    'Công sở'
-  ];
 
   @override
   void initState() {
     super.initState();
+
     _categoryController = CategoryController();
-    // Gọi API ngay khi màn hình load
-    _categoryController.addListener(_onCategoryChanged);
+    _styleController = StyleController();
+
+    // Gọi cả 2 API khi màn hình load
+    _categoryController.addListener(_onDataChanged);
+    _styleController.addListener(_onDataChanged);
     _categoryController.fetchCategories();
+    _styleController.fetchStyles();
   }
 
   @override
   void dispose() {
-    _categoryController.removeListener(_onCategoryChanged);
+    _categoryController.removeListener(_onDataChanged);
+    _styleController.removeListener(_onDataChanged);
     _categoryController.dispose();
+    _styleController.dispose();
     super.dispose();
   }
 
-  void _onCategoryChanged() {
-    if (mounted) setState(() {}); // Cập nhật UI khi controller thay đổi
+  void _onDataChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _pickImage() async {
@@ -112,6 +112,12 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
     if (_selectedCategoryId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Vui lòng chọn danh mục'), backgroundColor: Colors.red),
+      );
+      return;
+    }
+    if (_selectedStyleId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng chọn phong cách'), backgroundColor: Colors.red),
       );
       return;
     }
@@ -323,25 +329,21 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
         ),
         const SizedBox(height: 24),
 
-        // Chỉ thay đổi phần Card "Phân loại & Phong cách" trong _buildRightColumn()
-
+        // Card Phân loại & Phong cách - 2 dropdown nằm ngang
         _buildCardContainer(
           title: 'Phân loại & Phong cách',
           child: Row(
             children: [
-              // Danh mục từ API (tiếng Việt)
+              // Danh mục từ API
               Expanded(
                 child: AnimatedBuilder(
                   animation: _categoryController,
-                  builder: (context, child) {
+                  builder: (context, _) {
                     if (_categoryController.isLoading) {
                       return const Center(child: CircularProgressIndicator(color: Colors.black));
                     }
                     if (_categoryController.error != null) {
-                      return Text(
-                        _categoryController.error!,
-                        style: const TextStyle(color: Colors.red, fontSize: 13),
-                      );
+                      return Text(_categoryController.error!, style: const TextStyle(color: Colors.red));
                     }
                     return DropdownButtonFormField<String>(
                       value: _selectedCategoryId,
@@ -351,7 +353,7 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
                       items: _categoryController.categories.map((cat) {
                         return DropdownMenuItem<String>(
                           value: cat.id.toString(),
-                          child: Text(cat.displayName), // ← Hiển thị tiếng Việt đẹp
+                          child: Text(cat.displayName),
                         );
                       }).toList(),
                       onChanged: (value) => setState(() => _selectedCategoryId = value),
@@ -361,15 +363,31 @@ class _CreateProductPage1State extends State<CreateProductPage1> {
               ),
               const SizedBox(width: 16),
 
-              // Phong cách (tiếng Việt, nằm ngang)
+              // Phong cách từ API
               Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _selectedStyle,
-                  decoration: _inputDecoration('Phong cách'),
-                  hint: const Text('Chọn phong cách'),
-                  icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
-                  items: _styles.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
-                  onChanged: (v) => setState(() => _selectedStyle = v),
+                child: AnimatedBuilder(
+                  animation: _styleController,
+                  builder: (context, _) {
+                    if (_styleController.isLoading) {
+                      return const Center(child: CircularProgressIndicator(color: Colors.black));
+                    }
+                    if (_styleController.error != null) {
+                      return Text(_styleController.error!, style: const TextStyle(color: Colors.red));
+                    }
+                    return DropdownButtonFormField<String>(
+                      value: _selectedStyleId,
+                      decoration: _inputDecoration('Phong cách'),
+                      hint: const Text('Chọn phong cách'),
+                      icon: const Icon(Icons.keyboard_arrow_down, color: Colors.grey),
+                      items: _styleController.styles.map((style) {
+                        return DropdownMenuItem<String>(
+                          value: style.id.toString(),
+                          child: Text(style.displayName),
+                        );
+                      }).toList(),
+                      onChanged: (value) => setState(() => _selectedStyleId = value),
+                    );
+                  },
                 ),
               ),
             ],
