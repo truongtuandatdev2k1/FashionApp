@@ -434,15 +434,17 @@ func (r *ForYouRecommendationRepository) queryCFByRecentOrders(ctx context.Conte
 	}
 
 	// Seeds: most recent distinct products from orders
+	// NOTE: MySQL does not allow ordering by an aggregate without grouping.
 	var seedIDs []uint
 	if err := r.db.WithContext(ctx).
 		Table("orders").
-		Select("DISTINCT order_items.product_id").
+		Select("order_items.product_id").
 		Joins("JOIN order_items ON order_items.order_id = orders.id").
 		Joins("JOIN products ON products.id = order_items.product_id").
 		Where("orders.customer_id = ?", userID).
 		Where("UPPER(orders.status) != ?", "CANCELLED").
 		Where("UPPER(products.status) = ?", "ACTIVE").
+		Group("order_items.product_id").
 		Order("MAX(orders.created_at) DESC").
 		Limit(10).
 		Pluck("order_items.product_id", &seedIDs).Error; err != nil {

@@ -39,6 +39,9 @@ func (r *RelatedRecommendationRepository) GetRelated(ctx context.Context, req Re
 		Preload("Categories").
 		Preload("Styles").
 		First(&prod).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return []*entities.Product{}, nil
+		}
 		return nil, err
 	}
 
