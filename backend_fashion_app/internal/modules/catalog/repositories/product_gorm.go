@@ -3,6 +3,7 @@ package repositories
 import (
 	"context"
 	"myfashion/internal/modules/catalog/entities"
+	"strings"
 	"time"
 
 	"gorm.io/gorm"
@@ -72,11 +73,16 @@ func (r *productGormRepo) GetAll(ctx context.Context) ([]*entities.Product, erro
 	return productEntities, nil
 }
 
-func (r *productGormRepo) GetAllPaginated(ctx context.Context, filter string, page, limit int, brandID uint) ([]*entities.Product, int64, error) {
+func (r *productGormRepo) GetAllPaginated(ctx context.Context, filter string, page, limit int, brandID uint, status string) ([]*entities.Product, int64, error) {
 	db := r.db.WithContext(ctx).Model(&ProductModel{})
 
 	if brandID != 0 {
 		db = db.Where("brand_id = ?", brandID)
+	}
+
+	// Optional status filter (case-insensitive)
+	if status != "" {
+		db = db.Where("UPPER(status) = ?", strings.ToUpper(status))
 	}
 
 	// Áp dụng bộ lọc
@@ -150,48 +156,6 @@ func (r *productGormRepo) Update(ctx context.Context, product *entities.Product)
 }
 
 func (r *productGormRepo) Delete(ctx context.Context, id uint) error {
-	tx := r.db.WithContext(ctx).Begin()
-	// delete variants
-	if err := tx.Where("product_id = ?", id).Delete(&ProductVariantModel{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	// load color IDs
-	var colorIDs []uint
-	if err := tx.Model(&ProductColorModel{}).Where("product_id = ?", id).Pluck("id", &colorIDs).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	// delete color images
-	if len(colorIDs) > 0 {
-		if err := tx.Where("product_color_id IN ?", colorIDs).Delete(&ProductColorImageModel{}).Error; err != nil {
-			tx.Rollback()
-			return err
-		}
-	}
-	// delete colors
-	if err := tx.Where("product_id = ?", id).Delete(&ProductColorModel{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	// delete stats
-	if err := tx.Where("product_id = ?", id).Delete(&ProductStatsModel{}).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	// delete many-to-many join rows (categories, styles)
-	if err := tx.Exec("DELETE FROM product_categories WHERE product_model_id = ?", id).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	if err := tx.Exec("DELETE FROM product_styles WHERE product_model_id = ?", id).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	// delete product
-	if err := tx.Delete(&ProductModel{}, id).Error; err != nil {
-		tx.Rollback()
-		return err
-	}
-	return tx.Commit().Error
+	// Soft delete: set status = 'INACTIVE' (do not delete history)
+	return r.db.WithContext(ctx).Model(&ProductModel{}).Where("id = ?", id).Update("status", "INACTIVE").Error
 }

@@ -1532,6 +1532,97 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/products/{id}/image": {
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "description": "(Shop) Cập nhật ảnh đại diện của sản phẩm. Ưu tiên upload file, nếu không có file thì dùng image_url.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Products"
+                ],
+                "summary": "(Admin) Update product main image",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "file",
+                        "description": "File ảnh đại diện (upload)",
+                        "name": "image",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "URL ảnh đại diện (fallback nếu không upload file)",
+                        "name": "image_url",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/resp.Envelope"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/api.ProductDetailResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/resp.Envelope"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/products/{id}/variants": {
             "get": {
                 "security": [
@@ -3768,21 +3859,21 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/{id}/recommendations/related": {
+        "/products/{id}/recommendations": {
             "get": {
                 "security": [
                     {
                         "Bearer": []
                     }
                 ],
-                "description": "Gợi ý sản phẩm liên quan theo sản phẩm đang xem (category/brand/style). Loại trừ sản phẩm hiện tại + sản phẩm đã mua + sản phẩm hết hàng.",
+                "description": "Trộn gợi ý theo sản phẩm đang xem: ưu tiên similar items (category/brand/style) + bổ sung bought-together (CF từ orders). Loại trừ sản phẩm hiện tại + sản phẩm đã mua + sản phẩm hết hàng.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Recommendations"
                 ],
-                "summary": "Get related recommendations",
+                "summary": "Get mixed product recommendations",
                 "parameters": [
                     {
                         "type": "integer",
@@ -5761,6 +5852,10 @@ const docTemplate = `{
                 },
                 "page": {
                     "type": "integer"
+                },
+                "status": {
+                    "description": "optional: ACTIVE, INACTIVE, DRAFT (case-insensitive)",
+                    "type": "string"
                 }
             }
         },
@@ -5784,6 +5879,9 @@ const docTemplate = `{
                 },
                 "priceAfter": {
                     "type": "number"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },

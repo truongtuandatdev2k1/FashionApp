@@ -654,7 +654,7 @@ func (c *CatalogController) CreateProductBasic(w http.ResponseWriter, r *http.Re
 		resp.Error(w, http.StatusBadRequest, err.Error())
 		return
 	}
-	imgURL, err := saveProductMainImage(file, header)
+	imgURL, err := saveProductMainImage(file, header, 0)
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, "failed to save image")
 		return
@@ -885,10 +885,15 @@ func generateSKU(productID uint, hex string, size string, seq int) string {
 	return fmt.Sprintf("%d-%s-%s-%03d", productID, hex, size, seq)
 }
 
-func saveProductMainImage(src multipart.File, header *multipart.FileHeader) (string, error) {
+func saveProductMainImage(src multipart.File, header *multipart.FileHeader, productID uint) (string, error) {
 	ext := filepath.Ext(header.Filename)
-	filename := fmt.Sprintf("%d%s", time.Now().UnixNano(), ext)
-	uploadDir := "uploads/products"
+	filename := fmt.Sprintf("cover_%d%s", time.Now().UnixNano(), ext)
+	uploadDir := filepath.Join("uploads", "products")
+	if productID != 0 {
+		uploadDir = filepath.Join(uploadDir, strconv.Itoa(int(productID)))
+	} else {
+		uploadDir = filepath.Join(uploadDir, "tmp")
+	}
 	if err := os.MkdirAll(uploadDir, os.ModePerm); err != nil {
 		return "", err
 	}
@@ -983,7 +988,7 @@ func (c *CatalogController) ListProducts(w http.ResponseWriter, r *http.Request)
 			return
 		}
 	}
-	products, total, err := c.productSvc.ListProductsPaginated(r.Context(), req.Filter, req.Page, req.Limit, req.BrandID)
+	products, total, err := c.productSvc.ListProductsPaginated(r.Context(), req.Filter, req.Page, req.Limit, req.BrandID, req.Status)
 	if err != nil {
 		resp.Error(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1048,5 +1053,6 @@ func toProductSummaryResponse(p *catalogEntities.Product) api.ProductSummaryResp
 		DiscountPct: p.DiscountPct,
 		PriceAfter:  p.PriceAfter,
 		ImageURL:    p.ImageURL,
+		Status:      p.Status,
 	}}
 }

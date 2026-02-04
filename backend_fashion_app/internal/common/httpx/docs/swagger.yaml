@@ -851,6 +851,9 @@ definitions:
         type: integer
       page:
         type: integer
+      status:
+        description: 'optional: ACTIVE, INACTIVE, DRAFT (case-insensitive)'
+        type: string
     type: object
   api.ProductSummaryResponse:
     properties:
@@ -866,6 +869,8 @@ definitions:
         type: number
       priceAfter:
         type: number
+      status:
+        type: string
     type: object
   api.ProductVariantResponse:
     properties:
@@ -2037,6 +2042,63 @@ paths:
       security:
       - Bearer: []
       summary: (Admin) Update product basic
+      tags:
+      - Products
+  /admin/products/{id}/image:
+    put:
+      consumes:
+      - multipart/form-data
+      description: (Shop) Cập nhật ảnh đại diện của sản phẩm. Ưu tiên upload file,
+        nếu không có file thì dùng image_url.
+      parameters:
+      - description: Product ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: File ảnh đại diện (upload)
+        in: formData
+        name: image
+        type: file
+      - description: URL ảnh đại diện (fallback nếu không upload file)
+        in: formData
+        name: image_url
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/resp.Envelope'
+            - properties:
+                data:
+                  $ref: '#/definitions/api.ProductDetailResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/resp.Envelope'
+      security:
+      - Bearer: []
+      summary: (Admin) Update product main image
       tags:
       - Products
   /admin/products/{id}/variants:
@@ -3459,10 +3521,11 @@ paths:
       summary: Get Product
       tags:
       - Products
-  /products/{id}/recommendations/related:
+  /products/{id}/recommendations:
     get:
-      description: Gợi ý sản phẩm liên quan theo sản phẩm đang xem (category/brand/style).
-        Loại trừ sản phẩm hiện tại + sản phẩm đã mua + sản phẩm hết hàng.
+      description: 'Trộn gợi ý theo sản phẩm đang xem: ưu tiên similar items (category/brand/style)
+        + bổ sung bought-together (CF từ orders). Loại trừ sản phẩm hiện tại + sản
+        phẩm đã mua + sản phẩm hết hàng.'
       parameters:
       - description: Product ID
         in: path
@@ -3502,7 +3565,7 @@ paths:
             $ref: '#/definitions/resp.Envelope'
       security:
       - Bearer: []
-      summary: Get related recommendations
+      summary: Get mixed product recommendations
       tags:
       - Recommendations
   /products/list:

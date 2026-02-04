@@ -325,6 +325,12 @@ func (r *ForYouRecommendationRepository) loadCandidates(ctx context.Context, use
 		}
 	}
 
+	// Quota: 20% from CF (orders-based)
+	cfQuota := int(math.Ceil(float64(target) * 0.2))
+	if cfQuota < 1 {
+		cfQuota = 1
+	}
+
 	// Stage 1: Prefer same category/style first (seeded from cart/views/orders)
 	categoryIDs := topKeys(prefs.CategoryWeights, 5)
 	styleIDs := topKeys(prefs.StyleWeights, 5)
@@ -334,25 +340,35 @@ func (r *ForYouRecommendationRepository) loadCandidates(ctx context.Context, use
 			return nil, err
 		}
 		appendProducts(items)
-		if len(out) >= target {
-			return out, nil
+		if len(out) >= target-cfQuota {
+			// keep room for CF
+			out = out[:target-cfQuota]
 		}
 	}
 
 	// Stage 2: from preferred brands + price window
 	brandIDs := topKeys(prefs.BrandWeights, 5)
-	if len(brandIDs) > 0 || prefs.PriceMean > 0 {
+	if len(out) < target-cfQuota && (len(brandIDs) > 0 || prefs.PriceMean > 0) {
 		items, err := r.queryProducts(ctx, brandIDs, prefs.PriceMean, excluded, 200, "")
 		if err != nil {
 			return nil, err
 		}
 		appendProducts(items)
-		if len(out) >= target {
-			return out, nil
+		if len(out) >= target-cfQuota {
+			out = out[:target-cfQuota]
 		}
 	}
 
-	// Stage 3: from last viewed product taxonomy if still low
+	// Stage 3: CF from recent orders (cache: product_similarities)
+	if len(out) < target {
+		cfItems, err := r.queryCFByRecentOrders(ctx, userID, excluded, cfQuota)
+		if err != nil {
+			return nil, err
+		}
+		appendProducts(cfItems)
+	}
+
+	// Stage 4: from last viewed product taxonomy if still low
 	var lastViewed struct {
 		ProductID uint
 	}
@@ -376,21 +392,15 @@ func (r *ForYouRecommendationRepository) loadCandidates(ctx context.Context, use
 			return nil, err
 		}
 		appendProducts(items)
-		if len(out) >= target {
-			return out, nil
-		}
 	}
 
-	// Stage 4: fallback bestseller > hottrend > newest
+	// Stage 5: fallback bestseller > hottrend > newest
 	if len(out) < target {
 		items, err := r.queryBestseller(ctx, excluded, 200)
 		if err != nil {
 			return nil, err
 		}
 		appendProducts(items)
-		if len(out) >= target {
-			return out, nil
-		}
 	}
 
 	if len(out) < target {
@@ -399,9 +409,6 @@ func (r *ForYouRecommendationRepository) loadCandidates(ctx context.Context, use
 			return nil, err
 		}
 		appendProducts(items)
-		if len(out) >= target {
-			return out, nil
-		}
 	}
 
 	if len(out) < target {
@@ -412,6 +419,65 @@ func (r *ForYouRecommendationRepository) loadCandidates(ctx context.Context, use
 		appendProducts(items)
 	}
 
+	if len(out) > target {
+		out = out[:target]
+	}
+	return out, nil
+}
+
+func (r *ForYouRecommendationRepository) queryCFByRecentOrders(ctx context.Context, userID uint, excluded map[uint]struct{}, limit int) ([]*entities.Product, error) {
+	if userID == 0 {
+		return []*entities.Product{}, nil
+	}
+	if limit <= 0 {
+		limit = 2
+	}
+
+	// Seeds: most recent distinct products from orders
+	var seedIDs []uint
+	if err := r.db.WithContext(ctx).
+		Table("orders").
+		Select("DISTINCT order_items.product_id").
+		Joins("JOIN order_items ON order_items.order_id = orders.id").
+		Joins("JOIN products ON products.id = order_items.product_id").
+		Where("orders.customer_id = ?", userID).
+		Where("UPPER(orders.status) != ?", "CANCELLED").
+		Where("UPPER(products.status) = ?", "ACTIVE").
+		Order("MAX(orders.created_at) DESC").
+		Limit(10).
+		Pluck("order_items.product_id", &seedIDs).Error; err != nil {
+		return nil, err
+	}
+	if len(seedIDs) == 0 {
+		return []*entities.Product{}, nil
+	}
+
+	// Pull similar items from cache for each seed, then merge and dedupe.
+	simRepo := NewProductSimilarityRepository(r.db)
+	seen := map[uint]struct{}{}
+	out := make([]*entities.Product, 0, limit)
+	for _, seed := range seedIDs {
+		items, err := simRepo.GetSimilar(ctx, SimilarityRequest{ProductID: seed, Limit: 10, Source: "bought_together"})
+		if err != nil {
+			return nil, err
+		}
+		for _, p := range items {
+			if p == nil {
+				continue
+			}
+			if _, ok := excluded[p.ID]; ok {
+				continue
+			}
+			if _, ok := seen[p.ID]; ok {
+				continue
+			}
+			seen[p.ID] = struct{}{}
+			out = append(out, p)
+			if len(out) >= limit {
+				return out, nil
+			}
+		}
+	}
 	return out, nil
 }
 

@@ -33,6 +33,7 @@ import (
 	profilem "myfashion/internal/modules/profile"
 	promotionm "myfashion/internal/modules/promotion"
 	promoRepos "myfashion/internal/modules/promotion/repositories"
+	catalogRepos "myfashion/internal/modules/catalog/repositories"
 )
 
 // @title MyFashion API
@@ -67,6 +68,10 @@ func main() {
 	// Chạy cleanup scheduler trong background (cleanup mỗi 1 giờ)
 	ctx := context.Background()
 	go cleanupService.StartCleanupScheduler(ctx, time.Hour)
+
+	// Similarity recompute scheduler (CF cache) mỗi 1 giờ, topK=50
+	similarityRepo := catalogRepos.NewProductSimilarityRepository(gdb)
+	go startSimilarityScheduler(ctx, similarityRepo, time.Hour, 50)
 
 	r := chi.NewRouter()
 	for _, mw := range httpx.Middlewares() {

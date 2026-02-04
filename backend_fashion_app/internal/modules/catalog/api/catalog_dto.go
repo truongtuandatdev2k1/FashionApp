@@ -47,6 +47,7 @@ type ProductListRequest struct {
 	Limit   int    `json:"limit,omitempty"`
 	Filter  string `json:"filter,omitempty"` // all, bestseller, new, hottrend
 	BrandID uint   `json:"brand_id,omitempty"`
+	Status  string `json:"status,omitempty"` // optional: ACTIVE, INACTIVE, DRAFT (case-insensitive)
 }
 
 type PaginationMeta struct {
@@ -64,6 +65,7 @@ type ProductAbstract struct {
 	DiscountPct int     `json:"discount_pct"`
 	PriceAfter  float64 `json:"priceAfter"`
 	ImageURL    string  `json:"image_url,omitempty"`
+	Status      string  `json:"status"`
 }
 
 // ProductSummaryResponse contains summarized product info for lists
