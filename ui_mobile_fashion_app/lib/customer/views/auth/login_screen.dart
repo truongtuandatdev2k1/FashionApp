@@ -19,6 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
+  bool _obscurePassword = true; // 👈 Thêm biến trạng thái
 
   @override
   void dispose() {
@@ -60,7 +61,6 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _navigateToRegister() {
-    // TODO: Điều hướng đến trang đăng ký
     context.go('/register');
   }
 
@@ -126,9 +126,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 keyboardType: TextInputType.emailAddress,
                 validator:
                     (value) =>
-                        value?.trim().isEmpty ?? true
-                            ? 'Vui lòng nhập tài khoản'
-                            : null,
+                value?.trim().isEmpty ?? true
+                    ? 'Vui lòng nhập tài khoản'
+                    : null,
               ),
               const SizedBox(height: 20),
 
@@ -144,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 6),
               TextFormField(
                 controller: _passwordController,
-                obscureText: true,
+                obscureText: _obscurePassword, // 👈 Dùng biến trạng thái
                 decoration: InputDecoration(
                   hintText: 'Nhập mật khẩu của bạn',
                   prefixIcon: const Icon(
@@ -153,9 +153,14 @@ class _LoginScreenState extends State<LoginScreen> {
                     color: Color(0xff757575),
                   ),
                   suffixIcon: IconButton(
-                    icon: const Icon(LucideIcons.eyeOff, size: 20),
+                    icon: Icon(
+                      _obscurePassword ? LucideIcons.eyeOff : LucideIcons.eye, // 👈 Đổi icon theo trạng thái
+                      size: 20,
+                    ),
                     onPressed: () {
-                      // TODO: Toggle ẩn/hiện mật khẩu
+                      setState(() {
+                        _obscurePassword = !_obscurePassword; // 👈 Toggle
+                      });
                     },
                   ),
                   border: OutlineInputBorder(
@@ -171,9 +176,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 validator:
                     (value) =>
-                        value?.isEmpty ?? true
-                            ? 'Vui lòng nhập mật khẩu'
-                            : null,
+                value?.isEmpty ?? true
+                    ? 'Vui lòng nhập mật khẩu'
+                    : null,
               ),
               const SizedBox(height: 10),
 
@@ -206,22 +211,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 child:
-                    _isLoading
-                        ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
-                        : const Text(
-                          'Đăng Nhập',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                _isLoading
+                    ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+                    : const Text(
+                  'Đăng Nhập',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
               const SizedBox(height: 50),
 

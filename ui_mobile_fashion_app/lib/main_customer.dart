@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'core/config/flavor_config.dart';
 import 'core/di/locator.dart';
 import 'core/network/api_config.dart';
-import 'core/router.dart';
+import 'customer/router/customer_router.dart';
 import 'customer/logic/profile/profile_controller.dart';
 
 void main() async {

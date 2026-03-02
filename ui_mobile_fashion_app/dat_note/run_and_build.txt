@@ -7,3 +7,7 @@ flutter build apk --flavor customer --debug -t lib/main_customer.dart --dart-def
 flutter run --flavor customer -t lib/main_customer.dart --dart-define=FLAVOR=customer
 
 tree -a -I 'build|.dart_tool|.gradle|.idea|*.g.dart|*.lock|*.iml' --dirsfirst > dat_note/flutter_structure.txt
+
+Tài khoản khách:
+sđt: 0888133353
+pass: Dat2001@

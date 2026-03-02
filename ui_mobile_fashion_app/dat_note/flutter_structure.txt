@@ -1,4 +1,4 @@
-.
+ui_mobile_fashion_app/
 ├── android
 │   ├── app
 │   │   ├── src
@@ -206,6 +206,8 @@
 │   │   │           ├── logic
 │   │   │           │   ├── category_controller.dart
 │   │   │           │   ├── create_basic_product_controller.dart
+│   │   │           │   ├── create_product_variants_controller.dart
+│   │   │           │   ├── product_delete_controller.dart
 │   │   │           │   ├── product_list_controller.dart
 │   │   │           │   └── style_controller.dart
 │   │   │           ├── screens
@@ -255,12 +257,11 @@
 │   │   │   └── domain
 │   │   │       └── entities
 │   │   │           └── user_entity.dart
-│   │   ├── utils
-│   │   │   ├── extensions.dart
-│   │   │   ├── image_url_helper.dart
-│   │   │   ├── logger.dart
-│   │   │   └── validators.dart
-│   │   └── router.dart
+│   │   └── utils
+│   │       ├── extensions.dart
+│   │       ├── image_url_helper.dart
+│   │       ├── logger.dart
+│   │       └── validators.dart
 │   ├── customer
 │   │   ├── logic
 │   │   │   ├── address
@@ -408,4 +409,4 @@
 ├── pubspec.yaml
 └── README.md
 
-158 directories, 251 files
+158 directories, 252 files
