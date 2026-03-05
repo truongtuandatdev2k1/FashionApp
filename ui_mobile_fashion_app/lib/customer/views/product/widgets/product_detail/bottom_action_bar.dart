@@ -59,7 +59,7 @@ class BottomActionBar extends StatelessWidget {
         child: SafeArea(
           top: false,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             child: IntrinsicHeight(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -74,7 +74,7 @@ class BottomActionBar extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 14),
+                              horizontal: 8),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -102,7 +102,7 @@ class BottomActionBar extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 5),
 
                   // ===== BUTTON PHẢI: Mua ngay =====
                   Expanded(
@@ -114,7 +114,7 @@ class BottomActionBar extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 10),
+                              horizontal: 8, vertical: 4),
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             mainAxisSize: MainAxisSize.min,
@@ -127,7 +127,6 @@ class BottomActionBar extends StatelessWidget {
                                   color: Colors.white,
                                 ),
                               ),
-                              const SizedBox(height: 3),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [

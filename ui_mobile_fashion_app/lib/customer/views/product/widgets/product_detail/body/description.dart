@@ -14,7 +14,6 @@ class ProductDescription extends StatefulWidget {
 class _ProductDescriptionState extends State<ProductDescription> {
   bool _isExpanded = false;
 
-  // Tự động chuyển đoạn văn thành các dòng có gạch đầu dòng
   List<String> _getBulletPoints() {
     return widget.description
         .split('. ')
@@ -27,6 +26,30 @@ class _ProductDescriptionState extends State<ProductDescription> {
   Widget build(BuildContext context) {
     final bulletPoints = _getBulletPoints();
 
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: bulletPoints.map((point) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 3),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('• ',
+                  style: TextStyle(fontSize: 12, color: Colors.black87)),
+              Expanded(
+                child: Text(
+                  point.endsWith('.') ? point : '$point.',
+                  style: const TextStyle(
+                      fontSize: 12, height: 1.5, color: Colors.black87),
+                ),
+              ),
+            ],
+          ),
+        );
+      }).toList(),
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -36,7 +59,6 @@ class _ProductDescriptionState extends State<ProductDescription> {
         ),
         const SizedBox(height: 12),
 
-        // Khung bao quanh mô tả
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -48,52 +70,53 @@ class _ProductDescriptionState extends State<ProductDescription> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Hiển thị tối đa 3 dòng nếu chưa mở rộng
-              ...bulletPoints.take(_isExpanded ? bulletPoints.length : 3).map((point) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 4),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('• ', style: TextStyle(fontSize: 16, color: Colors.black87)),
-                      Expanded(
-                        child: Text(
-                          point.endsWith('.') ? point : '$point.',
-                          style: const TextStyle(fontSize: 15, height: 1.5, color: Colors.black87),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
-
-              // Nút Xem thêm / Thu gọn
-              if (bulletPoints.length > 3)
-                GestureDetector(
-                  onTap: () => setState(() => _isExpanded = !_isExpanded),
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          _isExpanded ? 'Thu gọn' : 'Xem thêm',
-                          style: const TextStyle(
-                            color: Colors.blue,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 15,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          _isExpanded ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down,
-                          color: Colors.blue,
-                          size: 20,
-                        ),
-                      ],
+              // Dùng ClipRect + AnimatedSize để clip đúng
+              ClipRect(
+                child: AnimatedAlign(
+                  alignment: Alignment.topCenter,
+                  heightFactor: _isExpanded ? 1.0 : null,
+                  duration: const Duration(milliseconds: 250),
+                  curve: Curves.easeInOut,
+                  child: _isExpanded
+                      ? content
+                      : SizedBox(
+                    height: 100,
+                    child: OverflowBox(
+                      alignment: Alignment.topCenter,
+                      maxHeight: double.infinity,
+                      child: content,
                     ),
                   ),
                 ),
+              ),
+
+              GestureDetector(
+                onTap: () => setState(() => _isExpanded = !_isExpanded),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        _isExpanded ? 'Thu gọn' : 'Xem thêm',
+                        style: const TextStyle(
+                          color: Colors.blue,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        _isExpanded
+                            ? Icons.keyboard_arrow_up
+                            : Icons.keyboard_arrow_down,
+                        color: Colors.blue,
+                        size: 18,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),

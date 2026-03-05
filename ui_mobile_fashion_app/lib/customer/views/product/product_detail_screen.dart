@@ -92,7 +92,7 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
                               reviewCount: 0,
                               soldCount: product.soldCount,
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 12),
                             const SizeGuideSection(),
                             const SizedBox(height: 24),
                             ProductDescription(

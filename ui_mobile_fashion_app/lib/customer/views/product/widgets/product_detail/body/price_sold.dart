@@ -56,91 +56,94 @@ class PriceAndSold extends StatelessWidget {
         // Tiêu đề sản phẩm
         Text(
           title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 14,
+              // fontWeight: FontWeight.w600
+          ),
         ),
         const SizedBox(height: 8),
 
         // Giá hiện tại + giá cũ + % giảm
         Row(
           children: [
-            Text(
-              _formatCurrency(currentPrice),
-              style: const TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text(
-              _formatCurrency(oldPrice),
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-                decoration: TextDecoration.lineThrough,
-              ),
-            ),
-            const SizedBox(width: 8),
+
             if (discountPercent != '0')
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                 decoration: BoxDecoration(
                   color: Colors.red,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(2),
                 ),
                 child: Text(
                   '-$discountPercent%',
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
+            const SizedBox(width: 8),
+            Text(
+              _formatCurrency(currentPrice),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              _formatCurrency(oldPrice),
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.grey,
+                decoration: TextDecoration.lineThrough,
+              ),
+            ),
+
           ],
         ),
         const SizedBox(height: 16),
 
         // Đường kẻ ngang
         Container(height: 0.5, color: Colors.grey.shade300),
-        const SizedBox(height: 12),
 
         // Rating + lượt đánh giá + đã bán
-        Row(
-          children: [
-            // Rating
-            Row(
-              children: [
-                const Icon(LucideIcons.star, color: Colors.amber, size: 18),
-                const SizedBox(width: 4),
-                Text(
-                  rating.toStringAsFixed(1),
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  '(${_formatNumber(reviewCount)})',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-                ),
-              ],
-            ),
-            const SizedBox(width: 16),
-            Container(width: 1, height: 16, color: Colors.grey.shade400),
-            const SizedBox(width: 16),
-            // Đã bán
-            Text(
-              'Đã bán ${_formatNumber(soldCount)}',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+        // Row(
+        //   children: [
+        //     // Rating
+        //     Row(
+        //       children: [
+        //         const Icon(LucideIcons.star, color: Colors.amber, size: 18),
+        //         const SizedBox(width: 4),
+        //         Text(
+        //           rating.toStringAsFixed(1),
+        //           style: const TextStyle(
+        //             fontWeight: FontWeight.bold,
+        //             fontSize: 15,
+        //           ),
+        //         ),
+        //         const SizedBox(width: 6),
+        //         Text(
+        //           '(${_formatNumber(reviewCount)})',
+        //           style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+        //         ),
+        //       ],
+        //     ),
+        //     const SizedBox(width: 16),
+        //     Container(width: 1, height: 16, color: Colors.grey.shade400),
+        //     const SizedBox(width: 16),
+        //     // Đã bán
+        //     Text(
+        //       'Đã bán ${_formatNumber(soldCount)}',
+        //       style: const TextStyle(
+        //         fontSize: 14,
+        //         color: Colors.black87,
+        //         fontWeight: FontWeight.w500,
+        //       ),
+        //     ),
+        //   ],
+        // ),
       ],
     );
   }

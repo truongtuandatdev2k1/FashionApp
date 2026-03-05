@@ -29,15 +29,15 @@ class SizeGuideSection extends StatelessWidget {
               style: TextStyle(fontSize: 16, color: Colors.black87),
             ),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: Colors.black,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(3),
               ),
               child: Text(
                 recommendedSize,
                 style: const TextStyle(
-                  fontSize: 18,
+                  fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
@@ -51,7 +51,7 @@ class SizeGuideSection extends StatelessWidget {
         // === TIÊU ĐỀ BẢNG SIZE ===
         const Text(
           'Bảng hướng dẫn chọn size',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
 
         const SizedBox(height: 12),
@@ -61,17 +61,17 @@ class SizeGuideSection extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.grey.shade300),
           ),
           child: Column(
             children: [
               // Header
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 14),
+                padding: const EdgeInsets.symmetric(vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.grey.shade200,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(10)),
                 ),
                 child: const Row(
                   children: [
@@ -86,7 +86,7 @@ class SizeGuideSection extends StatelessWidget {
               ...sizeTable.map((row) {
                 final isRecommended = row['size'] == recommendedSize;
                 return Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  padding: const EdgeInsets.symmetric(vertical: 5),
                   decoration: BoxDecoration(
                     color: isRecommended ? Colors.black.withOpacity(0.05) : null,
                     border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
