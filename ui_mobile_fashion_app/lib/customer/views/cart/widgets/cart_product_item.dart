@@ -8,12 +8,14 @@ class CartProductItem extends StatefulWidget {
   final CartItem item;
   final VoidCallback onUpdate;
   final ValueChanged<bool> onSelectionChanged;
+  final bool isSelected; // ← THÊM
 
   const CartProductItem({
     super.key,
     required this.item,
     required this.onUpdate,
     required this.onSelectionChanged,
+    required this.isSelected, // ← THÊM
   });
 
   @override
@@ -21,7 +23,7 @@ class CartProductItem extends StatefulWidget {
 }
 
 class _CartProductItemState extends State<CartProductItem> {
-  bool _isSelected = false;
+  // Bỏ _isSelected local, dùng widget.isSelected từ ngoài truyền vào
 
   Future<void> _deleteItem(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
@@ -94,19 +96,18 @@ class _CartProductItemState extends State<CartProductItem> {
           children: [
             CartProductItemUI(
               item: widget.item,
-              isSelected: _isSelected,
+              isSelected: widget.isSelected, // ← dùng từ parent
               onSelectionChanged: (value) {
-                setState(() {
-                  _isSelected = value;
-                });
                 widget.onSelectionChanged(value);
               },
             ),
+            const SizedBox(height: 5),
             const Divider(
               height: 1,
               thickness: 1,
               color: Color(0xFFE8E8E8),
             ),
+            // const SizedBox(height: 5),
           ],
         ),
       ),

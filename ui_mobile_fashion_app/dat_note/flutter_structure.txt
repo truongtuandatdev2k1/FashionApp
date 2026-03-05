@@ -286,10 +286,12 @@
 │   │   │   │   ├── product_controller.dart
 │   │   │   │   ├── product_detail_api.dart
 │   │   │   │   └── product_list_controller.dart
-│   │   │   └── profile
-│   │   │       ├── profile_api.dart
-│   │   │       ├── profile_controller.dart
-│   │   │       └── update_profile_api.dart
+│   │   │   ├── profile
+│   │   │   │   ├── profile_api.dart
+│   │   │   │   ├── profile_controller.dart
+│   │   │   │   └── update_profile_api.dart
+│   │   │   └── saved
+│   │   │       └── saved_api.dart
 │   │   ├── models
 │   │   │   ├── order
 │   │   │   │   ├── order_request.dart
@@ -370,8 +372,10 @@
 │   │   │   │       ├── profile_header.dart
 │   │   │   │       └── profile_menu_list.dart
 │   │   │   ├── saved
-│   │   │   │   └── views
-│   │   │   │       └── saved_screen.dart
+│   │   │   │   ├── views
+│   │   │   │   │   └── saved_screen.dart
+│   │   │   │   └── widgets
+│   │   │   │       └── saved_product_item.dart
 │   │   │   └── splash
 │   │   │       └── customer_splash_screen.dart
 │   │   ├── app_initializer.dart
@@ -410,4 +414,4 @@
 ├── pubspec.yaml
 └── README.md
 
-158 directories, 253 files
+160 directories, 255 files

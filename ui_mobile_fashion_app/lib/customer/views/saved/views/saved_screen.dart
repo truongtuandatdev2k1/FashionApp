@@ -1,91 +1,223 @@
-import 'package:flutter/material.dart';
-// **QUAN TRỌNG:** Phải import file được tạo ra bởi FlutterGen
-import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
+// lib/customer/views/saved/saved_screen.dart
 
-class SavedScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
+import 'package:ui_mobile_fashion_app/core/utils/extensions.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/saved/saved_api.dart';
+import 'package:ui_mobile_fashion_app/customer/views/common/navigation_helper.dart';
+import 'package:ui_mobile_fashion_app/customer/views/saved/widgets/saved_product_item.dart';
+
+class SavedScreen extends StatefulWidget {
   const SavedScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Kích thước của lớp phủ hình tròn (Dùng lại kích thước bạn thích)
-    const double circleSize = 200.0;
-    // Kích thước của hình ảnh (Dùng lại kích thước bạn thích)
-    const double imageContentSize = 100.0;
+  State<SavedScreen> createState() => _SavedScreenState();
+}
 
+class _SavedScreenState extends State<SavedScreen> {
+  late Future<WishlistResponse> _wishlistFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _wishlistFuture = SavedApi.getWishlist();
+  }
+
+  void _refresh() {
+    setState(() {
+      _wishlistFuture = SavedApi.getWishlist();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              // 1. Hiển thị hình ảnh với lớp phủ hình tròn to (friendship.png)
-              Stack(
-                alignment: Alignment.center,
+      backgroundColor: Colors.white,
+      appBar: AppBar(
+        backgroundColor: Colors.white,
+        elevation: 0,
+        title: const Text(
+          'Yêu thích',
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.3,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: FutureBuilder<WishlistResponse>(
+        future: _wishlistFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(
+                color: Colors.black,
+                strokeWidth: 1.5,
+              ),
+            );
+          }
+
+          if (snapshot.hasError) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Lớp phủ xám nhạt (Overlay) hình tròn
-                  Container(
-                    width: circleSize,
-                    height: circleSize,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.withOpacity(0.15), // Màu xám nhạt
-                      shape: BoxShape.circle,
+                  const Icon(
+                    Icons.wifi_off_rounded,
+                    size: 44,
+                    color: Colors.black26,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'Không thể tải dữ liệu',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey[500],
+                      fontWeight: FontWeight.w400,
                     ),
                   ),
-
-                  // Hình ảnh friendship.png
-                  Assets.customer.images.friendship.image( // <--- ĐÃ THAY BẰNG friendship.png
-                    width: imageContentSize,
-                    height: imageContentSize,
-                    fit: BoxFit.contain,
+                  const SizedBox(height: 20),
+                  TextButton(
+                    onPressed: _refresh,
+                    style: TextButton.styleFrom(
+                      backgroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 12,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      'Thử lại',
+                      style: TextStyle(color: Colors.white, fontSize: 14),
+                    ),
                   ),
                 ],
               ),
+            );
+          }
 
-              const SizedBox(height: 30),
+          final items = snapshot.data!.items;
 
-              // 2. Text thông báo danh sách rỗng
-              const Text(
-                'Bạn chưa có sản phẩm nào được lưu\nHãy tìm kiếm những món đồ yêu thích!',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black54,
-                ),
-              ),
+          if (items.isEmpty) {
+            return _buildEmptyState(context);
+          }
 
-              const SizedBox(height: 20),
+          return _buildWishlistList(items);
+        },
+      ),
+    );
+  }
 
-              // 3. Button "Khám phá ngay"
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: TextButton(
-                  onPressed: () {
-                    // TODO: Xử lý sự kiện khi nhấn nút (ví dụ: điều hướng đến trang Khám phá/Home)
-                    debugPrint('Khám phá ngay');
-                  },
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20), // Bo góc tròn 20
-                    ),
-                  ),
-                  child: const Text(
-                    'Khám phá ngay', // Đổi text phù hợp hơn với màn Saved/Yêu thích
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+  Widget _buildEmptyState(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 200,
+                  height: 200,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
                 ),
+                Assets.customer.images.friendship.image(
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.contain,
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
+            const Text(
+              'Chưa có sản phẩm yêu thích',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: Colors.black,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Hãy khám phá và lưu những món đồ\nbạn yêu thích vào đây nhé!',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 28),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: TextButton(
+                onPressed: () => context.go('/home'),
+                style: TextButton.styleFrom(
+                  backgroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Text(
+                  'Khám phá ngay',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildWishlistList(List<WishlistProduct> items) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Padding(
+        //   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+        //   child: Text(
+        //     '${items.length} sản phẩm',
+        //     style: TextStyle(
+        //       fontSize: 13,
+        //       color: Colors.grey[400],
+        //       fontWeight: FontWeight.w400,
+        //     ),
+        //   ),
+        // ),
+        Expanded(
+          child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              return SavedProductItem(
+                product: items[index],
+                onTap: () => NavigationHelper.toProductDetail(
+                  context,
+                  productId: items[index].id,
+                ),
+                onFavoriteTap: () {
+                  // TODO: Xử lý xoá khỏi yêu thích
+                },
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 }

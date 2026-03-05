@@ -1,3 +1,4 @@
+// file: lib/customer/views/cart/views/cart_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -45,7 +46,7 @@ class _CartScreenState extends State<CartScreen> {
   double _calculateSelectedTotal(CartResponse cart) {
     double total = 0;
     for (final item in cart.items) {
-      if (_selectedIds.contains(item.id)) {
+      if (_selectedIds.contains(item.id.toString())) {
         total += item.currentPrice * item.quantity;
       }
     }
@@ -85,9 +86,7 @@ class _CartScreenState extends State<CartScreen> {
         final cart = snapshot.data!;
 
         final selectedCount = _selectedIds.length;
-        final totalAmount = selectedCount > 0
-            ? _calculateSelectedTotal(cart)
-            : cart.totalAmount;
+        final totalAmount = _calculateSelectedTotal(cart);
 
         return RefreshIndicator(
           onRefresh: () async {
@@ -114,19 +113,20 @@ class _CartScreenState extends State<CartScreen> {
                 Expanded(
                   child: ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    // padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: cart.items.length,
                     itemBuilder: (context, index) {
                       final item = cart.items[index];
                       return CartProductItem(
                         item: item,
                         onUpdate: _refreshCart,
+                        isSelected: _selectedIds.contains(item.id.toString()), // ← THÊM
                         onSelectionChanged: (selected) {
                           setState(() {
                             if (selected) {
-                              _selectedIds.add(item.id as String);
+                              _selectedIds.add(item.id.toString());
                             } else {
-                              _selectedIds.remove(item.id);
+                              _selectedIds.remove(item.id.toString());
                             }
                           });
                         },
@@ -143,9 +143,27 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
+  bool _isAllSelected(CartResponse cart) {
+    if (cart.items.isEmpty) return false;
+    return cart.items.every((item) => _selectedIds.contains(item.id.toString()));
+  }
+
+  void _toggleSelectAll(CartResponse cart) {
+    setState(() {
+      if (_isAllSelected(cart)) {
+        _selectedIds.clear();
+      } else {
+        for (final item in cart.items) {
+          _selectedIds.add(item.id.toString());
+        }
+      }
+    });
+  }
+
   Widget _buildFooter(CartResponse cart, int selectedCount, double totalAmount) {
+    final isAllSelected = _isAllSelected(cart);
+
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
@@ -157,55 +175,84 @@ class _CartScreenState extends State<CartScreen> {
         ],
       ),
       child: SafeArea(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  selectedCount > 0
-                      ? 'Đã chọn $selectedCount/${cart.totalItems} sản phẩm'
-                      : 'Tổng cộng (${cart.totalItems} sản phẩm)',
-                  style: TextStyle(color: Colors.grey[700], fontSize: 15),
-                ),
-                Text(
-                  _currency.format(totalAmount),
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton(
-                onPressed: selectedCount == 0
-                    ? null
-                    : () {
-                  // Có thể filter chỉ gửi các item được chọn
-                  context.push('/order', extra: cart);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  disabledBackgroundColor: Colors.grey.shade400,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(26),
-                  ),
-                ),
-                child: Text(
-                  'Thanh toán',
-                  style: TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                    color: selectedCount == 0 ? Colors.white70 : Colors.white,
-                  ),
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          child: Row(
+            children: [
+              // ===== TRÁI: Checkbox chọn tất cả + label =====
+              GestureDetector(
+                onTap: () => _toggleSelectAll(cart),
+                child: Row(
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: isAllSelected,
+                        activeColor: Colors.black,
+                        shape: const CircleBorder(),
+                        side: BorderSide(color: Colors.grey.shade400),
+                        onChanged: (_) => _toggleSelectAll(cart),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    const Text(
+                      'Tất cả',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ],
+
+              const Spacer(),
+
+              // ===== PHẢI: Tổng tiền + nút thanh toán =====
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        selectedCount > 0
+                            ? _currency.format(totalAmount)
+                            : '0₫',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    child: ElevatedButton(
+                      onPressed: selectedCount == 0
+                          ? null
+                          : () => context.push('/order', extra: cart),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.black,
+                        disabledBackgroundColor: Colors.grey.shade300,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 15),
+                      ),
+                      child: Text(
+                        'Thanh toán${selectedCount > 0 ? ' ($selectedCount)' : ''}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: selectedCount == 0 ? Colors.white54 : Colors.white,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

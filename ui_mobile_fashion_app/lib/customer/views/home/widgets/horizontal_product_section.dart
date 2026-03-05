@@ -1,7 +1,7 @@
 // lib/customer/views/home/widgets/horizontal_product_section.dart
 import 'package:flutter/material.dart';
 import 'package:ui_mobile_fashion_app/customer/models/product_data.dart';
-import 'package:ui_mobile_fashion_app/customer/views/product/product_detail_screen.dart';
+import 'package:ui_mobile_fashion_app/customer/views/common/navigation_helper.dart';
 import 'product_item.dart';
 import '../../product/product_list_screen.dart';
 
@@ -19,8 +19,8 @@ class HorizontalProductSection extends StatelessWidget {
     switch (title) {
       case 'Bán chạy nhất':
         return 'bestseller';
-      // case 'Sản phẩm mới':
-      //   return 'new';
+    // case 'Sản phẩm mới':
+    //   return 'new';
       case 'Hot trend':
         return 'hottrend';
       default:
@@ -54,9 +54,9 @@ class HorizontalProductSection extends StatelessWidget {
                     MaterialPageRoute(
                       builder:
                           (_) => ProductListScreen(
-                            title: title,
-                            filter: _mapTitleToFilter(title),
-                          ),
+                        title: title,
+                        filter: _mapTitleToFilter(title),
+                      ),
                     ),
                   );
                 },
@@ -88,17 +88,10 @@ class HorizontalProductSection extends StatelessWidget {
                 price: product.price.toDouble(),
                 discountPct: product.discountPct,
                 priceAfter: product.priceAfter.toDouble(),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (_) => ProductDetailScreen(
-                            productId: product.id,
-                          ), // DÙNG ID
-                    ),
-                  );
-                },
+                onTap: () => NavigationHelper.toProductDetail(
+                  context,
+                  productId: product.id,
+                ),
               );
             },
           ),
