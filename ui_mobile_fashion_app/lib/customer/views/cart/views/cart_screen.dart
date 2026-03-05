@@ -38,9 +38,13 @@ class _CartScreenState extends State<CartScreen> {
   void _refreshCart() {
     setState(() {
       _loadData();
-      // Nếu muốn reset chọn khi refresh thì uncomment dòng dưới
-      // _selectedIds.clear();
     });
+  }
+
+  // Sync _selectedIds: chỉ giữ lại những id còn tồn tại trong cart hiện tại
+  void _syncSelectedIds(CartResponse cart) {
+    final validIds = cart.items.map((e) => e.id.toString()).toSet();
+    _selectedIds.retainAll(validIds);
   }
 
   double _calculateSelectedTotal(CartResponse cart) {
@@ -85,6 +89,9 @@ class _CartScreenState extends State<CartScreen> {
 
         final cart = snapshot.data!;
 
+        // Sync trước khi tính: loại bỏ các id không còn trong cart
+        _syncSelectedIds(cart);
+
         final selectedCount = _selectedIds.length;
         final totalAmount = _calculateSelectedTotal(cart);
 
@@ -113,14 +120,13 @@ class _CartScreenState extends State<CartScreen> {
                 Expanded(
                   child: ListView.builder(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    // padding: const EdgeInsets.symmetric(vertical: 8),
                     itemCount: cart.items.length,
                     itemBuilder: (context, index) {
                       final item = cart.items[index];
                       return CartProductItem(
                         item: item,
                         onUpdate: _refreshCart,
-                        isSelected: _selectedIds.contains(item.id.toString()), // ← THÊM
+                        isSelected: _selectedIds.contains(item.id.toString()),
                         onSelectionChanged: (selected) {
                           setState(() {
                             if (selected) {
@@ -190,7 +196,7 @@ class _CartScreenState extends State<CartScreen> {
                       height: 24,
                       child: Checkbox(
                         value: isAllSelected,
-                        activeColor: Colors.black,
+                        activeColor: Colors.blue,
                         shape: const CircleBorder(),
                         side: BorderSide(color: Colors.grey.shade400),
                         onChanged: (_) => _toggleSelectAll(cart),

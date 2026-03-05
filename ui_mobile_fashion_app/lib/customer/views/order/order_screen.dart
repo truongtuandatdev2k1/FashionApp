@@ -308,6 +308,7 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
     final totalItems = widget.cart.totalItems;
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: _buildAppBar(),
       body: SingleChildScrollView(
         child: Column(
@@ -318,7 +319,7 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
               children: [
                 OrderProductItem(item: item),
                 if (item != cartItems.last)
-                  const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
+                  const Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE), indent: 20, endIndent: 20),
               ],
             )),
             _divider(thickness: 8),
@@ -348,7 +349,8 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
       ),
       title: const Text('Tổng quan đơn hàng'),
       centerTitle: true,
-      elevation: 0.5,
+      elevation: 0,
+      surfaceTintColor: Colors.white,
       backgroundColor: Colors.white,
       foregroundColor: Colors.black,
       bottom: PreferredSize(
@@ -372,6 +374,6 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
   }
 
   Widget _divider({double thickness = 1}) {
-    return Divider(height: 1, thickness: thickness, color: const Color(0xFFF5F5F5));
+    return Divider(height: thickness, thickness: thickness, color: const Color(0xFFEEEEEE));
   }
 }

@@ -7,6 +7,16 @@ class OrderProductItem extends StatelessWidget {
 
   const OrderProductItem({super.key, required this.item});
 
+  Color _parseColor(String colorCode) {
+    try {
+      final hex = colorCode.replaceAll('#', '');
+      final fullHex = hex.length == 6 ? 'FF$hex' : hex;
+      return Color(int.parse(fullHex, radix: 16));
+    } catch (_) {
+      return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
@@ -32,13 +42,13 @@ class OrderProductItem extends StatelessWidget {
                 fit: BoxFit.cover,
                 errorBuilder:
                     (_, __, ___) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(
-                        Icons.image_not_supported,
-                        color: Colors.grey,
-                        size: 40,
-                      ),
-                    ),
+                  color: Colors.grey[300],
+                  child: const Icon(
+                    Icons.image_not_supported,
+                    color: Colors.grey,
+                    size: 40,
+                  ),
+                ),
               ),
             ),
           ),
@@ -55,14 +65,35 @@ class OrderProductItem extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
-                  maxLines: 2,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 4),
-                // Màu sắc và Kích cỡ
-                Text(
-                  'Màu: ${product.color} • Size: ${product.size}',
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                // Màu sắc, Kích cỡ và Số lượng
+                Row(
+                  children: [
+                    Container(
+                      width: 14,
+                      height: 14,
+                      decoration: BoxDecoration(
+                        color: _parseColor(product.color),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.grey.shade400,
+                          width: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Size: ${product.size}, Số lượng: x${item.quantity}',
+                        style: TextStyle(color: Colors.grey[600], fontSize: 13),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Row(
@@ -92,21 +123,7 @@ class OrderProductItem extends StatelessWidget {
             ),
           ),
 
-          // Số lượng
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              const SizedBox(height: 30), // Căn chỉnh với giá
-              Text(
-                'x${item.quantity}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
+
         ],
       ),
     );

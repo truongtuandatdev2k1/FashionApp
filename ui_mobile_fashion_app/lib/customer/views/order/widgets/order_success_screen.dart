@@ -19,12 +19,14 @@ class OrderSuccessScreen extends StatelessWidget {
     final isVNPay = orderId != null; // Kiểm tra xem có phải VNPay không
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Kết quả thanh toán'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
-        automaticallyImplyLeading: false, // Ẩn nút back
+        surfaceTintColor: Colors.white,
+        automaticallyImplyLeading: false,
       ),
       body: Center(
         child: Padding(
@@ -57,7 +59,7 @@ class OrderSuccessScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.grey.shade200),
                   ),
@@ -66,7 +68,7 @@ class OrderSuccessScreen extends StatelessWidget {
                       _buildInfoRow('Mã đơn hàng', orderId!),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Divider(),
+                        child: Divider(color: Color(0xFFEEEEEE)),
                       ),
                       _buildInfoRow(
                         'Tổng thanh toán',
@@ -75,7 +77,7 @@ class OrderSuccessScreen extends StatelessWidget {
                       ),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Divider(),
+                        child: Divider(color: Color(0xFFEEEEEE)),
                       ),
                       _buildInfoRow('Phương thức', 'VNPAY QR'),
                     ],

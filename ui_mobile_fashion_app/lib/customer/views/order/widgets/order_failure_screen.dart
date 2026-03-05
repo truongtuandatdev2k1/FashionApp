@@ -25,11 +25,13 @@ class OrderFailureScreen extends StatelessWidget {
     print('-----------------------------------------');
 
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Kết quả thanh toán'),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
+        surfaceTintColor: Colors.white,
         automaticallyImplyLeading: false,
       ),
       body: Center(
@@ -62,7 +64,7 @@ class OrderFailureScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.grey[50],
+                    color: Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: Colors.grey.shade200),
                   ),
@@ -71,7 +73,7 @@ class OrderFailureScreen extends StatelessWidget {
                       _buildInfoRow('Mã đơn hàng', orderId!),
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 8.0),
-                        child: Divider(),
+                        child: Divider(color: Color(0xFFEEEEEE)),
                       ),
                       _buildInfoRow(
                         'Tổng thanh toán',

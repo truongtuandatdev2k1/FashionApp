@@ -44,7 +44,7 @@ class OrderSummarySection extends StatelessWidget {
           ),
 
           const SizedBox(height: 20),
-          const Divider(thickness: 8, color: Color(0xFFF5F5F5)),
+          const Divider(height: 8, thickness: 8, color: Color(0xFFEEEEEE)),
           const SizedBox(height: 16),
 
           // --- Order Summary ---
@@ -55,7 +55,7 @@ class OrderSummarySection extends StatelessWidget {
           const SizedBox(height: 10),
           _buildRow('Tổng phụ ($totalItems sp)', currency.format(subtotal)),
           _buildRow('Vận chuyển', currency.format(shippingFee)),
-          const Divider(),
+          const Divider(color: Color(0xFFEEEEEE)),
           _buildRow('Tổng', currency.format(total), isTotal: true),
         ],
       ),

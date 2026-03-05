@@ -26,7 +26,7 @@ class OrderBottomBar extends StatelessWidget {
       padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade300, width: 1)),
+        border: Border(top: BorderSide(color: Color(0xFFEEEEEE), width: 1)),
         boxShadow: const [
           BoxShadow(color: Colors.black12, blurRadius: 5, offset: Offset(0, -2)),
         ],

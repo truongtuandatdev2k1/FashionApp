@@ -32,7 +32,7 @@ class CartProductItemUI extends StatelessWidget {
             height: 24,
             child: Checkbox(
               value: isSelected,
-              activeColor: Colors.black,
+              activeColor: Colors.blue,
               shape: const CircleBorder(),
               side: BorderSide(color: Colors.grey.shade400),
               onChanged: (bool? value) {
