@@ -18,21 +18,20 @@ class SizeColorSelectorSheet extends StatefulWidget {
   });
 
   static Future<void> show(
-    BuildContext context, {
-    required ProductDetailModel product,
-    required VoidCallback onConfirm,
-    required bool isBuyNow,
-  }) {
+      BuildContext context, {
+        required ProductDetailModel product,
+        required VoidCallback onConfirm,
+        required bool isBuyNow,
+      }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder:
-          (_) => SizeColorSelectorSheet(
-            product: product,
-            onConfirm: onConfirm,
-            isBuyNow: isBuyNow,
-          ),
+      builder: (_) => SizeColorSelectorSheet(
+        product: product,
+        onConfirm: onConfirm,
+        isBuyNow: isBuyNow,
+      ),
     );
   }
 
@@ -75,12 +74,11 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
   void _updateSizesForSelectedColor() {
     if (selectedColorHex == null) return;
 
-    final sizes =
-        variantsByColorHex[selectedColorHex]!
-            .map((v) => v.sizeCode)
-            .toSet()
-            .toList()
-          ..sort();
+    final sizes = variantsByColorHex[selectedColorHex]!
+        .map((v) => v.sizeCode)
+        .toSet()
+        .toList()
+      ..sort();
 
     availableSizes = sizes;
 
@@ -89,16 +87,16 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
       selectedSize = availableSizes.first;
     }
 
-    // Reset số lượng khi đổi màu/size
     setState(() => _quantity = 1);
   }
 
   String get _selectedImageUrl {
-    if (selectedColorHex == null || selectedSize == null)
+    if (selectedColorHex == null || selectedSize == null) {
       return widget.product.imageUrl;
+    }
 
     final variant = variantsByColorHex[selectedColorHex]!.firstWhere(
-      (v) => v.sizeCode == selectedSize,
+          (v) => v.sizeCode == selectedSize,
       orElse: () => variantsByColorHex[selectedColorHex]!.first,
     );
 
@@ -109,7 +107,6 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
 
   int get _currentStock {
     if (selectedColorHex == null || selectedSize == null) return 0;
-
     try {
       return variantsByColorHex[selectedColorHex]!
           .firstWhere((v) => v.sizeCode == selectedSize)
@@ -121,7 +118,6 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
 
   int? get _selectedVariantId {
     if (selectedColorHex == null || selectedSize == null) return null;
-
     try {
       return variantsByColorHex[selectedColorHex]!
           .firstWhere((v) => v.sizeCode == selectedSize)
@@ -129,6 +125,12 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
     } catch (_) {
       return null;
     }
+  }
+
+  String _formatCurrency(num price) {
+    final raw = price.toStringAsFixed(0);
+    final reg = RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))');
+    return raw.replaceAllMapped(reg, (m) => '${m[1]}.') + ' đ';
   }
 
   Future<void> _addToCart() async {
@@ -146,21 +148,17 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
 
     try {
       await AddToCartApi.addToCart(variantId, _quantity);
-
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Đã thêm vào giỏ hàng thành công!'),
           backgroundColor: Colors.green,
         ),
       );
-
       widget.onConfirm();
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.toString().replaceFirst('Exception: ', '')),
@@ -177,22 +175,23 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
     final height = MediaQuery.of(context).size.height;
 
     return Container(
-      height: height * 0.82,
+      height: height * 0.65,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
       child: Column(
         children: [
-          // Header
-          Container(
-            margin: const EdgeInsets.only(top: 12),
+          // Handle bar + close
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Stack(
               alignment: Alignment.center,
               children: [
                 Container(
                   width: 40,
                   height: 5,
+                  margin: const EdgeInsets.only(top: 12),
                   decoration: BoxDecoration(
                     color: Colors.grey[300],
                     borderRadius: BorderRadius.circular(10),
@@ -202,13 +201,12 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                   alignment: Alignment.centerRight,
                   child: IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, size: 28),
+                    icon: const Icon(Icons.close, size: 20),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 16),
 
           // Ảnh + giá
           Padding(
@@ -219,63 +217,66 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(12),
                   child: SizedBox(
-                    width: 90,
-                    height: 90,
+                    width: 80,
+                    height: 80,
                     child: CachedNetworkImage(
                       imageUrl: _selectedImageUrl,
                       fit: BoxFit.cover,
-                      placeholder:
-                          (_, __) => Container(
-                            color: Colors.grey[200],
-                            child: const CircularProgressIndicator(),
-                          ),
+                      placeholder: (_, __) => Container(
+                        color: Colors.grey[200],
+                        child: const CircularProgressIndicator(),
+                      ),
                     ),
                   ),
                 ),
                 const SizedBox(width: 16),
+
+                // Giá + kho
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Hàng 1: Giá sau giảm (màu đen)
+                      Text(
+                        _formatCurrency(widget.product.priceAfter),
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      // Hàng 2: Giá gốc gạch ngang + % giảm cùng hàng
                       Row(
                         children: [
-                          if (widget.product.discountPct > 0)
+                          Text(
+                            _formatCurrency(widget.product.price),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey,
+                              decoration: TextDecoration.lineThrough,
+                            ),
+                          ),
+                          if (widget.product.discountPct > 0) ...[
+                            const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
+                                  horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
                                 color: Colors.red,
-                                borderRadius: BorderRadius.circular(6),
+                                borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 '-${widget.product.discountPct}%',
                                 style: const TextStyle(
+                                  fontSize: 11,
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${(widget.product.priceAfter / 1000).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
+                          ],
                         ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${(widget.product.price / 1000).toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}đ',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                          decoration: TextDecoration.lineThrough,
-                        ),
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -291,260 +292,205 @@ class _SizeColorSelectorSheetState extends State<SizeColorSelectorSheet> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+
+          const SizedBox(height: 10),
           const Divider(height: 1),
 
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 20, 24, 20),
+              padding: const EdgeInsets.fromLTRB(24, 10, 24, 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Kích thước
-                  const Text(
-                    'Kích thước',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 12),
+                  const Text('Kích thước', style: TextStyle(fontSize: 14)),
+                  const SizedBox(height: 5),
                   Wrap(
-                    spacing: 12,
+                    spacing: 10,
                     runSpacing: 12,
-                    children:
-                        availableSizes.map((size) {
-                          final isSelected = selectedSize == size;
-                          final isOutOfStock = _currentStock == 0;
-                          return GestureDetector(
-                            onTap:
-                                isOutOfStock
-                                    ? null
-                                    : () => setState(() => selectedSize = size),
-                            child: Container(
-                              width: 30,
-                              height: 30,
-                              alignment: Alignment.center,
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? Colors.black
-                                        : (isOutOfStock
-                                            ? Colors.grey[200]
-                                            : Colors.transparent),
-                                border: Border.all(
-                                  color:
-                                      isSelected
-                                          ? Colors.black
-                                          : Colors.grey.shade400,
-                                  width: isSelected ? 2 : 1.5,
-                                ),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Text(
-                                size,
-                                style: TextStyle(
-                                  color:
-                                      isSelected
-                                          ? Colors.white
-                                          : (isOutOfStock
-                                              ? Colors.grey
-                                              : Colors.black),
-                                  // fontWeight: FontWeight.w600,
-                                  fontSize: 12
-                                ),
-                              ),
+                    children: availableSizes.map((size) {
+                      final isSelected = selectedSize == size;
+                      final isOutOfStock = _currentStock == 0;
+                      return GestureDetector(
+                        onTap: isOutOfStock
+                            ? null
+                            : () => setState(() => selectedSize = size),
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? Colors.black
+                                : (isOutOfStock
+                                ? Colors.grey[200]
+                                : Colors.transparent),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.black
+                                  : Colors.grey.shade400,
+                              width: isSelected ? 2 : 0.5,
                             ),
-                          );
-                        }).toList(),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            size,
+                            style: TextStyle(
+                              color: isSelected
+                                  ? Colors.white
+                                  : (isOutOfStock
+                                  ? Colors.grey
+                                  : Colors.black),
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                   ),
                   const SizedBox(height: 10),
 
                   // Màu sắc
-                  const Text(
-                    'Màu sắc',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 12),
+                  const Text('Màu sắc', style: TextStyle(fontSize: 14)),
+                  const SizedBox(height: 5),
                   Wrap(
-                    spacing: 16,
+                    spacing: 10,
                     runSpacing: 16,
-                    children:
-                        availableColors
-                            .where(
-                              (c) =>
-                                  c.hex.trim().isNotEmpty &&
-                                  RegExp(r'^#?[0-9A-Fa-f]{6}$').hasMatch(
-                                    c.hex.trim().replaceFirst('#', ''),
-                                  ),
-                            )
-                            .map((colorInfo) {
-                              final hex = colorInfo.hex.trim();
-                              final cleanHex =
-                                  hex.startsWith('#') ? hex : '#$hex';
-                              final isSelected =
-                                  selectedColorHex?.trim() == cleanHex;
-                              final color = Color(
-                                int.parse(cleanHex.replaceFirst('#', '0xFF')),
-                              );
-                              final luminance = color.computeLuminance();
-                              final isLight = luminance > 0.9;
+                    children: availableColors
+                        .where((c) =>
+                    c.hex.trim().isNotEmpty &&
+                        RegExp(r'^#?[0-9A-Fa-f]{6}$').hasMatch(
+                          c.hex.trim().replaceFirst('#', ''),
+                        ))
+                        .map((colorInfo) {
+                      final hex = colorInfo.hex.trim();
+                      final cleanHex =
+                      hex.startsWith('#') ? hex : '#$hex';
+                      final isSelected =
+                          selectedColorHex?.trim() == cleanHex;
+                      final color = Color(
+                        int.parse(cleanHex.replaceFirst('#', '0xFF')),
+                      );
+                      final isLight = color.computeLuminance() > 0.9;
 
-                              return GestureDetector(
-                                onTap: () {
-                                  setState(() {
-                                    selectedColorHex = cleanHex;
-                                    _updateSizesForSelectedColor();
-                                  });
-                                },
-                                child: Column(
-                                  children: [
-                                    Container(
-                                      width: 30,
-                                      height: 30,
-                                      decoration: BoxDecoration(
-                                        color: color,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color:
-                                              isSelected
-                                                  ? Colors.black
-                                                  : (isLight
-                                                      ? Colors.grey.shade400
-                                                      : Colors.grey.shade300),
-                                          width:
-                                              isSelected
-                                                  ? 2.0
-                                                  : (isLight ? 0.0 : 0.0),
-                                        ),
-                                        // boxShadow: [
-                                        //   BoxShadow(
-                                        //     color: Colors.black.withOpacity(
-                                        //       isSelected ? 0.4 : 0.2,
-                                        //     ),
-                                        //     blurRadius: isSelected ? 16 : 10,
-                                        //     offset: const Offset(0, 5),
-                                        //   ),
-                                        // ],
-                                      ),
-                                      child:
-                                          isSelected
-                                              ? const Icon(
-                                                Icons.check,
-                                                color: Colors.white,
-                                                size: 14,
-                                              )
-                                              : null,
-                                    ),
-                                  ],
-                                ),
-                              );
-                            })
-                            .toList(),
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedColorHex = cleanHex;
+                            _updateSizesForSelectedColor();
+                          });
+                        },
+                        child: Container(
+                          width: 24,
+                          height: 24,
+                          decoration: BoxDecoration(
+                            color: color,
+                            borderRadius: BorderRadius.circular(100),
+                            border: Border.all(
+                              color: isSelected
+                                  ? Colors.black
+                                  : (isLight
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade300),
+                              width: isSelected ? 2.0 : 0.0,
+                            ),
+                          ),
+                          child: isSelected
+                              ? const Icon(Icons.check,
+                              color: Colors.white, size: 14)
+                              : null,
+                        ),
+                      );
+                    })
+                        .toList(),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 1),
 
-                  // === SỐ LƯỢNG - CÙNG MỘT HÀNG ===
+                  // Số lượng
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // Cột trái: Text "Số lượng"
-                      const Text(
-                        'Số lượng:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-
-                      // Cột phải: Phần chọn số lượng
+                      const Text('Số lượng:',
+                          style: TextStyle(fontSize: 14)),
                       Row(
                         children: [
                           IconButton(
-                            icon: const Icon(
-                              Icons.remove_circle_outline,
-                              size: 20,
-                            ),
-                            color: _quantity > 1 ? Colors.black : Colors.grey,
-                            onPressed:
-                                _quantity > 1
-                                    ? () => setState(() => _quantity--)
-                                    : null,
+                            icon: const Icon(Icons.remove_circle_outline,
+                                size: 20),
+                            color:
+                            _quantity > 1 ? Colors.black : Colors.grey,
+                            onPressed: _quantity > 1
+                                ? () => setState(() => _quantity--)
+                                : null,
                           ),
-                          Container(
+                          SizedBox(
                             width: 18,
-                            alignment: Alignment.center,
-                            child: Text(
-                              '$_quantity',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                            child: Center(
+                              child: Text(
+                                '$_quantity',
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(
-                              Icons.add_circle_outline,
-                              size: 20,
-                            ),
-                            color:
-                                _quantity < _currentStock
-                                    ? Colors.black
-                                    : Colors.grey,
-                            onPressed:
-                                _quantity < _currentStock
-                                    ? () => setState(() => _quantity++)
-                                    : null,
+                            icon: const Icon(Icons.add_circle_outline,
+                                size: 20),
+                            color: _quantity < _currentStock
+                                ? Colors.black
+                                : Colors.grey,
+                            onPressed: _quantity < _currentStock
+                                ? () => setState(() => _quantity++)
+                                : null,
                           ),
                         ],
                       ),
                     ],
                   ),
-                  const SizedBox(
-                    height: 20,
-                  ), // Khoảng cách xuống nút "Thêm vào giỏ hàng"
+
                   const Spacer(),
 
-                  // Nút thêm vào giỏ
+                  // Nút thêm vào giỏ / mua ngay
                   SizedBox(
                     width: double.infinity,
                     height: 45,
                     child: ElevatedButton(
-                      onPressed:
-                          _isAdding ||
-                                  selectedSize == null ||
-                                  selectedColorHex == null ||
-                                  _currentStock == 0 ||
-                                  _quantity == 0
-                              ? null
-                              : _addToCart,
+                      onPressed: _isAdding ||
+                          selectedSize == null ||
+                          selectedColorHex == null ||
+                          _currentStock == 0 ||
+                          _quantity == 0
+                          ? null
+                          : _addToCart,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF0079C2),
+                        backgroundColor: Colors.black,
                         disabledBackgroundColor: Colors.grey[300],
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child:
-                          _isAdding
-                              ? const SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
-                                ),
-                              )
-                              : Text(
-                                widget.isBuyNow
-                                    ? 'Mua ngay'
-                                    : 'Thêm vào giỏ hàng',
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  // fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                ),
-                              ),
+                      child: _isAdding
+                          ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 3,
+                        ),
+                      )
+                          : Text(
+                        widget.isBuyNow
+                            ? 'Mua ngay'
+                            : 'Thêm vào giỏ hàng',
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 20),
                 ],
               ),
             ),
