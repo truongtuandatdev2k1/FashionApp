@@ -1,9 +1,7 @@
 // lib/customer/views/order/order_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:ui_mobile_fashion_app/core/constants/assets.dart/assets.gen.dart';
 
 import 'package:ui_mobile_fashion_app/customer/logic/cart/cart_api.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/address/address_default_api.dart';
@@ -13,6 +11,9 @@ import 'package:ui_mobile_fashion_app/customer/models/order/order_request.dart';
 
 import 'widgets/order_address_section.dart';
 import 'widgets/order_product_item.dart';
+import 'widgets/order_summary_section.dart';
+import 'widgets/order_payment_method_section.dart';
+import 'widgets/order_bottom_bar.dart';
 
 class OrderScreen extends StatefulWidget {
   final CartResponse cart;
@@ -24,13 +25,10 @@ class OrderScreen extends StatefulWidget {
 
 class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
   String _paymentMethod = 'cod';
-  String? _pendingOrderId; // Lưu order ID đang chờ thanh toán PayOS
+  String? _pendingOrderId;
   bool _isCheckingPayment = false;
 
-  final NumberFormat _currency = NumberFormat.currency(
-    locale: 'vi_VN',
-    symbol: '₫',
-  );
+  // ─── Lifecycle ────────────────────────────────────────────────────────────
 
   @override
   void initState() {
@@ -44,12 +42,9 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  /// Được gọi khi app quay lại từ background (sau khi mở PayOS web)
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-
-    // Khi app resumed và đang có order đang chờ thanh toán
     if (state == AppLifecycleState.resumed &&
         _pendingOrderId != null &&
         !_isCheckingPayment) {
@@ -57,24 +52,22 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
     }
   }
 
-  // ====================== LOGIC KIỂM TRA TRẠNG THÁI THANH TOÁN ======================
+  // ─── Payment status check ─────────────────────────────────────────────────
 
   Future<void> _checkPaymentStatus() async {
     if (_pendingOrderId == null || _isCheckingPayment) return;
 
     setState(() => _isCheckingPayment = true);
 
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    scaffoldMessenger.hideCurrentSnackBar();
-    scaffoldMessenger.showSnackBar(
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       const SnackBar(
-        content: Row(
-          children: [
-            CircularProgressIndicator(color: Colors.white),
-            SizedBox(width: 16),
-            Text('Đang kiểm tra trạng thái thanh toán...'),
-          ],
-        ),
+        content: Row(children: [
+          CircularProgressIndicator(color: Colors.white),
+          SizedBox(width: 16),
+          Text('Đang kiểm tra trạng thái thanh toán...'),
+        ]),
         duration: Duration(seconds: 5),
       ),
     );
@@ -84,40 +77,34 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
       final totalAmount = widget.cart.totalAmount + 30000;
 
       if (!mounted) return;
-      scaffoldMessenger.hideCurrentSnackBar();
+      messenger.hideCurrentSnackBar();
 
       if (status.isPaid) {
-        // Thanh toán thành công
         context.pushReplacement('/order-success', extra: {
           'orderId': _pendingOrderId,
           'totalAmount': totalAmount,
         });
       } else if (status.isFailed) {
-        // Thanh toán thất bại
         context.pushReplacement('/order-failure', extra: {
           'orderId': _pendingOrderId,
           'totalAmount': totalAmount,
           'error': 'Giao dịch bị hủy hoặc thất bại.',
         });
       } else {
-        // Vẫn đang pending - hiển thị dialog hỏi
         _showPaymentPendingDialog(totalAmount);
       }
     } catch (e) {
       if (!mounted) return;
-      scaffoldMessenger.hideCurrentSnackBar();
-      scaffoldMessenger.showSnackBar(
-        SnackBar(
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(
           content: Text(
             'Lỗi kiểm tra trạng thái: ${e.toString().replaceFirst('Exception: ', '')}',
           ),
           backgroundColor: Colors.orange,
-        ),
-      );
+        ));
     } finally {
-      if (mounted) {
-        setState(() => _isCheckingPayment = false);
-      }
+      if (mounted) setState(() => _isCheckingPayment = false);
     }
   }
 
@@ -125,7 +112,7 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: const Text('Thanh toán đang chờ xử lý'),
         content: const Text(
           'Hệ thống chưa nhận được xác nhận thanh toán.\n\n'
@@ -137,21 +124,21 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(ctx).pop();
               context.go('/profile/my-orders');
             },
             child: const Text('Xem đơn hàng'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(ctx).pop();
               setState(() => _pendingOrderId = null);
             },
             child: const Text('Quay lại'),
           ),
           ElevatedButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(ctx).pop();
               _checkPaymentStatus();
             },
             style: ElevatedButton.styleFrom(
@@ -165,46 +152,37 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
     );
   }
 
-  // ====================== LOGIC MỞ PAYMENT LINK ======================
+  // ─── Open payment link ────────────────────────────────────────────────────
 
   Future<void> _openPaymentLink(String url) async {
     try {
       final uri = Uri.parse(url);
       if (await canLaunchUrl(uri)) {
-        await launchUrl(
-          uri,
-          mode: LaunchMode.externalApplication, // Mở trong browser
-        );
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
         throw Exception('Không thể mở link thanh toán');
       }
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Lỗi mở link: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Lỗi mở link: $e'), backgroundColor: Colors.red),
       );
     }
   }
 
-  // ====================== LOGIC ĐẶT HÀNG ======================
+  // ─── Place order ──────────────────────────────────────────────────────────
 
   Future<void> _handlePlaceOrder() async {
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final totalAmount = widget.cart.totalAmount + 1000; // + tiền ship
+    final messenger = ScaffoldMessenger.of(context);
 
-    scaffoldMessenger.hideCurrentSnackBar();
-    scaffoldMessenger.showSnackBar(
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       const SnackBar(
-        content: Row(
-          children: [
-            CircularProgressIndicator(color: Colors.white),
-            SizedBox(width: 16),
-            Text('Đang xử lý đơn hàng...'),
-          ],
-        ),
+        content: Row(children: [
+          CircularProgressIndicator(color: Colors.white),
+          SizedBox(width: 16),
+          Text('Đang xử lý đơn hàng...'),
+        ]),
         duration: Duration(seconds: 30),
       ),
     );
@@ -215,70 +193,59 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
       if (defaultAddress == null) {
         throw Exception('Vui lòng chọn hoặc thêm địa chỉ giao hàng mặc định.');
       }
-      final addressId = defaultAddress.id;
 
-      // 2. Lấy danh sách ID sản phẩm
+      // 2. Lấy danh sách cart item IDs
       final cartItemIds = widget.cart.items.map((item) => item.id).toList();
       if (cartItemIds.isEmpty) {
         throw Exception('Giỏ hàng hiện tại không có sản phẩm nào.');
       }
 
-      // 3. Tạo Request Object - SỬA: bank_transfer thay vì bank
+      // 3. Tạo request
       final orderRequest = CreateOrderRequest(
-        addressId: addressId,
+        addressId: defaultAddress.id,
         cartItemIds: cartItemIds,
         paymentMethod: _paymentMethod == 'bank_transfer' ? 'bank_transfer' : 'cod',
         note: null,
       );
 
-      // 4. XỬ LÝ THEO PHƯƠNG THỨC THANH TOÁN
+      // 4. Xử lý theo phương thức thanh toán
       if (_paymentMethod == 'cod') {
-        // === THANH TOÁN KHI NHẬN HÀNG (COD) ===
         await CreateOrderApi.createOrder(orderRequest);
         if (!mounted) return;
-
-        scaffoldMessenger.hideCurrentSnackBar();
+        messenger.hideCurrentSnackBar();
         context.pushReplacement('/order-success');
       } else {
-        // === THANH TOÁN QUA PAYOS ===
-
-        // Bước 1: Tạo đơn hàng
-        print('📦 Đang tạo đơn hàng với payment_method: bank_transfer');
+        // PayOS flow
+        print('📦 Tạo đơn hàng với payment_method: bank_transfer');
         final orderId = await CreateOrderApi.createOrder(orderRequest);
-        print('✅ Đơn hàng đã tạo thành công. Order ID: $orderId');
-
+        print('✅ Order ID: $orderId');
         if (!mounted) return;
 
-        // Lưu order ID để kiểm tra sau
         setState(() => _pendingOrderId = orderId);
 
-        // Bước 2: Tạo payment link từ PayOS
-        scaffoldMessenger.hideCurrentSnackBar();
-        scaffoldMessenger.showSnackBar(
+        messenger.hideCurrentSnackBar();
+        messenger.showSnackBar(
           const SnackBar(
-            content: Row(
-              children: [
-                CircularProgressIndicator(color: Colors.white),
-                SizedBox(width: 16),
-                Text('Đang tạo link thanh toán PayOS...'),
-              ],
-            ),
+            content: Row(children: [
+              CircularProgressIndicator(color: Colors.white),
+              SizedBox(width: 16),
+              Text('Đang tạo link thanh toán PayOS...'),
+            ]),
             duration: Duration(seconds: 10),
           ),
         );
 
-        print('🔗 Đang tạo payment link cho order: $orderId');
+        print('🔗 Tạo payment link cho order: $orderId');
         final paymentLink = await PayOSApi.createPaymentLink(orderId);
-        print('✅ Payment link đã tạo: ${paymentLink.checkoutUrl}');
+        print('✅ Payment link: ${paymentLink.checkoutUrl}');
 
         if (!mounted) return;
-        scaffoldMessenger.hideCurrentSnackBar();
+        messenger.hideCurrentSnackBar();
 
-        // Bước 3: Hiển thị hướng dẫn và mở link
         final shouldOpen = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
-          builder: (context) => AlertDialog(
+          builder: (ctx) => AlertDialog(
             title: const Text('Chuyển đến thanh toán'),
             content: const Text(
               'Bạn sẽ được chuyển đến trang PayOS để hoàn tất thanh toán.\n\n'
@@ -286,11 +253,11 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.of(context).pop(false),
+                onPressed: () => Navigator.of(ctx).pop(false),
                 child: const Text('Hủy'),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.of(context).pop(true),
+                onPressed: () => Navigator.of(ctx).pop(true),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
                   foregroundColor: Colors.white,
@@ -302,12 +269,9 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
         );
 
         if (shouldOpen == true && mounted) {
-          // Mở payment link
-          print('🌐 Mở payment link trong browser...');
+          print('🌐 Mở payment link...');
           await _openPaymentLink(paymentLink.checkoutUrl);
-
-          // Hiển thị snackbar nhắc nhở
-          scaffoldMessenger.showSnackBar(
+          messenger.showSnackBar(
             const SnackBar(
               content: Text('Vui lòng hoàn tất thanh toán trên trình duyệt'),
               duration: Duration(seconds: 5),
@@ -315,7 +279,6 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
             ),
           );
         } else {
-          // User hủy - reset pending order
           setState(() => _pendingOrderId = null);
         }
       }
@@ -324,20 +287,19 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
       final errorString = e.toString().replaceFirst('Exception: ', '');
       print('❌ Lỗi đặt hàng: $errorString');
 
-      // Handle riêng trường hợp Cart Empty (Idempotent) - CHỈ CHO COD
+      messenger.hideCurrentSnackBar();
+
+      // Idempotent: cart rỗng sau khi đã đặt hàng COD thành công
       if (errorString.contains('cart is empty') && _paymentMethod == 'cod') {
-        scaffoldMessenger.hideCurrentSnackBar();
         context.pushReplacement('/order-success');
         return;
       }
 
-      // Lỗi chung
-      scaffoldMessenger.hideCurrentSnackBar();
       context.pushReplacement('/order-failure', extra: errorString);
     }
   }
 
-  // ====================== GIAO DIỆN ======================
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -346,287 +308,70 @@ class _OrderScreenState extends State<OrderScreen> with WidgetsBindingObserver {
     final totalItems = widget.cart.totalItems;
 
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            context.pop();
-          },
-        ),
-        title: const Text('Tổng quan đơn hàng'),
-        centerTitle: true,
-        elevation: 0.5,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(20.0),
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 4.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.lock_outline, size: 14, color: Colors.grey),
-                SizedBox(width: 4),
-                Text(
-                  'Thông tin bạn sẽ được bảo mật và mã hóa',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+      appBar: _buildAppBar(),
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
             const OrderAddressSection(),
-            _buildDivider(thickness: 8),
-            ...cartItems.map((item) {
-              return Column(
-                children: [
-                  OrderProductItem(item: item),
-                  if (item != cartItems.last)
-                    const Divider(
-                      height: 1,
-                      thickness: 1,
-                      indent: 20,
-                      endIndent: 20,
-                    ),
-                ],
-              );
-            }).toList(),
-            _buildDivider(thickness: 8),
-            _buildDeliveryGuaranteeSection(context),
-            _buildDivider(thickness: 8),
-            _buildOrderSummarySection(context, totalAmount, totalItems),
-            _buildDivider(thickness: 8),
-            _buildPaymentMethodSection(context),
+            _divider(thickness: 8),
+            ...cartItems.map((item) => Column(
+              children: [
+                OrderProductItem(item: item),
+                if (item != cartItems.last)
+                  const Divider(height: 1, thickness: 1, indent: 20, endIndent: 20),
+              ],
+            )),
+            _divider(thickness: 8),
+            OrderSummarySection(subtotal: totalAmount, totalItems: totalItems),
+            _divider(thickness: 8),
+            OrderPaymentMethodSection(
+              selectedMethod: _paymentMethod,
+              onChanged: (val) => setState(() => _paymentMethod = val),
+            ),
             const SizedBox(height: 16),
           ],
         ),
       ),
-      bottomNavigationBar: _buildBottomBar(context, totalAmount, totalItems),
-    );
-  }
-
-  Widget _buildDivider({double thickness = 1}) {
-    return Divider(
-      height: 1,
-      thickness: thickness,
-      color: const Color(0xFFF5F5F5),
-    );
-  }
-
-  Widget _buildDeliveryGuaranteeSection(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: const <Widget>[
-          Text(
-            'Đảm bảo giao hàng: 25-26/3',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          SizedBox(height: 10),
-          Row(
-            children: <Widget>[
-              Icon(
-                Icons.local_shipping_outlined,
-                color: Colors.black87,
-                size: 20,
-              ),
-              SizedBox(width: 8),
-              Text('Vận chuyển tiêu chuẩn', style: TextStyle(fontSize: 14)),
-            ],
-          ),
-          SizedBox(height: 4),
-          Text(
-            'Nhận voucher giảm giá nếu được đơn hàng bị giao muộn',
-            style: TextStyle(color: Colors.grey, fontSize: 13),
-          ),
-        ],
+      bottomNavigationBar: OrderBottomBar(
+        subtotal: totalAmount,
+        totalItems: totalItems,
+        onPlaceOrder: _handlePlaceOrder,
       ),
     );
   }
 
-  Widget _buildOrderSummarySection(
-      BuildContext context,
-      double subtotal,
-      int totalItems,
-      ) {
-    const double shippingFee = 1000;
-    final double total = subtotal + shippingFee;
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Text(
-            'Tóm tắt đơn hàng',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const SizedBox(height: 10),
-          _buildSummaryRow(
-            'Tổng phụ (${totalItems} sp)',
-            _currency.format(subtotal),
-            isTotal: false,
-          ),
-          _buildSummaryRow(
-            'Vận chuyển',
-            _currency.format(shippingFee),
-            isTotal: false,
-          ),
-          const Divider(),
-          _buildSummaryRow('Tổng', _currency.format(total), isTotal: true),
-        ],
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => context.pop(),
       ),
-    );
-  }
-
-  Widget _buildSummaryRow(String label, String value, {required bool isTotal}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.black : Colors.grey.shade600,
-            ),
-          ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: isTotal ? FontWeight.bold : FontWeight.normal,
-              color: isTotal ? Colors.black : Colors.black,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentMethodSection(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Text(
-            'Phương thức thanh toán',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-          ),
-          const SizedBox(height: 10),
-          _buildPaymentOption(
-            icon: Icons.wallet_outlined,
-            label: 'Thanh toán khi nhận hàng',
-            value: 'cod',
-          ),
-          _buildPaymentOption(
-            leading: Assets.customer.images.vnpay.image(
-              width: 26,
-              height: 26,
-              fit: BoxFit.contain,
-            ),
-            label: 'Thanh toán online qua PayOS',
-            value: 'bank_transfer',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentOption({
-    Widget? leading,
-    IconData? icon,
-    required String label,
-    required String value,
-  }) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: leading ?? Icon(icon, color: Colors.black87),
-      title: Text(label, style: const TextStyle(fontSize: 14)),
-      trailing: Radio<String>(
-        value: value,
-        groupValue: _paymentMethod,
-        onChanged: (val) {
-          if (val != null) {
-            setState(() => _paymentMethod = val);
-          }
-        },
-        activeColor: Colors.black,
-      ),
-      onTap: () {
-        setState(() => _paymentMethod = value);
-      },
-    );
-  }
-
-  Widget _buildBottomBar(
-      BuildContext context,
-      double subtotal,
-      int totalItems,
-      ) {
-    const double shippingFee = 1000;
-    final double total = subtotal + shippingFee;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.grey.shade300, width: 1)),
-        boxShadow: const [
-          BoxShadow(
-            color: Colors.black12,
-            blurRadius: 5,
-            offset: Offset(0, -2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
-      height: 70,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: <Widget>[
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      title: const Text('Tổng quan đơn hàng'),
+      centerTitle: true,
+      elevation: 0.5,
+      backgroundColor: Colors.white,
+      foregroundColor: Colors.black,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(20.0),
+        child: Padding(
+          padding: const EdgeInsets.only(bottom: 4.0),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
+            children: const [
+              Icon(Icons.lock, size: 14, color: Colors.green),
+              SizedBox(width: 4),
               Text(
-                'Tổng (${totalItems} mặt hàng)',
-                style: const TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              Text(
-                _currency.format(total),
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
+                'Thông tin bạn sẽ được bảo mật và mã hóa',
+                style: TextStyle(fontSize: 12, color: Colors.green),
               ),
             ],
           ),
-          ElevatedButton(
-            onPressed: _handlePlaceOrder,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.black,
-              foregroundColor: Colors.white,
-              minimumSize: const Size(120, 50),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            child: const Text(
-              'Đặt hàng',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
+        ),
       ),
     );
+  }
+
+  Widget _divider({double thickness = 1}) {
+    return Divider(height: 1, thickness: thickness, color: const Color(0xFFF5F5F5));
   }
 }
