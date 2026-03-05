@@ -37,7 +37,7 @@ class _SavedScreenState extends State<SavedScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: const Text(
-          'Yêu thích',
+          'Sản phẩm yêu thích',
           style: TextStyle(
             color: Colors.black,
             fontSize: 18,
@@ -114,110 +114,108 @@ class _SavedScreenState extends State<SavedScreen> {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: 200,
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
+    return RefreshIndicator(
+      onRefresh: () async => _refresh(),
+      color: Colors.black,
+      strokeWidth: 1.5,
+      child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          SizedBox(
+            height: MediaQuery.of(context).size.height * 0.75,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32.0),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            color: Colors.grey.withOpacity(0.1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        Assets.customer.images.friendship.image(
+                          width: 100,
+                          height: 100,
+                          fit: BoxFit.contain,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    const Text(
+                      'Chưa có sản phẩm yêu thích',
+                      style: TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Hãy khám phá và lưu những món đồ\nbạn yêu thích vào đây nhé!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[500],
+                        height: 1.5,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: TextButton(
+                        onPressed: () => context.go('/home'),
+                        style: TextButton.styleFrom(
+                          backgroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                        ),
+                        child: const Text(
+                          'Khám phá ngay',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                Assets.customer.images.friendship.image(
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.contain,
-                ),
-              ],
-            ),
-            const SizedBox(height: 28),
-            const Text(
-              'Chưa có sản phẩm yêu thích',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: Colors.black,
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Hãy khám phá và lưu những món đồ\nbạn yêu thích vào đây nhé!',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[500],
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 28),
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: TextButton(
-                onPressed: () => context.go('/home'),
-                style: TextButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: const Text(
-                  'Khám phá ngay',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildWishlistList(List<WishlistProduct> items) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Padding(
-        //   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-        //   child: Text(
-        //     '${items.length} sản phẩm',
-        //     style: TextStyle(
-        //       fontSize: 13,
-        //       color: Colors.grey[400],
-        //       fontWeight: FontWeight.w400,
-        //     ),
-        //   ),
-        // ),
-        Expanded(
-          child: ListView.builder(
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              return SavedProductItem(
-                product: items[index],
-                onTap: () => NavigationHelper.toProductDetail(
-                  context,
-                  productId: items[index].id,
-                ),
-                onFavoriteTap: () {
-                  // TODO: Xử lý xoá khỏi yêu thích
-                },
-              );
-            },
-          ),
-        ),
-      ],
+    return RefreshIndicator(
+      onRefresh: () async => _refresh(),
+      color: Colors.black,
+      strokeWidth: 1.5,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: items.length,
+        itemBuilder: (context, index) {
+          return SavedProductItem(
+            product: items[index],
+            onTap: () => NavigationHelper.toProductDetail(
+              context,
+              productId: items[index].id,
+            ),
+          );
+        },
+      ),
     );
   }
 }

@@ -5,11 +5,13 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 class ProductDetailHeader extends StatelessWidget {
   final VoidCallback? onBack;
   final VoidCallback? onFavorite;
+  final bool isFavorited;
 
   const ProductDetailHeader({
     super.key,
     this.onBack,
     this.onFavorite,
+    this.isFavorited = false,
   });
 
   @override
@@ -24,11 +26,13 @@ class ProductDetailHeader extends StatelessWidget {
             // Back Button
             _buildIconButton(
               icon: LucideIcons.chevronLeft,
+              iconColor: Colors.black,
               onPressed: onBack ?? () => Navigator.pop(context),
             ),
             // Favorite Button
             _buildIconButton(
-              icon: LucideIcons.heart,
+              icon: isFavorited ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+              iconColor: isFavorited ? const Color(0xFFE57373) : Colors.black,
               onPressed: onFavorite ?? () {},
             ),
           ],
@@ -39,6 +43,7 @@ class ProductDetailHeader extends StatelessWidget {
 
   Widget _buildIconButton({
     required IconData icon,
+    required Color iconColor,
     required VoidCallback onPressed,
   }) {
     return Container(
@@ -56,7 +61,7 @@ class ProductDetailHeader extends StatelessWidget {
         ],
       ),
       child: IconButton(
-        icon: Icon(icon, color: Colors.black, size: 20),
+        icon: Icon(icon, color: iconColor, size: 20),
         onPressed: onPressed,
         padding: EdgeInsets.zero,
         constraints: const BoxConstraints(),

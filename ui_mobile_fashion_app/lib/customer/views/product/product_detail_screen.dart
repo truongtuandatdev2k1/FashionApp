@@ -2,6 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/product/product_detail_api.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/saved/add_wishlist_api.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/saved/remove_wishlist_api.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/saved/saved_api.dart';
 import 'package:ui_mobile_fashion_app/customer/models/product_detail_model.dart';
 import 'widgets/product_detail/header.dart';
 import 'widgets/product_detail/body/image_section.dart';
@@ -22,13 +25,30 @@ class ProductDetailScreen extends StatefulWidget {
 class ProductDetailScreenState extends State<ProductDetailScreen> {
   late Future<ProductDetailModel> _productFuture;
 
-  // 1. Biến snapshot để truy cập từ ngoài builder
   AsyncSnapshot<ProductDetailModel> _snapshot = const AsyncSnapshot.nothing();
+
+  bool _isFavorited = false;
 
   @override
   void initState() {
     super.initState();
     _productFuture = ProductDetailApi.getProduct(widget.productId);
+    _checkWishlistStatus();
+  }
+
+  // Kiểm tra productId có trong wishlist không
+  Future<void> _checkWishlistStatus() async {
+    try {
+      final wishlist = await SavedApi.getWishlist();
+      final isFav = wishlist.items.any((item) => item.id == widget.productId);
+      if (mounted) {
+        setState(() {
+          _isFavorited = isFav;
+        });
+      }
+    } catch (_) {
+      // Không ảnh hưởng flow chính, giữ nguyên false
+    }
   }
 
   // 2. Getter mà BottomActionBar sẽ dùng để lấy product hiện tại
@@ -51,6 +71,26 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
       images.addAll(v.images);
     }
     return images.toList();
+  }
+
+  Future<void> _toggleFavorite() async {
+    setState(() {
+      _isFavorited = !_isFavorited;
+    });
+
+    try {
+      if (_isFavorited) {
+        await AddWishlistApi.addToWishlist(widget.productId);
+      } else {
+        await RemoveWishlistApi.removeFromWishlist(widget.productId);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _isFavorited = !_isFavorited;
+        });
+      }
+    }
   }
 
   @override
@@ -113,11 +153,8 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
                   right: 0,
                   child: ProductDetailHeader(
                     onBack: () => Navigator.of(context).pop(),
-                    onFavorite: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đã thêm vào yêu thích')),
-                      );
-                    },
+                    isFavorited: _isFavorited,
+                    onFavorite: _toggleFavorite,
                   ),
                 ),
 

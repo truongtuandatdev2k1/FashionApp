@@ -1,19 +1,57 @@
 // lib/customer/views/saved/widgets/saved_product_item.dart
 
 import 'package:flutter/material.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/saved/add_wishlist_api.dart';
+import 'package:ui_mobile_fashion_app/customer/logic/saved/remove_wishlist_api.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/saved/saved_api.dart';
 
-class SavedProductItem extends StatelessWidget {
+class SavedProductItem extends StatefulWidget {
   final WishlistProduct product;
   final VoidCallback? onTap;
-  final VoidCallback? onFavoriteTap;
 
   const SavedProductItem({
     super.key,
     required this.product,
     this.onTap,
-    this.onFavoriteTap,
   });
+
+  @override
+  State<SavedProductItem> createState() => _SavedProductItemState();
+}
+
+class _SavedProductItemState extends State<SavedProductItem> {
+  // true = đang yêu thích (đỏ nhạt), false = đã bỏ (viền đen)
+  late bool _isFavorited;
+
+  @override
+  void initState() {
+    super.initState();
+    _isFavorited = true; // Mặc định đang có trong danh sách yêu thích
+  }
+
+  Future<void> _toggleFavorite() async {
+    // Đổi UI ngay lập tức, không chờ API
+    setState(() {
+      _isFavorited = !_isFavorited;
+    });
+
+    try {
+      if (_isFavorited) {
+        // Vừa bật lại → thêm vào wishlist
+        await AddWishlistApi.addToWishlist(widget.product.id);
+      } else {
+        // Vừa tắt → xóa khỏi wishlist
+        await RemoveWishlistApi.removeFromWishlist(widget.product.id);
+      }
+    } catch (_) {
+      // API lỗi → hoàn tác UI về trạng thái trước
+      if (mounted) {
+        setState(() {
+          _isFavorited = !_isFavorited;
+        });
+      }
+    }
+  }
 
   String _formatPrice(double price) {
     final formatted = price.toStringAsFixed(0).replaceAllMapped(
@@ -25,12 +63,12 @@ class SavedProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasDiscount = product.discountPct > 0;
+    final hasDiscount = widget.product.discountPct > 0;
 
     return Column(
       children: [
         GestureDetector(
-          onTap: onTap,
+          onTap: widget.onTap,
           behavior: HitTestBehavior.opaque,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -41,13 +79,13 @@ class SavedProductItem extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(4),
                   child: Image.network(
-                    product.fullImageUrl,
+                    widget.product.fullImageUrl,
                     width: 70,
                     height: 70,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      width: 90,
-                      height: 110,
+                      width: 70,
+                      height: 70,
                       color: Colors.grey[100],
                       child: const Icon(
                         Icons.image_not_supported_outlined,
@@ -58,8 +96,8 @@ class SavedProductItem extends StatelessWidget {
                     loadingBuilder: (_, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return Container(
-                        width: 90,
-                        height: 110,
+                        width: 70,
+                        height: 70,
                         color: Colors.grey[100],
                         child: const Center(
                           child: CircularProgressIndicator(
@@ -79,9 +117,8 @@ class SavedProductItem extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Hàng 1: Tên sản phẩm (1 dòng, overflow ellipsis)
                       Text(
-                        product.name,
+                        widget.product.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
@@ -93,9 +130,8 @@ class SavedProductItem extends StatelessWidget {
 
                       const SizedBox(height: 6),
 
-                      // Hàng 2: Giá sau giảm
                       Text(
-                        _formatPrice(product.priceAfter),
+                        _formatPrice(widget.product.priceAfter),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,
@@ -105,7 +141,6 @@ class SavedProductItem extends StatelessWidget {
 
                       const SizedBox(height: 6),
 
-                      // Hàng 3: Badge % giảm + giá gốc gạch ngang
                       if (hasDiscount)
                         Row(
                           children: [
@@ -119,7 +154,7 @@ class SavedProductItem extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '-${product.discountPct}%',
+                                '-${widget.product.discountPct}%',
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -129,7 +164,7 @@ class SavedProductItem extends StatelessWidget {
                             ),
                             const SizedBox(width: 8),
                             Text(
-                              _formatPrice(product.price),
+                              _formatPrice(widget.product.price),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey[400],
@@ -145,15 +180,19 @@ class SavedProductItem extends StatelessWidget {
 
                 const SizedBox(width: 8),
 
-                // Icon trái tim bên phải cùng
+                // Icon trái tim toggle
                 GestureDetector(
-                  onTap: onFavoriteTap,
+                  onTap: _toggleFavorite,
                   behavior: HitTestBehavior.opaque,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
-                    child: const Icon(
-                      Icons.favorite_rounded,
-                      color: Color(0xFFE57373),
+                    child: Icon(
+                      _isFavorited
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: _isFavorited
+                          ? const Color(0xFFE57373)
+                          : Colors.black,
                       size: 22,
                     ),
                   ),
@@ -163,13 +202,10 @@ class SavedProductItem extends StatelessWidget {
           ),
         ),
 
-        // Đường kẻ phân cách mỏng, mờ
         Divider(
           height: 1,
           thickness: 0.5,
           color: Colors.grey.withOpacity(0.25),
-          indent: 0,
-          endIndent: 0,
         ),
       ],
     );
