@@ -64,16 +64,16 @@ class BrandRating extends StatelessWidget {
                 ),
               ),
             ),
-            const SizedBox(width: 10),
-            Text(
-              brandName,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            // const SizedBox(width: 10),
+            // Text(
+            //   brandName,
+            //   style: const TextStyle(
+            //     fontSize: 17,
+            //     fontWeight: FontWeight.bold,
+            //   ),
+            // ),
             const SizedBox(width: 6),
-            const Icon(Icons.verified, color: Colors.blue, size: 18),
+            const Icon(Icons.verified, color: Colors.blue, size: 14),
           ],
         ),
 

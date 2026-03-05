@@ -1,21 +1,31 @@
-// lib/customer/views/cart/widgets/cart_product_item.dart file gốc
-
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+
 import '../../../logic/cart/cart_api.dart';
 import '../../../logic/cart/delete_item_api.dart';
+import 'cart_product_item_ui.dart'; // ← import file UI mới
 
-class CartProductItem extends StatelessWidget {
+class CartProductItem extends StatefulWidget {
   final CartItem item;
   final VoidCallback onUpdate;
+  final ValueChanged<bool> onSelectionChanged;
 
-  const CartProductItem({Key? key, required this.item, required this.onUpdate})
-    : super(key: key);
+  const CartProductItem({
+    super.key,
+    required this.item,
+    required this.onUpdate,
+    required this.onSelectionChanged,
+  });
+
+  @override
+  State<CartProductItem> createState() => _CartProductItemState();
+}
+
+class _CartProductItemState extends State<CartProductItem> {
+  bool _isSelected = false;
 
   Future<void> _deleteItem(BuildContext context) async {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    // Hiển thị loading
     scaffoldMessenger.showSnackBar(
       const SnackBar(
         content: Row(
@@ -25,11 +35,12 @@ class CartProductItem extends StatelessWidget {
             Text('Đang xóa...'),
           ],
         ),
+        duration: Duration(seconds: 8),
       ),
     );
 
     try {
-      await DeleteItemApi.deleteCartItem(item.id);
+      await DeleteItemApi.deleteCartItem(widget.item.id);
 
       if (!context.mounted) return;
 
@@ -42,7 +53,7 @@ class CartProductItem extends StatelessWidget {
         ),
       );
 
-      onUpdate(); // Refresh giỏ hàng
+      widget.onUpdate();
     } catch (e) {
       if (!context.mounted) return;
 
@@ -58,98 +69,43 @@ class CartProductItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
-    final product = item.product;
-
-    return Card(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Dismissible(
+      key: ValueKey(widget.item.id),
+      direction: DismissDirection.endToStart,
+      background: Container(
+        color: Colors.red.shade600,
+        alignment: Alignment.centerRight,
+        padding: const EdgeInsets.only(right: 32),
+        child: const Icon(
+          Icons.delete_outline,
+          color: Colors.white,
+          size: 36,
+        ),
+      ),
+      confirmDismiss: (direction) async {
+        return true;
+      },
+      onDismissed: (direction) {
+        _deleteItem(context);
+      },
+      child: Container(
+        color: Colors.white,
+        child: Column(
           children: [
-            // Ảnh
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                product.fullImageUrl,
-                width: 100,
-                height: 100,
-                fit: BoxFit.cover,
-                errorBuilder:
-                    (_, __, ___) => Container(
-                      color: Colors.grey[300],
-                      child: const Icon(
-                        Icons.image_not_supported,
-                        color: Colors.grey,
-                      ),
-                    ),
-              ),
+            CartProductItemUI(
+              item: widget.item,
+              isSelected: _isSelected,
+              onSelectionChanged: (value) {
+                setState(() {
+                  _isSelected = value;
+                });
+                widget.onSelectionChanged(value);
+              },
             ),
-            const SizedBox(width: 12),
-
-            // Thông tin sản phẩm
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Màu: ${product.color} • Size: ${product.size}',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        currencyFormat.format(item.currentPrice),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () {
-                              // TODO: giảm số lượng (sẽ làm sau)
-                            },
-                          ),
-                          Text(
-                            '${item.quantity}',
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle_outline),
-                            onPressed: () {
-                              // TODO: tăng số lượng
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Nút xóa (gọi API thật)
-            IconButton(
-              icon: const Icon(Icons.close, color: Colors.grey),
-              onPressed: () => _deleteItem(context),
+            const Divider(
+              height: 1,
+              thickness: 1,
+              color: Color(0xFFE8E8E8),
             ),
           ],
         ),

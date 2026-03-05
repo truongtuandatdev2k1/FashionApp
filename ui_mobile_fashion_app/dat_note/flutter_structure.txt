@@ -1,4 +1,4 @@
-ui_mobile_fashion_app/
+.
 ├── android
 │   ├── app
 │   │   ├── src
@@ -316,7 +316,8 @@ ui_mobile_fashion_app/
 │   │   │   │   ├── views
 │   │   │   │   │   └── cart_screen.dart
 │   │   │   │   └── widgets
-│   │   │   │       └── cart_product_item.dart
+│   │   │   │       ├── cart_product_item.dart
+│   │   │   │       └── cart_product_item_ui.dart
 │   │   │   ├── common
 │   │   │   │   └── customer_bottom_nav.dart
 │   │   │   ├── home
@@ -409,4 +410,4 @@ ui_mobile_fashion_app/
 ├── pubspec.yaml
 └── README.md
 
-158 directories, 252 files
+158 directories, 253 files

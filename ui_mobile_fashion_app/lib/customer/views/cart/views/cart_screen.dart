@@ -1,5 +1,3 @@
-// lib/customer/views/cart/views/cart_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -22,13 +20,15 @@ class _CartScreenState extends State<CartScreen> {
     symbol: '₫',
   );
 
+  // Lưu các item được chọn (dùng id)
+  final Set<String> _selectedIds = {};
+
   @override
   void initState() {
     super.initState();
     _loadData();
   }
 
-  // Tách riêng hàm load để dùng cho cả initState và RefreshIndicator
   Future<CartResponse> _loadData() {
     _cartFuture = CartApi.getCart();
     return _cartFuture;
@@ -37,7 +37,19 @@ class _CartScreenState extends State<CartScreen> {
   void _refreshCart() {
     setState(() {
       _loadData();
+      // Nếu muốn reset chọn khi refresh thì uncomment dòng dưới
+      // _selectedIds.clear();
     });
+  }
+
+  double _calculateSelectedTotal(CartResponse cart) {
+    double total = 0;
+    for (final item in cart.items) {
+      if (_selectedIds.contains(item.id)) {
+        total += item.currentPrice * item.quantity;
+      }
+    }
+    return total;
   }
 
   @override
@@ -71,65 +83,76 @@ class _CartScreenState extends State<CartScreen> {
         }
 
         final cart = snapshot.data!;
-        // Bọc toàn bộ body bằng RefreshIndicator để hỗ trợ vuốt xuống tải lại
+
+        final selectedCount = _selectedIds.length;
+        final totalAmount = selectedCount > 0
+            ? _calculateSelectedTotal(cart)
+            : cart.totalAmount;
+
         return RefreshIndicator(
           onRefresh: () async {
             _refreshCart();
-            await _cartFuture; // Đợi load xong để tắt cái vòng xoay refresh
+            await _cartFuture;
           },
           color: Colors.black,
-          child:
-              cart.items.isNotEmpty
-                  ? _buildCartWithItems(cart)
-                  : _buildEmptyCart(),
+          child: Scaffold(
+            backgroundColor: Colors.white,
+            appBar: AppBar(
+              title: const Text(
+                'Giỏ hàng',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              centerTitle: true,
+              elevation: 0,
+              backgroundColor: Colors.white,
+              foregroundColor: Colors.black,
+            ),
+            body: cart.items.isEmpty
+                ? _buildEmptyCart()
+                : Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: cart.items.length,
+                    itemBuilder: (context, index) {
+                      final item = cart.items[index];
+                      return CartProductItem(
+                        item: item,
+                        onUpdate: _refreshCart,
+                        onSelectionChanged: (selected) {
+                          setState(() {
+                            if (selected) {
+                              _selectedIds.add(item.id as String);
+                            } else {
+                              _selectedIds.remove(item.id);
+                            }
+                          });
+                        },
+                      );
+                    },
+                  ),
+                ),
+                _buildFooter(cart, selectedCount, totalAmount),
+              ],
+            ),
+          ),
         );
       },
     );
   }
 
-  Widget _buildCartWithItems(CartResponse cart) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        title: const Text(
-          'Giỏ hàng',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              // Physics này cực kỳ quan trọng để RefreshIndicator hoạt động được ngay cả khi danh sách ngắn
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(12),
-              itemCount: cart.items.length,
-              itemBuilder: (context, index) {
-                final item = cart.items[index];
-                return CartProductItem(item: item, onUpdate: _refreshCart);
-              },
-            ),
-          ),
-          _buildFooter(cart),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFooter(CartResponse cart) {
+  Widget _buildFooter(CartResponse cart, int selectedCount, double totalAmount) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, -2),
+            color: Colors.black12,
+            blurRadius: 8,
+            offset: Offset(0, -3),
           ),
         ],
       ),
@@ -140,11 +163,13 @@ class _CartScreenState extends State<CartScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Tổng cộng (${cart.totalItems} sản phẩm)',
+                  selectedCount > 0
+                      ? 'Đã chọn $selectedCount/${cart.totalItems} sản phẩm'
+                      : 'Tổng cộng (${cart.totalItems} sản phẩm)',
                   style: TextStyle(color: Colors.grey[700], fontSize: 15),
                 ),
                 Text(
-                  _currency.format(cart.totalAmount),
+                  _currency.format(totalAmount),
                   style: const TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -157,19 +182,25 @@ class _CartScreenState extends State<CartScreen> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: () => context.push('/order', extra: cart),
+                onPressed: selectedCount == 0
+                    ? null
+                    : () {
+                  // Có thể filter chỉ gửi các item được chọn
+                  context.push('/order', extra: cart);
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.black,
+                  disabledBackgroundColor: Colors.grey.shade400,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(26),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Thanh toán',
                   style: TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: selectedCount == 0 ? Colors.white70 : Colors.white,
                   ),
                 ),
               ),
@@ -182,7 +213,6 @@ class _CartScreenState extends State<CartScreen> {
 
   Widget _buildEmptyCart() {
     return ListView(
-      // Dùng ListView để vuốt xuống tải lại được
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(height: MediaQuery.of(context).size.height * 0.2),
