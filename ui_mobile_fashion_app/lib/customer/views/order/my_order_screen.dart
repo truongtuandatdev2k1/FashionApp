@@ -20,6 +20,13 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
     symbol: '₫',
   );
 
+  // ✅ FIX: Khởi tạo _ordersFuture trong initState
+  @override
+  void initState() {
+    super.initState();
+    _ordersFuture = GetOrdersApi.getOrders();
+  }
+
   // ─── Màu sắc trạng thái: chỉ dùng sắc độ xám / đen / trắng ──────────────
   static const _statusConfigs = {
     'pending':   _StatusConfig(bg: Color(0xFFF5F5F5), fg: Color(0xFF757575), label: 'Chờ xử lý'),
@@ -288,14 +295,14 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
                   ),
                   const SizedBox(width: 10),
                 ],
-                Expanded(
-                  child: _FilledBtn(
-                    label: 'Xem chi tiết',
-                    onTap: () {
-                      // TODO: Chuyển sang màn hình chi tiết đơn hàng
-                    },
-                  ),
-                ),
+                // Expanded(
+                //   child: _FilledBtn(
+                //     label: 'Xem chi tiết',
+                //     onTap: () {
+                //       // TODO: Chuyển sang màn hình chi tiết đơn hàng
+                //     },
+                //   ),
+                // ),
               ],
             ),
           ),

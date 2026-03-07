@@ -1,4 +1,5 @@
 // lib/customer/models/order/order_response.dart
+import 'package:ui_mobile_fashion_app/core/config/app_config.dart';
 
 class OrderItem {
   final String id;
@@ -9,11 +10,8 @@ class OrderItem {
   final double price;
   final double subtotal;
 
-  // BASE URL được cung cấp từ Cart API
-  static const String baseUrl = 'https://api.caibang.online';
-
   // Getter để tạo URL đầy đủ
-  String get fullProductImageUrl => '$baseUrl$productImage';
+  String get fullProductImageUrl => '${AppConfig.imageBaseUrl}$productImage';
 
   OrderItem({
     required this.id,
