@@ -5,6 +5,7 @@ import 'package:ui_mobile_fashion_app/customer/logic/product/product_api.dart';
 
 class ProductListController extends ChangeNotifier {
   final String filter;
+  final int? brandId; // ← THÊM: optional, null = không lọc theo brand
 
   List<ProductData> products = [];
   int _currentPage = 1;
@@ -12,7 +13,10 @@ class ProductListController extends ChangeNotifier {
   bool _hasMore = true;
   String? error;
 
-  ProductListController({required this.filter}) {
+  ProductListController({
+    required this.filter,
+    this.brandId, // ← THÊM
+  }) {
     loadMore();
   }
 
@@ -28,6 +32,7 @@ class ProductListController extends ChangeNotifier {
         filter: filter,
         limit: 10,
         page: _currentPage,
+        brandId: brandId, // ← THÊM
       );
 
       if (newProducts.isEmpty) {

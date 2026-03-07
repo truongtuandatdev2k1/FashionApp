@@ -20,72 +20,54 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
     symbol: '₫',
   );
 
-  @override
-  void initState() {
-    super.initState();
-    _ordersFuture = GetOrdersApi.getOrders();
-  }
+  // ─── Màu sắc trạng thái: chỉ dùng sắc độ xám / đen / trắng ──────────────
+  static const _statusConfigs = {
+    'pending':   _StatusConfig(bg: Color(0xFFF5F5F5), fg: Color(0xFF757575), label: 'Chờ xử lý'),
+    'shipped':   _StatusConfig(bg: Color(0xFF1A1A1A), fg: Color(0xFFFFFFFF), label: 'Đang giao'),
+    'delivered': _StatusConfig(bg: Color(0xFF000000), fg: Color(0xFFFFFFFF), label: 'Đã giao'),
+    'cancelled': _StatusConfig(bg: Color(0xFFEEEEEE), fg: Color(0xFF9E9E9E), label: 'Đã hủy'),
+  };
 
-  Color _getStatusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return Colors.orange.shade600;
-      case 'shipped':
-        return Colors.blue.shade600;
-      case 'delivered':
-        return Colors.green.shade600;
-      case 'cancelled':
-        return Colors.red.shade600;
-      default:
-        return Colors.grey.shade600;
-    }
-  }
+  _StatusConfig _getStatusConfig(String status) =>
+      _statusConfigs[status.toLowerCase()] ??
+          const _StatusConfig(bg: Color(0xFFF5F5F5), fg: Color(0xFF757575), label: 'Khác');
 
-  String _getStatusText(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Chờ xử lý';
-      case 'shipped':
-        return 'Đang giao';
-      case 'delivered':
-        return 'Đã giao';
-      case 'cancelled':
-        return 'Đã hủy';
-      default:
-        return 'Khác';
-    }
-  }
-
+  // ─── Item sản phẩm ────────────────────────────────────────────────────────
   Widget _buildProductItem(OrderItem item, {bool isLast = false}) {
     return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 12.0),
+      padding: EdgeInsets.only(bottom: isLast ? 0 : 14.0),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ảnh sản phẩm – bo góc vuông nhẹ
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(6),
             child: CachedNetworkImage(
               imageUrl: item.fullProductImageUrl,
-              width: 70,
-              height: 70,
+              width: 64,
+              height: 64,
               fit: BoxFit.cover,
-              placeholder:
-                  (context, url) => Container(
-                    color: Colors.grey.shade100,
-                    child: const Center(
-                      child: CircularProgressIndicator(strokeWidth: 2),
+              placeholder: (context, url) => Container(
+                color: const Color(0xFFF0F0F0),
+                child: const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 1.5,
+                      color: Colors.black38,
                     ),
                   ),
-              errorWidget:
-                  (context, url, error) => Container(
-                    color: Colors.grey.shade100,
-                    child: const Icon(
-                      Icons.image_not_supported,
-                      color: Colors.grey,
-                    ),
-                  ),
+                ),
+              ),
+              errorWidget: (context, url, error) => Container(
+                color: const Color(0xFFF0F0F0),
+                child: const Icon(Icons.image_not_supported_outlined,
+                    color: Colors.black26, size: 24),
+              ),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,8 +77,10 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 14.5,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w500,
+                    color: Color(0xFF1A1A1A),
+                    height: 1.35,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -104,18 +88,19 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'x${item.quantity}',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 13.5,
+                      'SL: ${item.quantity}',
+                      style: const TextStyle(
+                        color: Color(0xFF9E9E9E),
+                        fontSize: 12.5,
                       ),
                     ),
                     Text(
                       _currency.format(item.price),
                       style: const TextStyle(
                         fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                        color: Colors.black87,
+                        fontSize: 13.5,
+                        color: Color(0xFF1A1A1A),
+                        letterSpacing: -0.2,
                       ),
                     ),
                   ],
@@ -128,219 +113,279 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
     );
   }
 
+  // ─── Card đơn hàng ────────────────────────────────────────────────────────
   Widget _buildOrderCard(Order order) {
-    final totalItems = order.items.fold<int>(
-      0,
-      (sum, item) => sum + item.quantity,
-    );
-    final statusColor = _getStatusColor(order.status);
-    final statusText = _getStatusText(order.status);
+    final totalItems = order.items.fold<int>(0, (s, i) => s + i.quantity);
+    final config = _getStatusConfig(order.status);
     final bool showBuyAgain = order.status.toLowerCase() == 'delivered';
-
-    // Hiển thị tối đa 3 sản phẩm, nếu nhiều hơn thì +X
     final displayedItems = order.items.take(3).toList();
     final hasMore = order.items.length > 3;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header: Mã đơn + Trạng thái
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE8E8E8), width: 1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ── Header ─────────────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Text(
-                  'Đơn hàng #${order.orderNumber}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 12,
+                // Mã đơn hàng
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '#${order.orderNumber}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                          color: Color(0xFF1A1A1A),
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        DateFormat('dd/MM/yyyy · HH:mm').format(order.createdAt),
+                        style: const TextStyle(
+                          color: Color(0xFFAAAAAA),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                // Badge trạng thái
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: statusColor, width: 1),
+                    color: config.bg,
+                    borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
-                    statusText,
+                    config.label,
                     style: TextStyle(
-                      color: statusColor,
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.bold,
+                      color: config.fg,
+                      fontSize: 11.5,
+                      fontWeight: FontWeight.w600,
+                      letterSpacing: 0.2,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Ngày đặt: ${DateFormat('dd/MM/yyyy HH:mm').format(order.createdAt)}',
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
-            ),
-            const SizedBox(height: 16),
+          ),
 
-            // Danh sách sản phẩm
-            ...displayedItems.asMap().entries.map((entry) {
-              final bool isLast =
-                  entry.key == displayedItems.length - 1 && !hasMore;
-              return _buildProductItem(entry.value, isLast: isLast);
-            }),
+          // ── Divider mỏng ──────────────────────────────────────────────────
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Divider(height: 1, thickness: 1, color: Color(0xFFF2F2F2)),
+          ),
 
-            if (hasMore)
-              Padding(
-                padding: const EdgeInsets.only(top: 8),
-                child: Text(
-                  '+${order.items.length - 3} sản phẩm khác',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 13.5,
-                    fontStyle: FontStyle.italic,
+          // ── Danh sách sản phẩm ────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                ...displayedItems.asMap().entries.map((entry) {
+                  final bool isLast =
+                      entry.key == displayedItems.length - 1 && !hasMore;
+                  return _buildProductItem(entry.value, isLast: isLast);
+                }),
+                if (hasMore)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.more_horiz,
+                            size: 16, color: Color(0xFFBBBBBB)),
+                        const SizedBox(width: 6),
+                        Text(
+                          '+${order.items.length - 3} sản phẩm khác',
+                          style: const TextStyle(
+                            color: Color(0xFFAAAAAA),
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
+              ],
+            ),
+          ),
 
-            const Divider(height: 28),
+          // ── Divider + Tổng tiền ───────────────────────────────────────────
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Divider(height: 1, thickness: 1, color: Color(0xFFF2F2F2)),
+          ),
 
-            // Tổng tiền
-            Row(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  'Tổng cộng ($totalItems sản phẩm)',
-                  style: TextStyle(fontSize: 15, color: Colors.grey.shade700),
-                ),
-                Text(
-                  _currency.format(order.finalAmount),
+                  '$totalItems sản phẩm',
                   style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.redAccent,
+                    fontSize: 13,
+                    color: Color(0xFFAAAAAA),
                   ),
+                ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    const Text(
+                      'Tổng  ',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF888888),
+                      ),
+                    ),
+                    Text(
+                      _currency.format(order.finalAmount),
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF0D0D0D),
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
+          ),
 
-            const SizedBox(height: 16),
-
-            // Nút hành động
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+          // ── Nút hành động ─────────────────────────────────────────────────
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+            child: Row(
               children: [
-                if (showBuyAgain)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 12),
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        // TODO: Thêm lại vào giỏ hàng
+                if (showBuyAgain) ...[
+                  Expanded(
+                    child: _OutlineBtn(
+                      label: 'Mua lại',
+                      icon: Icons.replay_rounded,
+                      onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
                             content: Text('Đang phát triển tính năng Mua lại'),
+                            backgroundColor: Color(0xFF1A1A1A),
                           ),
                         );
                       },
-                      icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('Mua lại'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.black87,
-                        side: BorderSide(color: Colors.grey.shade400),
-                      ),
                     ),
                   ),
-                ElevatedButton(
-                  onPressed: () {
-                    // TODO: Chuyển sang màn hình chi tiết đơn hàng
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  const SizedBox(width: 10),
+                ],
+                Expanded(
+                  child: _FilledBtn(
+                    label: 'Xem chi tiết',
+                    onTap: () {
+                      // TODO: Chuyển sang màn hình chi tiết đơn hàng
+                    },
                   ),
-                  child: const Text('Xem chi tiết'),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
+  // ─── Build ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF7F7F7),
       appBar: AppBar(
-        title: const Text('Đơn hàng của tôi'),
+        title: const Text(
+          'Đơn hàng của tôi',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF0D0D0D),
+          ),
+        ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF7F7F7),
         foregroundColor: Colors.black,
         elevation: 0,
-        shadowColor: Colors.grey.shade200,
+        scrolledUnderElevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            size: 20,
-            color: Colors.black, // Đảm bảo màu icon là đen
-          ),
-          onPressed: () => context.pop(), // Giữ nguyên context.pop()
+          icon: const Icon(Icons.arrow_back_ios_new,
+              size: 19, color: Color(0xFF0D0D0D)),
+          onPressed: () => context.pop(),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1),
+          child: Container(height: 1, color: const Color(0xFFEEEEEE)),
         ),
       ),
       body: FutureBuilder<OrderListResponse>(
         future: _ordersFuture,
         builder: (context, snapshot) {
+          // ── Loading ────────────────────────────────────────────────────────
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-              child: CircularProgressIndicator(color: Colors.black),
+              child: CircularProgressIndicator(
+                  color: Colors.black, strokeWidth: 2),
             );
           }
 
+          // ── Error ──────────────────────────────────────────────────────────
           if (snapshot.hasError) {
             return Center(
               child: Padding(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(40),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.wifi_off, size: 64, color: Colors.grey.shade400),
-                    const SizedBox(height: 16),
-                    Text(
+                    Container(
+                      width: 72,
+                      height: 72,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF0F0F0),
+                        borderRadius: BorderRadius.circular(36),
+                      ),
+                      child: const Icon(Icons.wifi_off_rounded,
+                          size: 32, color: Color(0xFF9E9E9E)),
+                    ),
+                    const SizedBox(height: 20),
+                    const Text(
                       'Không thể tải đơn hàng',
                       style: TextStyle(
                         fontSize: 16,
-                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w600,
+                        color: Color(0xFF1A1A1A),
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      snapshot.error.toString().replaceFirst('Exception: ', ''),
+                      snapshot.error
+                          .toString()
+                          .replaceFirst('Exception: ', ''),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade500),
+                      style: const TextStyle(
+                          color: Color(0xFFAAAAAA), fontSize: 13, height: 1.5),
                     ),
-                    const SizedBox(height: 24),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _ordersFuture = GetOrdersApi.getOrders();
-                        });
-                      },
-                      icon: const Icon(Icons.refresh),
-                      label: const Text('Thử lại'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.black,
-                      ),
+                    const SizedBox(height: 28),
+                    _FilledBtn(
+                      label: 'Thử lại',
+                      icon: Icons.refresh_rounded,
+                      onTap: () => setState(
+                              () => _ordersFuture = GetOrdersApi.getOrders()),
                     ),
                   ],
                 ),
@@ -348,40 +393,140 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
             );
           }
 
+          // ── Empty ──────────────────────────────────────────────────────────
           if (!snapshot.hasData || snapshot.data!.orders.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.shopping_bag_outlined,
-                    size: 80,
-                    color: Colors.grey.shade300,
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF0F0F0),
+                      borderRadius: BorderRadius.circular(48),
+                    ),
+                    child: const Icon(Icons.shopping_bag_outlined,
+                        size: 44, color: Color(0xFFBBBBBB)),
                   ),
                   const SizedBox(height: 24),
-                  Text(
+                  const Text(
                     'Chưa có đơn hàng nào',
-                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.w600,
+                      color: Color(0xFF1A1A1A),
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
+                  const SizedBox(height: 8),
+                  const Text(
                     'Khi bạn đặt hàng, chúng sẽ hiện ở đây',
-                    style: TextStyle(color: Colors.grey.shade500),
+                    style: TextStyle(color: Color(0xFFAAAAAA), fontSize: 13.5),
                   ),
                 ],
               ),
             );
           }
 
+          // ── List ───────────────────────────────────────────────────────────
           final orders = snapshot.data!.orders;
           return ListView.builder(
-            padding: const EdgeInsets.only(top: 8, bottom: 20),
+            padding: const EdgeInsets.only(top: 12, bottom: 28),
             itemCount: orders.length,
-            itemBuilder: (context, index) {
-              return _buildOrderCard(orders[index]);
-            },
+            itemBuilder: (context, index) => _buildOrderCard(orders[index]),
           );
         },
+      ),
+    );
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+class _StatusConfig {
+  final Color bg;
+  final Color fg;
+  final String label;
+  const _StatusConfig({required this.bg, required this.fg, required this.label});
+}
+
+/// Nút viền – dùng cho "Mua lại"
+class _OutlineBtn extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  const _OutlineBtn({required this.label, required this.onTap, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 42,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFD0D0D0), width: 1),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: const Color(0xFF1A1A1A)),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF1A1A1A),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Nút đặc – dùng cho "Xem chi tiết" và "Thử lại"
+class _FilledBtn extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final VoidCallback onTap;
+
+  const _FilledBtn({required this.label, required this.onTap, this.icon});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 42,
+        decoration: BoxDecoration(
+          color: const Color(0xFF0D0D0D),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[
+              Icon(icon, size: 16, color: Colors.white),
+              const SizedBox(width: 6),
+            ],
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

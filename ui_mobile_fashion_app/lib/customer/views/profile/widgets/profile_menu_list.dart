@@ -24,11 +24,11 @@ class ProfileMenuList extends StatelessWidget {
           iconData: LucideIcons.mapPin,
           onTap: () => context.go('/profile/addresses'),
         ),
-        // ProfileMenuItem(
-        //   text: "Đơn hàng của tôi",
-        //   iconData: LucideIcons.shoppingBag,
-        //   onTap: () => context.go('/profile/my-orders'),
-        // ),
+        ProfileMenuItem(
+          text: "Đơn hàng của tôi",
+          iconData: LucideIcons.shoppingBag,
+          onTap: () => context.go('/profile/my-orders'),
+        ),
         // ProfileMenuItem(
         //   text: "Thông Báo",
         //   iconData: LucideIcons.bell,

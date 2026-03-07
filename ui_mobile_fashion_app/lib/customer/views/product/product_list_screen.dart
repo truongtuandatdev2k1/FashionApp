@@ -8,58 +8,78 @@ import 'widgets/product_grid_item.dart';
 class ProductListScreen extends StatelessWidget {
   final String title;
   final String filter;
+  final int? brandId; // ← THÊM: optional, truyền khi từ brand
 
   const ProductListScreen({
     super.key,
     required this.title,
     required this.filter,
+    this.brandId, // ← THÊM
   });
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (_) => ProductListController(filter: filter),
+      create: (_) => ProductListController(
+        filter: filter,
+        brandId: brandId, // ← THÊM
+      ),
       child: _ProductListView(title: title),
     );
   }
 }
 
-class _ProductListView extends StatelessWidget {
+class _ProductListView extends StatefulWidget {
   final String title;
 
   const _ProductListView({required this.title});
 
   @override
+  State<_ProductListView> createState() => _ProductListViewState();
+}
+
+class _ProductListViewState extends State<_ProductListView> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    final controller = context.read<ProductListController>();
+    if (controller.shouldLoadMore(
+      _scrollController.position.pixels,
+      _scrollController.position.maxScrollExtent,
+    )) {
+      controller.loadMore();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = context.watch<ProductListController>();
-    final scrollController = ScrollController();
-
-    scrollController.addListener(() {
-      if (controller.shouldLoadMore(
-        scrollController.position.pixels,
-        scrollController.position.maxScrollExtent,
-      )) {
-        controller.loadMore();
-      }
-    });
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: Text(title),
+        title: Text(widget.title),
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0.5,
       ),
-      body: _buildBody(context, controller, scrollController),
+      body: _buildBody(context, controller),
     );
   }
 
-  Widget _buildBody(
-    BuildContext context,
-    ProductListController controller,
-    ScrollController scrollController,
-  ) {
+  Widget _buildBody(BuildContext context, ProductListController controller) {
     if (controller.products.isEmpty && controller.isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: Colors.black),
@@ -84,10 +104,19 @@ class _ProductListView extends StatelessWidget {
       );
     }
 
+    if (controller.products.isEmpty) {
+      return const Center(
+        child: Text(
+          'Không có sản phẩm nào',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
     return RefreshIndicator(
       onRefresh: controller.refresh,
       child: GridView.builder(
-        controller: scrollController,
+        controller: _scrollController,
         padding: const EdgeInsets.all(16),
         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 2,
@@ -107,14 +136,13 @@ class _ProductListView extends StatelessWidget {
           }
 
           final product = controller.products[index];
-          // Trong itemBuilder của GridView.builder
           return ProductGridItem(
             imageUrl: product.imageUrl,
             name: product.name,
             price: product.price.toDouble(),
             discountPct: product.discountPct,
             priceAfter: product.priceAfter.toDouble(),
-            productId: product.id, // THÊM DÒNG NÀY
+            productId: product.id,
             onTap: () {
               Navigator.push(
                 context,

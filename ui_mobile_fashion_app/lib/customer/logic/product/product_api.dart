@@ -8,16 +8,24 @@ class ProductApi {
   static Future<List<ProductData>> getList({
     required String filter,
     int limit = 10,
-    int page = 1, // ĐÃ THÊM
+    int page = 1,
+    int? brandId, // ← THÊM: optional
   }) async {
     try {
+      final body = <String, dynamic>{
+        'filter': filter,
+        'limit': limit,
+        'page': page,
+      };
+
+      // Chỉ thêm brand_id khi có giá trị
+      if (brandId != null) {
+        body['brand_id'] = brandId;
+      }
+
       final response = await _dio.post(
         '/products/list',
-        data: {
-          'filter': filter,
-          'limit': limit,
-          'page': page, // ĐÃ THÊM
-        },
+        data: body,
       );
 
       if (response.data['code'] == 'OK') {
