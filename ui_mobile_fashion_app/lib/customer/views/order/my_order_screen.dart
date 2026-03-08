@@ -128,185 +128,186 @@ class _MyOrderScreenState extends State<MyOrderScreen> {
     final displayedItems = order.items.take(3).toList();
     final hasMore = order.items.length > 3;
 
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: const Color(0xFFE8E8E8), width: 1),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // ── Header ─────────────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Mã đơn hàng
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '#${order.orderNumber}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
-                          color: Color(0xFF1A1A1A),
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        DateFormat('dd/MM/yyyy · HH:mm').format(order.createdAt),
-                        style: const TextStyle(
-                          color: Color(0xFFAAAAAA),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // Badge trạng thái
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: config.bg,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    config.label,
-                    style: TextStyle(
-                      color: config.fg,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // ── Divider mỏng ──────────────────────────────────────────────────
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Divider(height: 1, thickness: 1, color: Color(0xFFF2F2F2)),
-          ),
-
-          // ── Danh sách sản phẩm ────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              children: [
-                ...displayedItems.asMap().entries.map((entry) {
-                  final bool isLast =
-                      entry.key == displayedItems.length - 1 && !hasMore;
-                  return _buildProductItem(entry.value, isLast: isLast);
-                }),
-                if (hasMore)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 10),
-                    child: Row(
+    return GestureDetector(
+      onTap: () => context.push('/profile/my-orders/${order.id}'),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: const Color(0xFFE8E8E8), width: 1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Header ─────────────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Mã đơn hàng
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.more_horiz,
-                            size: 16, color: Color(0xFFBBBBBB)),
-                        const SizedBox(width: 6),
                         Text(
-                          '+${order.items.length - 3} sản phẩm khác',
+                          '#${order.orderNumber}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: Color(0xFF1A1A1A),
+                            letterSpacing: 0.3,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          DateFormat('dd/MM/yyyy · HH:mm').format(order.createdAt),
                           style: const TextStyle(
                             color: Color(0xFFAAAAAA),
-                            fontSize: 12.5,
+                            fontSize: 12,
                           ),
                         ),
                       ],
                     ),
                   ),
-              ],
-            ),
-          ),
-
-          // ── Divider + Tổng tiền ───────────────────────────────────────────
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Divider(height: 1, thickness: 1, color: Color(0xFFF2F2F2)),
-          ),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '$totalItems sản phẩm',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFFAAAAAA),
-                  ),
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    const Text(
-                      'Tổng  ',
+                  // Badge trạng thái
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: config.bg,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      config.label,
                       style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF888888),
+                        color: config.fg,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.2,
                       ),
-                    ),
-                    Text(
-                      _currency.format(order.finalAmount),
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF0D0D0D),
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          // ── Nút hành động ─────────────────────────────────────────────────
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
-            child: Row(
-              children: [
-                if (showBuyAgain) ...[
-                  Expanded(
-                    child: _OutlineBtn(
-                      label: 'Mua lại',
-                      icon: Icons.replay_rounded,
-                      onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Đang phát triển tính năng Mua lại'),
-                            backgroundColor: Color(0xFF1A1A1A),
-                          ),
-                        );
-                      },
                     ),
                   ),
-                  const SizedBox(width: 10),
                 ],
-                // Expanded(
-                //   child: _FilledBtn(
-                //     label: 'Xem chi tiết',
-                //     onTap: () {
-                //       // TODO: Chuyển sang màn hình chi tiết đơn hàng
-                //     },
-                //   ),
-                // ),
-              ],
+              ),
             ),
-          ),
-        ],
+
+            // ── Divider mỏng ──────────────────────────────────────────────────
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Divider(height: 1, thickness: 1, color: Color(0xFFF2F2F2)),
+            ),
+
+            // ── Danh sách sản phẩm ────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  ...displayedItems.asMap().entries.map((entry) {
+                    final bool isLast =
+                        entry.key == displayedItems.length - 1 && !hasMore;
+                    return _buildProductItem(entry.value, isLast: isLast);
+                  }),
+                  if (hasMore)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 10),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.more_horiz,
+                              size: 16, color: Color(0xFFBBBBBB)),
+                          const SizedBox(width: 6),
+                          Text(
+                            '+${order.items.length - 3} sản phẩm khác',
+                            style: const TextStyle(
+                              color: Color(0xFFAAAAAA),
+                              fontSize: 12.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ),
+
+            // ── Divider + Tổng tiền ───────────────────────────────────────────
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Divider(height: 1, thickness: 1, color: Color(0xFFF2F2F2)),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '$totalItems sản phẩm',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0xFFAAAAAA),
+                    ),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      const Text(
+                        'Tổng  ',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF888888),
+                        ),
+                      ),
+                      Text(
+                        _currency.format(order.finalAmount),
+                        style: const TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w700,
+                          color: Color(0xFF0D0D0D),
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Nút hành động ─────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+              child: Row(
+                children: [
+                  if (showBuyAgain) ...[
+                    Expanded(
+                      child: _OutlineBtn(
+                        label: 'Mua lại',
+                        icon: Icons.replay_rounded,
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Đang phát triển tính năng Mua lại'),
+                              backgroundColor: Color(0xFF1A1A1A),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                  ],
+                  Expanded(
+                    child: _FilledBtn(
+                      label: 'Xem chi tiết',
+                      onTap: () => context.push('/profile/my-orders/${order.id}'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:ui_mobile_fashion_app/customer/views/auth/complete_profile_scree
 import 'package:ui_mobile_fashion_app/customer/views/auth/register_screen.dart';
 import 'package:ui_mobile_fashion_app/customer/views/navigation_shell/customer_navigation_shell.dart';
 import 'package:ui_mobile_fashion_app/customer/views/order/my_order_screen.dart';
+import 'package:ui_mobile_fashion_app/customer/views/order/order_detail_screen.dart';
 import 'package:ui_mobile_fashion_app/customer/views/order/order_screen.dart';
 import 'package:ui_mobile_fashion_app/customer/views/order/widgets/order_failure_screen.dart';
 import 'package:ui_mobile_fashion_app/customer/views/order/widgets/order_success_screen.dart';
@@ -132,6 +133,14 @@ class AppRouter {
                   GoRoute(
                     path: 'my-orders',
                     builder: (context, state) => const MyOrderScreen(),
+                    routes: [
+                      GoRoute(
+                        path: ':orderId',
+                        builder: (context, state) => OrderDetailScreen(
+                          orderId: state.pathParameters['orderId']!,
+                        ),
+                      ),
+                    ],
                   ),
                   // Address Management
                   GoRoute(

@@ -36,20 +36,20 @@ class SidebarConfig {
       icon: Icons.people_outline,
       route: '/customers',
     ),
-    SidebarItemModel(
-      title: 'Marketing & Voucher',
-      icon: Icons.local_offer_outlined,
-      route: '/marketing',
-    ),
-    SidebarItemModel(
-      title: 'Báo Cáo',
-      icon: Icons.bar_chart_outlined,
-      route: '/analytics',
-    ),
-    SidebarItemModel(
-      title: 'Cấu Hình',
-      icon: Icons.settings_outlined,
-      route: '/settings',
-    ),
+    // SidebarItemModel(
+    //   title: 'Marketing & Voucher',
+    //   icon: Icons.local_offer_outlined,
+    //   route: '/marketing',
+    // ),
+    // SidebarItemModel(
+    //   title: 'Báo Cáo',
+    //   icon: Icons.bar_chart_outlined,
+    //   route: '/analytics',
+    // ),
+    // SidebarItemModel(
+    //   title: 'Cấu Hình',
+    //   icon: Icons.settings_outlined,
+    //   route: '/settings',
+    // ),
   ];
 }

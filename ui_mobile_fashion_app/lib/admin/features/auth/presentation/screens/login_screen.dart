@@ -136,16 +136,16 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
 
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: _isLoading ? null : () {},
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.grey.shade700,
-                      ),
-                      child: const Text('Quên mật khẩu?'),
-                    ),
-                  ),
+                  // Align(
+                  //   alignment: Alignment.centerRight,
+                  //   child: TextButton(
+                  //     onPressed: _isLoading ? null : () {},
+                  //     style: TextButton.styleFrom(
+                  //       foregroundColor: Colors.grey.shade700,
+                  //     ),
+                  //     child: const Text('Quên mật khẩu?'),
+                  //   ),
+                  // ),
                   const SizedBox(height: 30),
 
                   // Nút Đăng nhập
