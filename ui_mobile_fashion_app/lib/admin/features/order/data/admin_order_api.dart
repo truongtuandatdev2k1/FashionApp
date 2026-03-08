@@ -12,7 +12,7 @@ class AdminOrderApi {
   static Future<AdminOrderListResponse> getOrders({
     int limit = 20,
     int offset = 0,
-    String? status, // Filter theo status nếu cần
+    String? status,
   }) async {
     try {
       final queryParams = {
@@ -36,6 +36,32 @@ class AdminOrderApi {
       throw Exception('Lỗi API: $errorMessage');
     } catch (e) {
       throw Exception('Lỗi không xác định khi tải đơn hàng: $e');
+    }
+  }
+
+  /// Cập nhật trạng thái đơn hàng
+  /// PUT /orders/{id}/status  —  body: { "status": "confirmed" }
+  static Future<void> updateOrderStatus({
+    required String orderId,
+    required String newStatus,
+  }) async {
+    try {
+      final response = await _dio.put(
+        '/orders/$orderId/status',
+        data: {'status': newStatus},
+      );
+
+      // API trả về 200 + code == 'OK' là thành công
+      if (response.statusCode == 200 && response.data['code'] == 'OK') {
+        return;
+      }
+
+      throw Exception('Cập nhật trạng thái không thành công.');
+    } on DioException catch (e) {
+      final errorMessage = e.response?.data?['message'] ?? 'Lỗi kết nối mạng.';
+      throw Exception('Lỗi API: $errorMessage');
+    } catch (e) {
+      throw Exception('Lỗi không xác định khi cập nhật trạng thái: $e');
     }
   }
 }

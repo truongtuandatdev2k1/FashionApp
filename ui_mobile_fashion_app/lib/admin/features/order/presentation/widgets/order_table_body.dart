@@ -2,10 +2,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ui_mobile_fashion_app/admin/features/notification/widgets/custom_toast.dart';
+import '../../data/admin_order_api.dart';
 import '../../data/models/admin_order_model.dart';
 import 'status_chip.dart';
 
-class OrderTableBody extends StatelessWidget {
+class OrderTableBody extends StatefulWidget {
   final List<AdminOrder> orders;
   final double availableWidth;
 
@@ -16,8 +17,80 @@ class OrderTableBody extends StatelessWidget {
   });
 
   @override
+  State<OrderTableBody> createState() => _OrderTableBodyState();
+}
+
+class _OrderTableBodyState extends State<OrderTableBody> {
+  // Lưu trạng thái local để cập nhật UI tức thì không cần reload toàn bộ danh sách
+  late List<String> _statuses;
+
+  // Theo dõi các row đang loading (tránh double-tap)
+  final Set<int> _loadingIndexes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _statuses = widget.orders.map((o) => o.status).toList();
+  }
+
+  @override
+  void didUpdateWidget(OrderTableBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Khi danh sách orders được reload từ bên ngoài thì đồng bộ lại
+    if (oldWidget.orders != widget.orders) {
+      _statuses = widget.orders.map((o) => o.status).toList();
+    }
+  }
+
+  Future<void> _updateStatus(int index, String newStatus) async {
+    final order = widget.orders[index];
+    final oldStatus = _statuses[index];
+
+    // Cập nhật UI tức thì (optimistic update)
+    setState(() {
+      _statuses[index] = newStatus;
+      _loadingIndexes.add(index);
+    });
+
+    try {
+      await AdminOrderApi.updateOrderStatus(
+        orderId: order.id,
+        newStatus: newStatus,
+      );
+
+      if (!mounted) return;
+
+      CustomToast.show(
+        context,
+        message: 'Đã cập nhật trạng thái thành công',
+        icon: Icons.check_circle_outline,
+        backgroundColor: Colors.green.shade700,
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      // Rollback nếu API thất bại
+      setState(() {
+        _statuses[index] = oldStatus;
+      });
+
+      CustomToast.show(
+        context,
+        message: e.toString().replaceFirst('Exception: ', ''),
+        icon: Icons.error_outline,
+        backgroundColor: Colors.red.shade700,
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingIndexes.remove(index);
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // Định dạng tiền tệ Việt Nam (1.000.000 ₫)
     final currencyFormat = NumberFormat.currency(
       locale: 'vi_VN',
       symbol: '₫',
@@ -27,15 +100,16 @@ class OrderTableBody extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: SizedBox(
-        width: availableWidth,
+        width: widget.availableWidth,
         child: ListView.builder(
-          itemCount: orders.length,
+          itemCount: widget.orders.length,
           itemBuilder: (context, index) {
-            final order = orders[index];
+            final order = widget.orders[index];
             final isEven = index % 2 == 0;
+            final isLoading = _loadingIndexes.contains(index);
+            final currentStatus = _statuses[index];
 
             return Container(
-              // Đổ màu xen kẽ giữa các dòng cho dễ nhìn
               color: isEven ? const Color(0xFFF9FAFB) : Colors.white,
               height: 64,
               child: Row(
@@ -103,28 +177,33 @@ class OrderTableBody extends StatelessWidget {
                   ),
 
                   // 6. Cột Trạng thái (Dropdown)
-                  // Cột Trạng thái (Dropdown)
                   SizedBox(
                     width: 200,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: Align(
                         alignment: Alignment.centerLeft,
-                        child: PopupMenuButton<String>(
+                        child: isLoading
+                        // Hiển thị spinner nhỏ khi đang gọi API
+                            ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.black54,
+                          ),
+                        )
+                            : PopupMenuButton<String>(
                           tooltip: 'Thay đổi trạng thái',
                           offset: const Offset(0, 40),
                           child: StatusChip(
-                            status: order.status,
+                            status: currentStatus,
                             isDropdown: true,
                           ),
                           onSelected: (String value) {
-                            // GỌI THÔNG BÁO TÙY CHỈNH TẠI ĐÂY
-                            CustomToast.show(
-                              context,
-                              message: 'Tính năng chưa được phát triển',
-                              icon: Icons.info_outline,
-                              backgroundColor: Colors.blueGrey.shade800,
-                            );
+                            // Bỏ qua nếu chọn đúng trạng thái hiện tại
+                            if (value == currentStatus) return;
+                            _updateStatus(index, value);
                           },
                           itemBuilder: (BuildContext context) => [
                             _buildMenuItem('pending', 'Chờ xác nhận', Colors.orange),
@@ -160,9 +239,7 @@ class OrderTableBody extends StatelessWidget {
                     child: Center(
                       child: IconButton(
                         icon: const Icon(Icons.more_horiz, size: 20, color: Colors.grey),
-                        onPressed: () {
-                          // Log hoặc xử lý mở chi tiết đơn hàng
-                        },
+                        onPressed: () {},
                       ),
                     ),
                   ),
@@ -175,7 +252,6 @@ class OrderTableBody extends StatelessWidget {
     );
   }
 
-  /// Hàm helper tạo item cho menu lựa chọn
   PopupMenuItem<String> _buildMenuItem(String value, String text, Color color) {
     return PopupMenuItem<String>(
       value: value,
@@ -190,10 +266,7 @@ class OrderTableBody extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(fontSize: 14),
-          ),
+          Text(text, style: const TextStyle(fontSize: 14)),
         ],
       ),
     );
