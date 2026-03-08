@@ -1,4 +1,4 @@
-// lib/customer/views/product/widgets/product_detail/product_detail_screen.dart
+// lib/customer/views/product/product_detail_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:ui_mobile_fashion_app/customer/logic/product/product_detail_api.dart';
@@ -12,6 +12,7 @@ import 'widgets/product_detail/body/brand_rating.dart';
 import 'widgets/product_detail/body/price_sold.dart';
 import 'widgets/product_detail/body/size_guide_section.dart';
 import 'widgets/product_detail/body/description.dart';
+import 'widgets/product_detail/body/recommendations_section.dart'; // ← THÊM
 import 'widgets/product_detail/bottom_action_bar.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -36,7 +37,6 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
     _checkWishlistStatus();
   }
 
-  // Kiểm tra productId có trong wishlist không
   Future<void> _checkWishlistStatus() async {
     try {
       final wishlist = await SavedApi.getWishlist();
@@ -46,12 +46,9 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
           _isFavorited = isFav;
         });
       }
-    } catch (_) {
-      // Không ảnh hưởng flow chính, giữ nguyên false
-    }
+    } catch (_) {}
   }
 
-  // 2. Getter mà BottomActionBar sẽ dùng để lấy product hiện tại
   ProductDetailModel? get currentProduct {
     if (!mounted) return null;
     if (_snapshot.connectionState == ConnectionState.done &&
@@ -61,7 +58,6 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
     return null;
   }
 
-  // 3. Hàm tiện ích để lấy danh sách ảnh (nếu cần dùng ở nhiều nơi)
   List<String> get allProductImages {
     final product = currentProduct;
     if (product == null) return [];
@@ -100,7 +96,6 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
       body: FutureBuilder<ProductDetailModel>(
         future: _productFuture,
         builder: (context, snapshot) {
-          // Quan trọng: luôn cập nhật _snapshot ở đây
           _snapshot = snapshot;
 
           if (snapshot.hasData) {
@@ -138,6 +133,14 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
                             ProductDescription(
                               description: product.description,
                             ),
+                            const SizedBox(height: 32),
+
+                            // ===== GỢI Ý SẢN PHẨM =====
+                            RecommendationsSection(
+                              productId: widget.productId,
+                            ),
+                            // ===========================
+
                             const SizedBox(height: 120),
                           ],
                         ),
@@ -158,12 +161,11 @@ class ProductDetailScreenState extends State<ProductDetailScreen> {
                   ),
                 ),
 
-                // BottomActionBar KHÔNG cần truyền tham số nào cả
                 const Positioned(
                   bottom: 0,
                   left: 0,
                   right: 0,
-                  child: BottomActionBar(), // ← Như cũ, không đổi
+                  child: BottomActionBar(),
                 ),
               ],
             );

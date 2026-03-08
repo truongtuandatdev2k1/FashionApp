@@ -271,6 +271,8 @@
 │   │   │   │   └── mock_address_data.dart
 │   │   │   ├── auth
 │   │   │   │   └── auth_api.dart
+│   │   │   ├── brand
+│   │   │   │   └── brand_api.dart
 │   │   │   ├── cart
 │   │   │   │   ├── add_to_cart_api.dart
 │   │   │   │   ├── cart_api.dart
@@ -291,12 +293,15 @@
 │   │   │   │   ├── profile_controller.dart
 │   │   │   │   └── update_profile_api.dart
 │   │   │   └── saved
+│   │   │       ├── add_wishlist_api.dart
+│   │   │       ├── remove_wishlist_api.dart
 │   │   │       └── saved_api.dart
 │   │   ├── models
 │   │   │   ├── order
 │   │   │   │   ├── order_request.dart
 │   │   │   │   └── order_response.dart
 │   │   │   ├── address.dart
+│   │   │   ├── brand_model.dart
 │   │   │   ├── product_data.dart
 │   │   │   └── product_detail_model.dart
 │   │   ├── router
@@ -321,7 +326,8 @@
 │   │   │   │       ├── cart_product_item.dart
 │   │   │   │       └── cart_product_item_ui.dart
 │   │   │   ├── common
-│   │   │   │   └── customer_bottom_nav.dart
+│   │   │   │   ├── customer_bottom_nav.dart
+│   │   │   │   └── navigation_helper.dart
 │   │   │   ├── home
 │   │   │   │   ├── data
 │   │   │   │   │   ├── best_sellers.dart
@@ -342,9 +348,12 @@
 │   │   │   ├── order
 │   │   │   │   ├── widgets
 │   │   │   │   │   ├── order_address_section.dart
+│   │   │   │   │   ├── order_bottom_bar.dart
 │   │   │   │   │   ├── order_failure_screen.dart
+│   │   │   │   │   ├── order_payment_method_section.dart
 │   │   │   │   │   ├── order_product_item.dart
-│   │   │   │   │   └── order_success_screen.dart
+│   │   │   │   │   ├── order_success_screen.dart
+│   │   │   │   │   └── order_summary_section.dart
 │   │   │   │   ├── my_order_screen.dart
 │   │   │   │   └── order_screen.dart
 │   │   │   ├── product
@@ -367,6 +376,7 @@
 │   │   │   │   └── product_list_screen.dart
 │   │   │   ├── profile
 │   │   │   │   ├── views
+│   │   │   │   │   ├── profile_edit_screen.dart
 │   │   │   │   │   └── profile_screen.dart
 │   │   │   │   └── widgets
 │   │   │   │       ├── profile_header.dart
@@ -414,4 +424,4 @@
 ├── pubspec.yaml
 └── README.md
 
-160 directories, 255 files
+161 directories, 264 files

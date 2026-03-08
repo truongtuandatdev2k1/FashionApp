@@ -2,21 +2,16 @@
 
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'package:ui_mobile_fashion_app/core/di/locator.dart';
+import 'package:ui_mobile_fashion_app/core/network/api_config.dart';
 
 class UpdateProfileApi {
-  static final _dio = getIt<Dio>();
+  static final _dio = ApiConfig.dio;
 
-  /// Cập nhật thông tin cá nhân
-  /// full_name: String
-  /// age: String (API nhận text)
-  /// address: String
-  /// gender: cố định "nam"
-  /// avatarFile: File? (có thể null nếu không chọn ảnh)
-  static Future<void> updateProfile({
+  static Future<Map<String, dynamic>> updateProfile({
     required String fullName,
     required String age,
     required String address,
+    required String gender,
     File? avatarFile,
   }) async {
     try {
@@ -24,7 +19,7 @@ class UpdateProfileApi {
         'full_name': fullName,
         'age': age,
         'address': address,
-        'gender': 'nam', // Shop nam → cố định
+        'gender': gender,
       });
 
       if (avatarFile != null) {
@@ -41,14 +36,15 @@ class UpdateProfileApi {
 
       final response = await _dio.put('/profiles/me', data: formData);
 
-      if (response.data['code'] != 'OK') {
+      if (response.data['code'] == 'OK') {
+        // Trả về data mới nhất nếu API có trả về, không thì map rỗng
+        return response.data['data'] ?? {};
+      } else {
         throw Exception(response.data['message'] ?? 'Cập nhật hồ sơ thất bại');
       }
     } on DioException catch (e) {
       final msg = e.response?.data?['message'] ?? 'Lỗi kết nối server';
       throw Exception(msg);
-    } catch (e) {
-      rethrow;
     }
   }
 }

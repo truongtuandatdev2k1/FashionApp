@@ -14,12 +14,6 @@ class ProfileMenuList extends StatelessWidget {
     return Column(
       children: [
         ProfileMenuItem(
-          text: "Thông tin Của Tôi",
-          iconData: LucideIcons.user,
-          onTap: () {},
-        ),
-        // Chỉ sửa 2 dòng onTap
-        ProfileMenuItem(
           text: "Địa Chỉ Nhận Hàng",
           iconData: LucideIcons.mapPin,
           onTap: () => context.go('/profile/addresses'),
@@ -56,24 +50,23 @@ class ProfileMenuList extends StatelessWidget {
   Future<void> _showLogoutDialog(BuildContext context) async {
     final confirm = await showDialog<bool>(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('Đăng xuất'),
-            content: const Text('Bạn có chắc muốn đăng xuất?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Hủy'),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: const Text(
-                  'Đăng xuất',
-                  style: TextStyle(color: Colors.red),
-                ),
-              ),
-            ],
+      builder: (context) => AlertDialog(
+        title: const Text('Đăng xuất'),
+        content: const Text('Bạn có chắc muốn đăng xuất?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Hủy'),
           ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text(
+              'Đăng xuất',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
     );
     if (confirm == true) {
       await CustomerAuthApi.logout(context);
@@ -110,10 +103,8 @@ class ProfileMenuItem extends StatelessWidget {
         onPressed: onTap,
         child: Row(
           children: [
-            // ICON: Luôn màu đen
             Icon(iconData, color: kPrimaryColor, size: 22),
             const SizedBox(width: 20),
-            // TEXT: Luôn màu đen, không đậm
             Expanded(
               child: Text(
                 text,
@@ -123,7 +114,6 @@ class ProfileMenuItem extends StatelessWidget {
                 ),
               ),
             ),
-            // MŨI TÊN: Luôn màu đen
             const Icon(Icons.arrow_forward_ios, color: kPrimaryColor, size: 16),
           ],
         ),
